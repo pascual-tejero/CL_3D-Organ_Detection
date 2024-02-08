@@ -119,6 +119,7 @@ neck:
     loss_coeff: 0.2
 
   dn:
+    type: cdn # Remember to add this to the model
     enabled: True #<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
     multiscale: True
     dn_number: 50  # number of dn groups 
