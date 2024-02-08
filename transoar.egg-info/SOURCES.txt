@@ -1,0 +1,7 @@
+README.md
+setup.py
+transoar.egg-info/PKG-INFO
+transoar.egg-info/SOURCES.txt
+transoar.egg-info/dependency_links.txt
+transoar.egg-info/requires.txt
+transoar.egg-info/top_level.txt
