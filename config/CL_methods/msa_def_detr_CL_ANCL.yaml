@@ -163,4 +163,9 @@ continual_learning:
     old_model_path: None
 
 # python ./scripts/train_CL_ANCL.py --config thesis_CL/msa_def_detr_CL_ANCL
+
+# Windows: 
+# SET TRANSOAR_DATA=C:\Users\pascu\Documents\Thesis\project_pascual\padded_data\totalsegmentator_TAPv2_160_160_256_CT
+
+# Linux: 
 # export TRANSOAR_DATA="/mnt/data/transoar_prep/dataset/"
