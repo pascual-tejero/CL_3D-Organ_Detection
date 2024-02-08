@@ -162,7 +162,7 @@ continual_learning:
     num_tasks: 2
     old_model_path: None
 
-# python ./scripts/train_CL_ANCL.py --config thesis_CL/msa_def_detr_CL_ANCL
+# python ./scripts/train_CL_ANCL.py --config CL_methods/msa_def_detr_CL_ANCL
 
 # Windows: 
 # SET TRANSOAR_DATA=C:\Users\pascu\Documents\Thesis\project_pascual\padded_data\totalsegmentator_TAPv2_160_160_256_CT
