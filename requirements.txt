@@ -1,6 +1,5 @@
 torch==1.10.1 # torch==1.7.1
 torchvision==0.11.2 # torchvision==0.8.2
-torchaudio==0.10.1
 tqdm==4.62.3
 monai==1.0.0 # monai==0.7.0
 batchgenerators==0.23
