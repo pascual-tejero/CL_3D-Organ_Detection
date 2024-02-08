@@ -3,6 +3,7 @@ global-exclude *.egg-info
 
 # Ignore pycache
 global-exclude __pycache__
+*__pycache__*
 
 # Ignore any file inside .git
 global-exclude .git
