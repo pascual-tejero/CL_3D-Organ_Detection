@@ -13,6 +13,8 @@ from einops.layers.torch import Rearrange
 from einops import rearrange
 from collections import deque
 
+WO_SELF_ATT = False
+_NUM_CROSS_ATT = -1
 ndims = 3 # H,W,D
 
 
@@ -630,8 +632,6 @@ class ViTLayer(nn.Module):
 
 
 
-
-
 class ViT(nn.Module):
     def __init__(self,
                 PYR_SCALES=None,
@@ -651,10 +651,18 @@ class ViT(nn.Module):
                 attn_drop_rate:float=0.,
                 norm_layer=nn.LayerNorm,
                 layer_scale=None,
-                img_size=None):
+                img_size=None,
+                NUM_CROSS_ATT=-1):
         super().__init__()
 
+
         num_levels = len(feats_num)
+        num_levels = min(num_levels, NUM_CROSS_ATT) if NUM_CROSS_ATT>0 else num_levels
+        if WO_SELF_ATT:
+            num_levels -= 1
+
+
+
         patch_size = patch_size if isinstance(patch_size, list) else [patch_size for _ in range(num_levels)]
         hwd = img_size[-1]
 
@@ -718,18 +726,20 @@ class ViT(nn.Module):
             #print('\n ViT level', i, '\n input->', KQs[i].size())
 
             if i == 0:
-                K = patch_embed_(KQs[i])
-                x = level(K, None, CONCAT_ok=CONCAT_ok)
-            else:
                 Q = patch_embed_(KQs[i])
-                x = level(K, Q, CONCAT_ok=CONCAT_ok)
-                #print(f'\t Q->{Q.size()}')
+                x = level(Q, None, CONCAT_ok=CONCAT_ok)
+                Q = patch_embed_(x)
+            else:
+                K = patch_embed_(KQs[i])
+                #print(f'\t K> {KQs[i].size()} K >>>{K.size()}')
+                x = level(Q, K, CONCAT_ok=CONCAT_ok)
+                Q = x.clone()
+                #print(f'\t Q->{Q.size()}  , x> {x.size()}')
 
             #print(f'\t K->{K.size()}')
             #print(f'\t x->{x.size()}')
 
         return x
-
 
 
 
@@ -945,15 +955,19 @@ class Decoder(nn.Module):
             for key in range(max(cnn_outputs.keys()), min(cnn_outputs.keys())-1, -1) :
                 xs.append(cnn_outputs[key].clone())
 
+            QK = []
             out_dict = {}
             for i, key in enumerate(range(max(cnn_outputs.keys()), min(cnn_outputs.keys())-1, -1)):
-                QK = xs[0:i+1]
+                QK = QK + [xs[i]]
                 QK.reverse()
 
                 if i == 0:
                     Pi = QK[0]
                 else:
                     Pi = self.msa_dec[i](QK)
+                QK[-1] = Pi
+
+
                 out_dict.update({'P' + str(key): Pi})
                 
                 # get segmentation map
@@ -1039,15 +1053,27 @@ if __name__ == "__main__":
     image = torch.rand((B,ch, 128,128, 64)).to(device)
     
     config = {
+            'cuda': 0,
             'msa': True,
             'out_fmaps': ['P4', 'P3', 'P2'],
+            'data_size': [128,128, 64],
             'start_channels': 4,
             'fpn_channels': 96,
+            'kernel_size': 3,
+            'use_msa_seg_loss': True,
+            'depths': 2,
+            'patch_size': 4,
+            'mlp_ratio': 2,
             'in_channels': ch, 
-            'data_size': [128,128, 64],
             'bias': True,
+            'num_heads': 16,
+            'drop_path_rate': 0.,
             'norm_type': 'instance',
-            'use_seg_proxy_loss': False
+            'use_seg_proxy_loss': False,
+            'qkv_bias': False,
+            'drop_rate': 0.,
+            'attn_drop_rate': 0.,
+            'num_organs': 13
     }
     model = MSAViT(config).to(device)
 
