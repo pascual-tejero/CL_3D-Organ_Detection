@@ -2,30 +2,30 @@
 
 
 # General training
-experiment_name: msa_def_detr_CL
-resume: False
+experiment_name: test_to_run_with_no_error
+resume: False # True to resume from last checkpoint
 device: cuda:0
 val_interval: 1
 debug_mode: False  # Doesn't save checkpoints
 seed: 10
 
-epochs: 2500
+epochs: 2500 #1000 optimal
 lr: 2e-4
 lr_backbone: 2e-4
 lr_linear_proj_mult: 0.1
 weight_decay: 1e-4
-clip_max_norm: -1   # Not used
+clip_max_norm: 1   # Not used
 
 # Scheduler
 lr_drop: 500
 
 # Data
-dataset: C:\Users\pascu\Documents\Thesis\project_pascual\padded_data\totalsegmentator_TAPv2_160_160_256_CT 
+dataset: matched_datasets/word_224_224_160_CT # matched_datasets/totalsegmentator_TAPv2_160_160_256_CT
 overfit: False # Use same set consisting of one image for train and val
 bbox_padding: 1
 
 # Dataloader
-batch_size: 4
+batch_size: 3 # 2 (normal)
 shuffle: True
 num_workers: 10
 
@@ -34,7 +34,7 @@ num_workers: 10
 set_cost_class: 2
 set_cost_bbox: 5
 set_cost_giou: 2
-dense_matching: False #<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+dense_matching: True #<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 dense_matching_lambda: 0.5
 class_matching: False
 class_matching_query_split: [10,20,20,30,20] # 10 for liver, 30 for pancreas, 20 for each other organ
@@ -56,18 +56,18 @@ backbone:
 
   # Standard params
   msa: True
-  in_channels: 1 #  Input channels 
+  in_channels: 1  #  Input channels 
   start_channels: 32  # Channels after first encoder block
   bias: False
   norm_type: instance
-  data_size: [224, 224, 96] 
+  data_size: [256, 256, 256] 
 
   
   # Standard params
   fpn_channels: 384 # Final output channels
   out_fmaps: [P4, P3, P2]  # P0, P1, P2, P3, P4, P5
 
-  kernel_size: [3]
+  kernel_size: 3
   patch_size: 2
   mlp_ratio: 2
   num_heads: 32
@@ -81,8 +81,8 @@ backbone:
 
 
   # Segmentation proxy loss
-  num_organs: 5
-  use_msa_seg_loss: False #<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+  num_organs: 19 
+  use_msa_seg_loss: True #<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
   fg_bg: False
   use_seg_proxy_loss: False  # never use it with msa
 
@@ -119,26 +119,31 @@ neck:
     loss_coeff: 0.2
 
   dn:
-    enabled: False  #<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-    dn_number: 3  # number of dn groups 
-    dn_box_noise_ratio: 0.2 # 0.4 
-    dn_label_noise_ratio: 0.25 # 0.5
+    type: cdn # Remember to add this to the model
+    enabled: False # True
+    multiscale: True
+    dn_number: 50  # number of dn groups 
+    dn_box_noise_ratio: 0.
+    multiscale_box_noise_ratio_max: 0.4  #it is necessary if multi_scale is true
+    dn_label_noise_ratio: 0. 
+    multiscale_label_noise_ratio_max: 0.2 #it is necessary if multi_scale is true
 
 # Augmentation
 augmentation:
   use_augmentation: True
-  patch_size: [224, 224, 96] 
+  patch_size: [256, 256, 256] 
 
-  p_gaussian_noise: 0.2
-  p_gaussian_smooth: 0.1
+
+  p_gaussian_noise: 0
+  p_gaussian_smooth: 0
   p_intensity_scale: 0.5
   p_intensity_shift: 0.5
-  p_adjust_contrast: 0.4
+  p_adjust_contrast: 0
   p_rotate: 0.5
   p_zoom: 0.5
-  p_shear: 0.05
+  p_shear: 0
   p_translate: 0.5
-  p_flip: 0.3
+  p_flip: 0
 
   gaussian_noise_mean: 0.0
   gaussian_noise_std: 0.1
@@ -149,24 +154,19 @@ augmentation:
 
   adjust_contrast_gamma: [0.7, 1.5]
 
-  rotation: [-15, 15]
-  min_zoom: 0.8
-  max_zoom: 1.2
-  translate_precentage: 20
+  rotation: [-5, 5]
+  min_zoom: 0.9
+  max_zoom: 1.1
+  translate_precentage: 10
   shear_range: [0.1, 0.1, 0.1]
   flip_axis: [0, 1, 2]
-
-continual_learning:
-  ANCL:
-    enabled: True
-    num_tasks: 2
-    old_model_path: None
 
 # python ./scripts/train_CL_ANCL.py --config CL_methods/msa_def_detr_CL_ANCL
 # python scripts/train.py --config msa_def_detr_abdomen_full
 
 # Windows: 
-# SET TRANSOAR_DATA=C:\Users\pascu\Documents\Thesis\project_pascual\padded_data\totalsegmentator_TAPv2_160_160_256_CT
+# SET TRANSOAR_DATA=C:\Users\pascu\Documents\Thesis\project_pascual\padded_datasets\totalsegmentator_TAPv2_160_160_256_CT
 
 # Linux: 
-# export TRANSOAR_DATA="/mnt/nas/Projects/project_pascual/padded_data/totalsegmentator_TAPv2_160_160_256_CT"
+# export TRANSOAR_DATA="/mnt/nas/Projects/project_pascual/padded_datasets/totalsegmentator_TAPv2_160_160_256_CT"
+# export TRANSOAR_DATA="/mnt/nas/Projects/project_pascual/

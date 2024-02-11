@@ -2,7 +2,7 @@
 
 
 # General training
-experiment_name: msa_def_detr_TS_full_seg_dm_clip1
+experiment_name: test_to_run_with_no_error
 resume: False # True to resume from last checkpoint
 device: cuda:0
 val_interval: 1
