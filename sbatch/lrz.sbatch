@@ -16,8 +16,8 @@ srun --pty --container-mounts=${DATA_DIR}:/mnt/data,${BASE_DIR}:/mnt/code \
 --container-image=${BASE_DIR}/${ENV_DIR}/${ENV_name}.sqsh bash
 
 
-
-cd *(code_organ_DETR)* (/mnt/code)
+*(code_organ_DETR)*
+cd /mnt/code
 ENV_name=msadet
 export TRANSOAR_DATA="/mnt/data/"
 
