@@ -19,7 +19,7 @@ srun --pty --container-mounts=${DATA_DIR}:/mnt/data,${BASE_DIR}:/mnt/code \
 *(code_organ_DETR)*
 cd /mnt/code
 ENV_name=msadet
-export TRANSOAR_DATA="/mnt/data/"
+export TRANSOAR_DATA=/mnt/data/
 
 
 
