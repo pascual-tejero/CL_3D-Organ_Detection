@@ -14,7 +14,7 @@ import numpy as np
 import torch
 import monai, re
 
-from transoar.trainer import Trainer
+from transoar.trainer_ANCL import Trainer_ANCL
 from transoar.data.dataloader import get_loader
 from transoar.utils.io import get_config, write_json, get_meta_data
 from transoar.models.transoarnet import TransoarNet
@@ -133,104 +133,82 @@ def train(config, args):
                 'lr': float(config['lr']) * config['lr_linear_proj_mult']
             }
         )
-    
-    num_params_dict ={'num_params': num_params,
-                    'num_backbone_params': num_backbone_params,
-                    'num_neck_params': num_neck_params,
-                    'num_head_params': num_head_params
-                    }
-    config.update(num_params_dict)
 
+    optim = torch.optim.AdamW(
+        param_dicts, lr=float(config['lr_backbone']), weight_decay=float(config['weight_decay'])
+    )
+    scheduler = torch.optim.lr_scheduler.StepLR(optim, config['lr_drop'])
+
+
+    # Init logging
+    path_to_run = Path(os.getcwd()) / 'runs' / config['experiment_name']
+    path_to_run.mkdir(exist_ok=True)
+
+
+    # Load checkpoint if applicable
+    if config.get('resume', False) or args.resume:
+        ckpt_file = get_last_ckpt(path_to_run)
+        print(f'[+] loading ckpt {ckpt_file} ...')
+        checkpoint = torch.load(Path(ckpt_file))
+
+        checkpoint['scheduler_state_dict']['step_size'] = config['lr_drop']
+
+        # Unpack and load content
+        model.load_state_dict(checkpoint['model_state_dict'])
+        optim.load_state_dict(checkpoint['optimizer_state_dict'])
+        scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
+        epoch = checkpoint['epoch']
+        metric_start_val = checkpoint['metric_max_val']
+    else:
+        epoch = 0
+        metric_start_val = 0
+
+
+    # log num_params
+    num_params_dict ={'num_params': num_params,
+                      'num_backbone_params': num_backbone_params,
+                      'num_neck_params': num_neck_params,
+                      'num_head_params': num_head_params
+                      }
+    config.update(num_params_dict)
     # Get meta data and write config to run
     try:
         config.update(get_meta_data())
     except:
         pass
 
-    # =================================================================================================
-    # Continual Learning approach
-    # We assume that the old model is already trained and saved, and we want to train an auxiliary model
-    # with the old model as a starting point but only with the new data
-    # After training the auxiliary model, we can use the old model and the auxiliary model to train a model
-    # that is able to maintain the performance on the old and new data
-    # In this case we assume two different datasets, one for the old data and one for the new data
-    if config["continual_learning"]["ANCL"]["enabled"] == True:
-        print("Continual Learning with ANCL enabled ...")
-        quit()
-        # Load old model
-        old_model = TransoarNet(config).to(device=device)
-        old_model.load_state_dict(torch.load(config["continual_learning"]["old_model_path"]))
-        old_model.eval()
+    write_json(config, path_to_run / 'config.json')
 
-        # Load auxiliary model
-        aux_model = TransoarNet(config).to(device=device)
-        aux_model.load_state_dict(old_model.state_dict()) # Initialize aux model with old model
-        aux_model.train() # Set to train mode
- 
-        optim_aux = torch.optim.AdamW(
-            param_dicts, lr=float(config['lr_backbone']), weight_decay=float(config['weight_decay'])
-        )
-        scheduler_aux = torch.optim.lr_scheduler.StepLR(optim_aux, config['lr_drop'])
 
-        # Init logging
-        path_to_run = Path(os.getcwd()) / 'runs' / config['experiment_name'] / 'auxiliary_net'
-        path_to_run.mkdir(exist_ok=True)
+    # Load auxiliary model from config["ANCL"]["aux_model_path"]
+    aux_model = TransoarNet(config).to(device=device)
+    checkpoint_aux_model = torch.load(config["ANCL"]["aux_model_path"])
+    aux_model.load_state_dict(checkpoint_aux_model['model_state_dict'])
+    aux_model.eval()
+    for param in aux_model.parameters():
+        param.requires_grad = False
 
-        epoch = 0
-        metric_start_val = 0
+    # Load old model from config["ANCL"]["old_model_path"]
+    old_model = TransoarNet(config).to(device=device)
+    checkpoint_old_model = torch.load(config["ANCL"]["old_model_path"])
+    old_model.load_state_dict(checkpoint_old_model['model_state_dict'])
+    old_model.eval()
+    for param in old_model.parameters():
+        param.requires_grad = False
 
-        write_json(config, path_to_run / 'config_auxiliray_net.json')
-
-        # Build trainer and start training for auxiliary model
-        trainer_aux = Trainer(
-            train_loader, val_loader, model, criterion, optim_aux, scheduler_aux, device, config, 
-            path_to_run, epoch, metric_start_val, dense_hybrid_criterion
-        )
-        trainer_aux.run()
-
-        # Load checkpoint of auxiliary model
-        ckpt_file = get_last_ckpt(path_to_run)
-        print(f'[+] loading ckpt {ckpt_file} ...')
-        checkpoint = torch.load(Path(ckpt_file))
-
-        # Unpack and load content
-        aux_model.load_state_dict(checkpoint['model_state_dict'])
-        aux_model.eval()
-        
-        # Train model with old and new model as starting point
-        model = TransoarNet(config).to(device=device)
-        model.load_state_dict(old_model.state_dict()) # Initialize model with old model
-        model.train() # Set to train mode
-
-        optim = torch.optim.AdamW(
-            param_dicts, lr=float(config['lr_backbone']), weight_decay=float(config['weight_decay'])
-        )
-        scheduler = torch.optim.lr_scheduler.StepLR(optim, config['lr_drop'])
-
-        # Init logging
-        path_to_run = Path(os.getcwd()) / 'runs' / config['experiment_name']
-        path_to_run.mkdir(exist_ok=True)
-
-        epoch = 0
-        metric_start_val = 0
-
-        write_json(config, path_to_run / 'config.json')
-
-        # Build trainer and start training
-        trainer = Trainer(
-            train_loader, val_loader, model, criterion, optim, scheduler, device, config,
-            path_to_run, epoch, metric_start_val, dense_hybrid_criterion, old_model=old_model, aux_model=aux_model
-        )
-        trainer.run()
-        
+    # Build trainer and start training
+    trainer = Trainer_ANCL(
+        train_loader, val_loader, model, criterion, optim, scheduler, device, config, 
+        path_to_run, epoch, metric_start_val, dense_hybrid_criterion, aux_model, old_model
+    )
+    trainer.run()
         
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     # Add minimal amount of args (most args should be set in config files)
-    parser.add_argument("--config", type=str, required=True, help="Config to use for training located in /config."
-                        )
+    parser.add_argument("--config", type=str, required=True, help="Config to use for training located in /config.")
     parser.add_argument("--resume", action='store_true', help="Auto-loads model_last.pt.")
     parser.add_argument("--medicalnet", action='store_true', help="Load pretrained ResNet")
     parser.add_argument("--pretrained_fpn", action='store_true', help="Load pretrained FPN")
