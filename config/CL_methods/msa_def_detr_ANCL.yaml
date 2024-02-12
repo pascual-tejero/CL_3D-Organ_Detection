@@ -25,7 +25,7 @@ overfit: False # Use same set consisting of one image for train and val
 bbox_padding: 1
 
 # Dataloader
-batch_size: 3 # 2 (normal)
+batch_size: 2 # 2 (normal)
 shuffle: True
 num_workers: 10
 
@@ -165,8 +165,7 @@ augmentation:
 # python scripts/train.py --config msa_def_detr_abdomen_full
 
 # Windows: 
-# SET TRANSOAR_DATA="C:\Users\pascu\Documents\Thesis\project_pascual\padded_datasets\totalsegmentator_TAPv2_160_160_256_CT"
+# SET TRANSOAR_DATA=C:\Users\pascu\Documents\Thesis\datasets\
 
 # Linux: 
-# export TRANSOAR_DATA="/mnt/nas/Projects/project_pascual/padded_datasets/totalsegmentator_TAPv2_160_160_256_CT"
-# export TRANSOAR_DATA="/mnt/nas/Projects/project_pascual/""
+# export TRANSOAR_DATA=/mnt/nas/Projects/project_pascual/

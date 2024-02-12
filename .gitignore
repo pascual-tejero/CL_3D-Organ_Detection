@@ -13,3 +13,6 @@ global-exclude .github
 
 # Ignore any file inside the folder dist
 global-exclude dist
+
+# Ignore everything inside runs folder 
+runs/* 

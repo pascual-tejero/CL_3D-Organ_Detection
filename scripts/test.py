@@ -396,7 +396,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     # Add necessary args
-    parser.add_argument('--run', required=True, type=str, help='Name of experiment in transoar/runs.')
+    parser.add_argument('--run', required=True, type=str, help='Name of experiment in ./runs.')
     parser.add_argument('--num_gpu', type=int, default=-1, help='Use model_last instead of model_best.')
     parser.add_argument('--val', action='store_true', help='Evaluate performance on test set.')
     parser.add_argument('--last', action='store_true', help='Use model_last instead of model_best.')

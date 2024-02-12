@@ -20,8 +20,7 @@ einops==0.3.2
 # python scripts/train.py --config msa_def_detr_abdomen_full
 
 # Windows: 
-# SET TRANSOAR_DATA=C:\Users\pascu\Documents\Thesis\project_pascual\padded_data\totalsegmentator_TAPv2_160_160_256_CT
+# SET TRANSOAR_DATA=C:\Users\pascu\Documents\Thesis\datasets\
 
 # Linux: 
-# export TRANSOAR_DATA="/mnt/nas/Projects/project_pascual/padded_data/totalsegmentator_TAPv2_160_160_256_CT"
-# export TRANSOAR_DATA="/mnt/nas/Projects/project_pascual/downsampled_data/totalsegmentator_TAPv2_160_160_256_CT"
+# export TRANSOAR_DATA=/mnt/nas/Projects/project_pascual/

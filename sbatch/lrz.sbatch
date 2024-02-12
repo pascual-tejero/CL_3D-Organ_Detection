@@ -17,13 +17,14 @@ srun --pty --container-mounts=${DATA_DIR}:/mnt/data,${BASE_DIR}:/mnt/code \
 
 
 
-cd *(code_organ_DETR)*
+cd *(code_organ_DETR)* (/mnt/code)
 ENV_name=msadet
 export TRANSOAR_DATA="/mnt/data/"
 
 
 
 # train with attn_fpn as backbone
+/opt/conda/envs/${ENV_name}/bin/python scripts/train.py --config CL_methods/msa_def_detr_CL_ANCL
 /opt/conda/envs/${ENV_name}/bin/python scripts/train.py --config attn_fpn_def_detr_abdomen_full
 /opt/conda/envs/${ENV_name}/bin/python scripts/train.py --config attn_fpn_def_detr_abdomen
 
