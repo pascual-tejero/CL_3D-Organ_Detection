@@ -54,7 +54,7 @@ class Trainer:
 
         self._writer = SummaryWriter(log_dir=path_to_run)
         self._scaler = GradScaler()
-
+        
         self._evaluator = DetectionEvaluator(
             classes=list(config['labels'].values()),
             classes_small=config['labels_small'],
@@ -113,6 +113,8 @@ class Trainer:
                     'labels': item[1].to(device=self._device)
                 }
                 det_targets.append(target)
+            # print('det_targets: ', det_targets) 
+            # quit()
 
             # Make prediction
             with autocast(): 

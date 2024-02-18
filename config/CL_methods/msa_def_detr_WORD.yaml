@@ -2,7 +2,7 @@
 
 
 # General training
-experiment_name: msa_def_detr_WORD_dataset # msa_def_detr_TOTAL_SEGMENTATOR_dataset
+experiment_name: msa_def_detr_WORD_dataset 
 resume: False # True to resume from last checkpoint
 device: cuda:0
 val_interval: 1
@@ -20,12 +20,12 @@ clip_max_norm: 1   # Not used
 lr_drop: 500
 
 # Data
-dataset: matched_datasets/word_224_224_160_CT # matched_datasets/totalsegmentator_TAPv2_160_160_256_CT
+dataset: matched_datasets/word_224_224_160_CT 
 overfit: False # Use same set consisting of one image for train and val
 bbox_padding: 1
 
 # Dataloader
-batch_size: 2 # 2 (normal)
+batch_size: 1 # 2 (normal)
 shuffle: True
 num_workers: 10 # 10 (normal)
  
@@ -64,7 +64,7 @@ backbone:
 
   
   # Standard params
-  fpn_channels: 384 # Final output channels
+  fpn_channels: 288 # Final output channels (384 original)
   out_fmaps: [P4, P3, P2]  # P0, P1, P2, P3, P4, P5
 
   kernel_size: 3
@@ -95,7 +95,7 @@ neck:
   num_feature_levels: 3
 
   pos_encoding: sine
-  hidden_dim: 384
+  hidden_dim: 288 # (384 original)
   dropout: 0.1
   nheads: 6
   dim_feedforward: 1024
