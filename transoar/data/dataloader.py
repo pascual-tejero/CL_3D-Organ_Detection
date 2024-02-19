@@ -16,6 +16,9 @@ def get_loader(config, split, batch_size=None):
     shuffle = False if split in ['test', 'val'] else config['shuffle']
 
     dataset = TransoarDataset(config, split)
+    # for i in range(1000):   
+    #     dataset.__getitem__(i)
+
     dataloader = DataLoader(
         dataset, batch_size=batch_size, shuffle=shuffle,
         num_workers=config['num_workers'], collate_fn=collator

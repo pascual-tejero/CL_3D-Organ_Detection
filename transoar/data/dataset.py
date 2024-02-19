@@ -31,7 +31,6 @@ class TransoarDataset(Dataset):
         #print("limited data read for ", split, ": ", len(self._data))
         
         self._data = [data_path.name for data_path in self._path_to_split.iterdir()]
-
         self._augmentation = get_transforms(split, config)
 
     def __len__(self):
@@ -61,7 +60,8 @@ class TransoarDataset(Dataset):
             data, label = data_transformed['image'], data_transformed['label']
         else:
             data, label = torch.tensor(data), torch.tensor(label)
-
+        print("data, label", data.shape, label.shape)
+        
         if self._split == 'test':
             return data, label, path_to_case # path is used for visualization of predictions on source data
         else:
