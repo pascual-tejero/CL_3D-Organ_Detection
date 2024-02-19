@@ -60,7 +60,7 @@ class TransoarDataset(Dataset):
             data, label = data_transformed['image'], data_transformed['label']
         else:
             data, label = torch.tensor(data), torch.tensor(label)
-        print("data, label", data.shape, label.shape)
+        # print("data, label", data.shape, label.shape)
         
         if self._split == 'test':
             return data, label, path_to_case # path is used for visualization of predictions on source data
