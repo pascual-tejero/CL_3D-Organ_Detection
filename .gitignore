@@ -16,3 +16,6 @@ global-exclude dist
 
 # Ignore everything inside runs folder 
 runs/* 
+
+# Ignore all files with .pyc extension
+*.pyc

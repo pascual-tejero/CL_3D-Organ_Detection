@@ -118,6 +118,14 @@ class Trainer:
 
             # Make prediction
             with autocast(): 
+                # print(det_targets)
+                # # Change from cx,cy,cz,w,h,d to x1,y1,z1,x2,y2,z2
+                # for target in det_targets:
+                #     target['boxes'] = torch.cat((target['boxes'][:, :3] - target['boxes'][:, 3:]/2, 
+                #                                 target['boxes'][:, :3] + target['boxes'][:, 3:]/2), dim=1)
+                # print("=====================================")
+                # print('det_targets: ', det_targets)
+                # quit()
                 out, contrast_losses, dn_meta = self._model(data, det_targets, num_epoch=num_epoch)
                 loss_dict, pos_indices = self._criterion(out, det_targets, seg_targets, dn_meta, num_epoch=num_epoch)
 

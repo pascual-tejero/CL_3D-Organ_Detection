@@ -2,7 +2,7 @@
 
 
 # General training
-experiment_name: msa_def_detr_TOTAL_SEGMENTATOR_dataset # msa_def_detr_TOTAL_SEGMENTATOR_dataset
+experiment_name: msa_def_detr_TOTALSEGMENTATOR_dataset # msa_def_detr_TOTAL_SEGMENTATOR_dataset
 resume: False # True to resume from last checkpoint
 device: cuda:0
 val_interval: 1
