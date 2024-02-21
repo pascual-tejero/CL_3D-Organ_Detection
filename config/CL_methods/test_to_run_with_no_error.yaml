@@ -163,8 +163,8 @@ augmentation:
   flip_axis: [0, 1, 2]
 
 
-# python ./scripts/train_CL_ANCL.py --config CL_methods/msa_def_detr_CL_ANCL
-# python scripts/train.py --config msa_def_detr_abdomen_full
+# python ./scripts/train_ANCL.py --config CL_methods/msa_def_detr_ANCL
+# python ./scripts/train.py --config msa_def_detr_TOTALSEGMENTATOR
 
 # Windows: 
 # SET TRANSOAR_DATA=C:\Users\pascu\Documents\Thesis\datasets\

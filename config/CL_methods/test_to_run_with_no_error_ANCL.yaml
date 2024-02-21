@@ -167,8 +167,8 @@ ANCL:
   aux_model_path: ./runs/test_to_run_with_no_error/model_best_0.007_in_ep10.pt
   old_model_path: ./runs/test_to_run_with_no_error/model_best_0.007_in_ep10.pt
 
-# python ./scripts/train_CL_ANCL.py --config CL_methods/msa_def_detr_CL_ANCL
-# python scripts/train.py --config msa_def_detr_abdomen_full
+# python ./scripts/train_ANCL.py --config CL_methods/msa_def_detr_ANCL
+# python ./scripts/train.py --config msa_def_detr_TOTALSEGMENTATOR
 
 # Windows: 
 # SET TRANSOAR_DATA=C:\Users\pascu\Documents\Thesis\datasets\

@@ -71,8 +71,13 @@ def train(config, args):
         val_loader = get_loader(config, 'train')
     else:
         val_loader = get_loader(config, 'val')
-
+    
+    # Load model from old model checkpoint
     model = TransoarNet(config).to(device=device)
+    checkpoint_model = torch.load(config["ANCL"]["old_model_path"])
+    model.load_state_dict(checkpoint_model['model_state_dict'])
+    
+
     if args.medicalnet:  # Download pretrained model from https://github.com/Tencent/MedicalNet
         assert config['backbone']['name'] == 'resnet', 'Loading MedicalNet is only possible if ResNet backbone is configured!'
         ckpt = torch.load('resnet_50.pth')

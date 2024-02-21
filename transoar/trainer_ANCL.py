@@ -134,7 +134,6 @@ class Trainer_ANCL:
                 for key, value in loss_dict_aux.items():
                     loss_dict["aux_model"] += value 
 
-
                 # Old model loss
                 old_out = self._old_model(data)
                 loss_dict_old, _ = self._criterion(old_out, det_targets, seg_targets)

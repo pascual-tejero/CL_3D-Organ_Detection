@@ -1,5 +1,7 @@
-torch==1.10.1 # torch==1.7.1
-torchvision==0.11.2 # torchvision==0.8.2
+# pip3 install torch==1.10.1+cu113 torchvision==0.11.2+cu113 torchaudio===0.10.1+cu113 -f https://download.pytorch.org/whl/cu113/torch_stable.html
+
+# torch==1.10.1 # torch==1.7.1
+# torchvision==0.11.2 # torchvision==0.8.2
 tqdm==4.62.3
 monai==1.0.0 # monai==0.7.0
 batchgenerators==0.23
@@ -14,10 +16,9 @@ timm==0.4.12
 einops==0.3.2
 
 
-# pip3 install torch==1.10.1+cu113 torchvision==0.11.2+cu113 torchaudio===0.10.1+cu113 -f https://download.pytorch.org/whl/cu113/torch_stable.html
 
-# python ./scripts/train_CL_ANCL.py --config CL_methods/msa_def_detr_CL_ANCL
-# python scripts/train.py --config msa_def_detr_abdomen_full
+# python ./scripts/train_ANCL.py --config CL_methods/msa_def_detr_ANCL
+# python ./scripts/train.py --config msa_def_detr_TOTALSEGMENTATOR
 
 # Windows: 
 # SET TRANSOAR_DATA=C:\Users\pascu\Documents\Thesis\datasets\
