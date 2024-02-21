@@ -193,11 +193,14 @@ class TransoarCriterion(nn.Module):
         loss_bbox = F.l1_loss(src_boxes, target_boxes, reduction='none')
 
         loss_bbox = loss_bbox.sum() / num_boxes
-
-        loss_giou = 1 - torch.diag(generalized_bbox_iou_3d(
-            box_cxcyczwhd_to_xyzxyz(src_boxes),
-            box_cxcyczwhd_to_xyzxyz(target_boxes))
-        )
+        
+        if torch.isnan(src_boxes).all():
+            loss_giou = torch.zeros(src_boxes.size())
+        else:
+            loss_giou = 1 - torch.diag(generalized_bbox_iou_3d(
+                box_cxcyczwhd_to_xyzxyz(src_boxes),
+                box_cxcyczwhd_to_xyzxyz(target_boxes))
+            )
         loss_giou = loss_giou.sum() / num_boxes
         losses = {}
         losses['bbox'] = loss_bbox
