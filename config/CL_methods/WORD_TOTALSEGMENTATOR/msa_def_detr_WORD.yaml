@@ -2,7 +2,7 @@
 
 
 # General training
-experiment_name: msa_def_detr_ANCL_WORD_TOTAL_SEGMENTATOR_datasets # msa_def_detr_TOTAL_SEGMENTATOR_dataset
+experiment_name: msa_def_detr_WORD_dataset 
 resume: False # True to resume from last checkpoint
 device: cuda:0
 val_interval: 1
@@ -20,15 +20,15 @@ clip_max_norm: 1   # Not used
 lr_drop: 500
 
 # Data
-dataset: matched_datasets/totalsegmentator_ANCL_joint_datasets(val_test)_TOTALSEGMENTATOR_WORD # matched_datasets/word_224_224_160_CT
+dataset: matched_datasets/word_224_224_160_CT
 overfit: False # Use same set consisting of one image for train and val
 bbox_padding: 1
 
 # Dataloader
 batch_size: 1 # 2 (normal)
 shuffle: True
-num_workers: 1 # 10 (normal)
-
+num_workers: 10 # 10 (normal)
+ 
 
 # Hungarian matching
 set_cost_class: 2
@@ -48,8 +48,7 @@ loss_coefs:
   giou: 2
   segce: 2    # Segmentation proxy
   segdice: 2
-  aux: 10 # Aux loss coefficient
-  old: 10 # Old model loss coefficient
+
 
 # Model specific params
 backbone:
@@ -162,9 +161,6 @@ augmentation:
   shear_range: [0.1, 0.1, 0.1]
   flip_axis: [0, 1, 2]
 
-ANCL:
-  aux_model_path: ./runs/test_to_run_with_no_error_TOTALSEGMENTATOR/model_best_0.008_in_ep9.pt
-  old_model_path: ./runs/test_to_run_with_no_error_WORD/model_best_0.008_in_ep9.pt
 
 # python ./scripts/train_ANCL.py --config CL_methods/msa_def_detr_ANCL
 # python ./scripts/train.py --config msa_def_detr_TOTALSEGMENTATOR
