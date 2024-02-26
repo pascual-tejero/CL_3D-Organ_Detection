@@ -196,6 +196,15 @@ class TransoarCriterion(nn.Module):
         
         if torch.isnan(src_boxes).all():
             loss_giou = torch.zeros(src_boxes.size())
+        elif torch.isnan(src_boxes).any():
+            # Identify NaNs in the output boxes and remove them
+            nan_indices = torch.isnan(src_boxes).any(dim=1)
+            src_boxes = src_boxes[~nan_indices]
+            target_boxes = target_boxes[~nan_indices]
+            loss_giou = 1 - torch.diag(generalized_bbox_iou_3d(
+                box_cxcyczwhd_to_xyzxyz(src_boxes),
+                box_cxcyczwhd_to_xyzxyz(target_boxes))
+            )
         else:
             loss_giou = 1 - torch.diag(generalized_bbox_iou_3d(
                 box_cxcyczwhd_to_xyzxyz(src_boxes),

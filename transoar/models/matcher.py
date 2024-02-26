@@ -90,6 +90,21 @@ class HungarianMatcher(nn.Module):
             #print(torch.isnan(tgt_bbox).all())
             #quit()
             cost_giou = 0
+        elif torch.isnan(out_bbox).any():
+            # Identify NaNs in the output boxes and remove them
+            nan_indices = torch.isnan(out_bbox).any(dim=1)
+            out_bbox = out_bbox[~nan_indices]
+            out_prob = out_prob[~nan_indices]
+            cost_bbox = cost_bbox[~nan_indices]
+            cost_class = cost_class[~nan_indices]
+            tgt_bbox = tgt_bbox[~nan_indices]
+            tgt_ids = tgt_ids[~nan_indices]
+
+            # Compute the giou cost betwen boxes
+            cost_giou = -generalized_bbox_iou_3d(
+                box_cxcyczwhd_to_xyzxyz(out_bbox),
+                box_cxcyczwhd_to_xyzxyz(tgt_bbox)
+            )
         else:
             # Compute the giou cost betwen boxes
             cost_giou = -generalized_bbox_iou_3d(
