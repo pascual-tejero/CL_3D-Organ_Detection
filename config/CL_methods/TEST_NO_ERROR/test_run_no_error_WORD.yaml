@@ -2,7 +2,7 @@
 
 
 # General training
-experiment_name: msa_def_detr_TOTALSEGMENTATOR_dataset
+experiment_name: test_run_no_error_WORD
 resume: False # True to resume from last checkpoint
 device: cuda:0
 val_interval: 1
@@ -20,14 +20,14 @@ clip_max_norm: 1   # Not used
 lr_drop: 500
 
 # Data
-dataset: matched_datasets/totalsegmentator_224_224_160_CT
+dataset: downsampled_datasets/word_64_64_64_CT
 overfit: False # Use same set consisting of one image for train and val
 bbox_padding: 1
 
 # Dataloader
-batch_size: 1 # 2 (normal)
+batch_size: 2 # 2 (normal, 1 reduced params)
 shuffle: True
-num_workers: 10 # 10 (normal)
+num_workers: 1 # 10 (normal, 1 lower 80GB GPU)
  
 
 # Hungarian matching
@@ -60,11 +60,11 @@ backbone:
   start_channels: 32  # Channels after first encoder block
   bias: False
   norm_type: instance
-  data_size: [256, 256, 256] 
+  data_size: [64, 64, 64] 
 
   
   # Standard params
-  fpn_channels: 288 # Final output channels (384 original)
+  fpn_channels: 384 # Final output channels (384 original, 288 reduced params)
   out_fmaps: [P4, P3, P2]  # P0, P1, P2, P3, P4, P5
 
   kernel_size: 3
@@ -81,7 +81,7 @@ backbone:
 
 
   # Segmentation proxy loss
-  num_organs: 19 
+  num_organs: 14
   use_msa_seg_loss: True #<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
   fg_bg: False
   use_seg_proxy_loss: False  # never use it with msa
@@ -95,7 +95,7 @@ neck:
   num_feature_levels: 3
 
   pos_encoding: sine
-  hidden_dim: 288 # (384 original)
+  hidden_dim: 384 # (384 original, 288 reduced params)
   dropout: 0.1
   nheads: 6
   dim_feedforward: 1024
@@ -161,6 +161,7 @@ augmentation:
   shear_range: [0.1, 0.1, 0.1]
   flip_axis: [0, 1, 2]
 
+
 # Dataset path:
 #   Windows: SET TRANSOAR_DATA=C:\Users\pascu\Documents\Thesis\datasets\
 #   Linux: export TRANSOAR_DATA=/mnt/nas/Projects/project_pascual/
@@ -170,4 +171,4 @@ augmentation:
 #   Linux: export CUDA_VISIBLE_DEVICES=0
 
 # Run command
-#   python ./scripts/train.py --config CL_methods/WORD_TOTALSEGMENTATOR/msa_def_detr_TOTALSEGMENTATOR
+#   python ./scripts/train.py --config CL_methods/TEST_NO_ERROR/test_run_no_error_WORD

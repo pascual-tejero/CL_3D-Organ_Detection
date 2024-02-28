@@ -2,7 +2,7 @@
 
 
 # General training
-experiment_name: test_to_run_with_no_error_ANCL
+experiment_name: test_run_no_error_ANCL
 resume: False # True to resume from last checkpoint
 device: cuda:0
 val_interval: 1
@@ -20,14 +20,14 @@ clip_max_norm: 1   # Not used
 lr_drop: 500
 
 # Data
-dataset: downsampled_datasets/totalsegmentator_TAPv2_160_160_256_CT
+dataset: downsampled_datasets/abdomenCT-1k_64_64_64_CT
 overfit: False # Use same set consisting of one image for train and val
 bbox_padding: 1
 
 # Dataloader
-batch_size: 2 # 2 (normal)
+batch_size: 2 # 2 (normal, 1 reduced params)
 shuffle: True
-num_workers: 1 # 10 (normal)
+num_workers: 1 # 10 (normal, 1 lower 80GB GPU)
 
 
 # Hungarian matching
@@ -65,7 +65,7 @@ backbone:
 
   
   # Standard params
-  fpn_channels: 384 # Final output channels
+  fpn_channels: 384 # Final output channels (384 original, 288 reduced params)
   out_fmaps: [P4, P3, P2]  # P0, P1, P2, P3, P4, P5
 
   kernel_size: 3
@@ -82,7 +82,7 @@ backbone:
 
 
   # Segmentation proxy loss
-  num_organs: 19 
+  num_organs: 5 
   use_msa_seg_loss: True #<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
   fg_bg: False
   use_seg_proxy_loss: False  # never use it with msa
@@ -96,7 +96,7 @@ neck:
   num_feature_levels: 3
 
   pos_encoding: sine
-  hidden_dim: 384
+  hidden_dim: 384 # (384 original, 288 reduced params)
   dropout: 0.1
   nheads: 6
   dim_feedforward: 1024
@@ -162,16 +162,17 @@ augmentation:
   shear_range: [0.1, 0.1, 0.1]
   flip_axis: [0, 1, 2]
 
-
 ANCL:
-  aux_model_path: ./runs/test_to_run_with_no_error/model_best_0.007_in_ep10.pt
-  old_model_path: ./runs/test_to_run_with_no_error/model_best_0.007_in_ep10.pt
+  aux_model_path: ./runs/test_to_run_with_no_error_TOTALSEGMENTATOR/model_best_0.008_in_ep9.pt
+  old_model_path: ./runs/test_to_run_with_no_error_WORD/model_best_0.008_in_ep9.pt
 
-# python ./scripts/train_ANCL.py --config CL_methods/msa_def_detr_ANCL
-# python ./scripts/train.py --config msa_def_detr_TOTALSEGMENTATOR
+# Dataset path:
+#   Windows: SET TRANSOAR_DATA=C:\Users\pascu\Documents\Thesis\datasets\
+#   Linux: export TRANSOAR_DATA=/mnt/nas/Projects/project_pascual/
 
-# Windows: 
-# SET TRANSOAR_DATA=C:\Users\pascu\Documents\Thesis\datasets\
+# Switch GPU
+#   Windows: set CUDA_VISIBLE_DEVICES=0
+#   Linux: export CUDA_VISIBLE_DEVICES=0
 
-# Linux: 
-# export TRANSOAR_DATA=/mnt/nas/Projects/project_pascual/
+# Run command
+#   python ./scripts/train_ANCL.py --config CL_methods/TEST_NO_ERROR/test_run_no_error_ANCL

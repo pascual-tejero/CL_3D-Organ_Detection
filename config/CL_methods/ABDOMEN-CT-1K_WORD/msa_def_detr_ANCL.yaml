@@ -166,11 +166,13 @@ ANCL:
   aux_model_path: ./runs/test_to_run_with_no_error_TOTALSEGMENTATOR/model_best_0.008_in_ep9.pt
   old_model_path: ./runs/test_to_run_with_no_error_WORD/model_best_0.008_in_ep9.pt
 
-# python ./scripts/train_ANCL.py --config CL_methods/msa_def_detr_ANCL
-# python ./scripts/train.py --config msa_def_detr_TOTALSEGMENTATOR
+# Dataset path:
+#   Windows: SET TRANSOAR_DATA=C:\Users\pascu\Documents\Thesis\datasets\
+#   Linux: export TRANSOAR_DATA=/mnt/nas/Projects/project_pascual/
 
-# Windows: 
-# SET TRANSOAR_DATA=C:\Users\pascu\Documents\Thesis\datasets\
+# Switch GPU
+#   Windows: set CUDA_VISIBLE_DEVICES=0
+#   Linux: export CUDA_VISIBLE_DEVICES=0
 
-# Linux: 
-# export TRANSOAR_DATA=/mnt/nas/Projects/project_pascual/
+# Run command
+#   python ./scripts/train_ANCL.py --config CL_methods/ABDOMEN-CT-1K_WORD/msa_def_detr_ANCL
