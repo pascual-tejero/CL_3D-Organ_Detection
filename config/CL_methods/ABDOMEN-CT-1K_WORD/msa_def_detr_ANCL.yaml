@@ -2,7 +2,7 @@
 
 
 # General training
-experiment_name: msa_def_detr_ANCL_ABDOMEN-CT-1K_WORD_dataset
+experiment_name: msa_def_detr_ANCL_ABDOMEN-CT-1K_WORD_datasets
 resume: False # True to resume from last checkpoint
 device: cuda:0
 val_interval: 1
