@@ -164,7 +164,7 @@ augmentation:
 
 ANCL:
   aux_model_path: ./runs/test_run_no_error_WORD/model_best_0.007_in_ep9.pt 
-  old_model_path: ./runs/test_run_no_error_WORD/model_best_0.007_in_ep9.pt
+  old_model_path: ./runs/test_run_no_error_ABDOMEN-CT-1K/model_best_0.007_in_ep9.pt
 
 # Dataset path:
 #   Windows: SET TRANSOAR_DATA=C:\Users\pascu\Documents\Thesis\datasets\
