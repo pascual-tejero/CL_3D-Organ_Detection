@@ -14,16 +14,21 @@ srun --pty --container-mounts=${DATA_DIR}:/mnt/data,${BASE_DIR}:/mnt/code \
 --container-image=${BASE_DIR}/${ENV_DIR}/${ENV_name}.sqsh bash
 
 
-*(code_organ_DETR)*
 cd /mnt/code/OrganDETR
 ENV_name=msadet
 export TRANSOAR_DATA=/mnt/data/
 
 
 
-# train with attn_fpn as backbone
+# train
 /opt/conda/envs/${ENV_name}/bin/python scripts/train.py --config CL_methods/ABDOMEN-CT-1K_WORD/msa_def_detr_ABDOMEN-CT-1K
 /opt/conda/envs/${ENV_name}/bin/python scripts/train.py --config CL_methods/ABDOMEN-CT-1K_WORD/msa_def_detr_WORD
+
+# test
+/opt/conda/envs/${ENV_name}/bin/python scripts/test.py --run msa_def_detr_ABDOMEN-CT-1K_dataset
+/opt/conda/envs/${ENV_name}/bin/python scripts/test.py --run msa_def_detr_WORD_dataset
+
+
 
 # Login to LRZ
 ssh login.ai.lrz.de -l ge32fix2

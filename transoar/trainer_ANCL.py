@@ -118,6 +118,7 @@ class Trainer_ANCL:
 
             # Make prediction
             with autocast(): 
+                # Main model loss
                 out, contrast_losses, dn_meta = self._model(data, det_targets, num_epoch=num_epoch)
                 loss_dict, pos_indices = self._criterion(out, det_targets, seg_targets, dn_meta, num_epoch=num_epoch)
 
@@ -142,6 +143,10 @@ class Trainer_ANCL:
                 del loss_dict_old['hd95'] # remove Hausdorff distance from loss, so it does not influence loss_abs
                 for key, value in loss_dict_old.items():
                     loss_dict["old_model"] += value
+                
+                # for key, value in loss_dict.items():
+                #     print(key, value)
+                # quit()
 
                 if self._hybrid: # hybrid matching
                     outputs_one2many = dict()

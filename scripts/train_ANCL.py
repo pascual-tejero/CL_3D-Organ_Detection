@@ -74,7 +74,7 @@ def train(config, args):
     
     # Load model from old model checkpoint
     model = TransoarNet(config).to(device=device)
-    checkpoint_model = torch.load(config["ANCL"]["old_model_path"])
+    checkpoint_model = torch.load(config["ANCL"]["old_model_path"]) # Start main model with old model
     model.load_state_dict(checkpoint_model['model_state_dict'])
     
 

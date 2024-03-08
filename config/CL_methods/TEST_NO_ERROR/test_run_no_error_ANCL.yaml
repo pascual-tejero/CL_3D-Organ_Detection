@@ -20,7 +20,7 @@ clip_max_norm: 1   # Not used
 lr_drop: 500
 
 # Data
-dataset: downsampled_datasets/abdomenCT-1k_64_64_64_CT
+dataset: downsampled_datasets/word_64_64_64_CT
 overfit: False # Use same set consisting of one image for train and val
 bbox_padding: 1
 
@@ -48,8 +48,8 @@ loss_coefs:
   giou: 2
   segce: 2    # Segmentation proxy
   segdice: 2
-  aux: 10 # Aux loss coefficient
-  old: 10 # Old model loss coefficient
+  aux: 2 # Aux loss coefficient
+  old: 2 # Old model loss coefficient
 
 # Model specific params
 backbone:
@@ -82,7 +82,7 @@ backbone:
 
 
   # Segmentation proxy loss
-  num_organs: 5 
+  num_organs: 14
   use_msa_seg_loss: True #<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
   fg_bg: False
   use_seg_proxy_loss: False  # never use it with msa
@@ -98,7 +98,7 @@ neck:
   pos_encoding: sine
   hidden_dim: 384 # (384 original, 288 reduced params)
   dropout: 0.1
-  nheads: 6
+  nheads: 32
   dim_feedforward: 1024
   enc_layers: 3
   dec_layers: 3
@@ -163,8 +163,8 @@ augmentation:
   flip_axis: [0, 1, 2]
 
 ANCL:
-  aux_model_path: ./runs/test_to_run_with_no_error_TOTALSEGMENTATOR/model_best_0.008_in_ep9.pt
-  old_model_path: ./runs/test_to_run_with_no_error_WORD/model_best_0.008_in_ep9.pt
+  aux_model_path: ./runs/test_run_no_error_WORD/model_best_0.007_in_ep9.pt 
+  old_model_path: ./runs/test_run_no_error_WORD/model_best_0.007_in_ep9.pt
 
 # Dataset path:
 #   Windows: SET TRANSOAR_DATA=C:\Users\pascu\Documents\Thesis\datasets\

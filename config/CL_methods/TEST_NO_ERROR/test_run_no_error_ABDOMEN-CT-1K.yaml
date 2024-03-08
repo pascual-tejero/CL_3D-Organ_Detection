@@ -81,7 +81,7 @@ backbone:
 
 
   # Segmentation proxy loss
-  num_organs: 5 
+  num_organs: 14
   use_msa_seg_loss: True #<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
   fg_bg: False
   use_seg_proxy_loss: False  # never use it with msa
@@ -97,7 +97,7 @@ neck:
   pos_encoding: sine
   hidden_dim: 384 # (384 original, 288 reduced params)
   dropout: 0.1
-  nheads: 6
+  nheads: 32
   dim_feedforward: 1024
   enc_layers: 3
   dec_layers: 3

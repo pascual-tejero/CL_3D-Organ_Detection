@@ -2,7 +2,7 @@
 
 
 # General training
-experiment_name: msa_def_detr_ANCL_WORD_ABDOMEN-CT-1K_datasets
+experiment_name: msa_def_detr_ANCL_ABDOMEN-CT-1K_WORD_dataset
 resume: False # True to resume from last checkpoint
 device: cuda:0
 val_interval: 1
@@ -48,8 +48,8 @@ loss_coefs:
   giou: 2
   segce: 2    # Segmentation proxy
   segdice: 2
-  aux: 10 # Aux loss coefficient
-  old: 10 # Old model loss coefficient
+  aux: 3 # Aux loss coefficient
+  old: 3 # Old model loss coefficient
 
 # Model specific params
 backbone:
@@ -163,8 +163,8 @@ augmentation:
   flip_axis: [0, 1, 2]
 
 ANCL:
-  aux_model_path: ./runs/test_to_run_with_no_error_TOTALSEGMENTATOR/model_best_0.008_in_ep9.pt
-  old_model_path: ./runs/test_to_run_with_no_error_WORD/model_best_0.008_in_ep9.pt
+  aux_model_path: ./runs/msa_def_detr_WORD_dataset/results/model_best_0.347_in_ep850.pt 
+  old_model_path: ./runs/msa_def_detr_ABDOMEN-CT-1K_dataset/results/model_best_0.217_in_ep19.pt
 
 # Dataset path:
 #   Windows: SET TRANSOAR_DATA=C:\Users\pascu\Documents\Thesis\datasets\
