@@ -2,7 +2,7 @@
 
 
 # General training
-experiment_name: test_run_no_error_ABDOMEN-CT-1K
+experiment_name: test_run_no_error_ABDOMEN-CT-1K_dataset
 resume: False # True to resume from last checkpoint
 device: cuda:0
 val_interval: 1
@@ -97,7 +97,7 @@ neck:
   pos_encoding: sine
   hidden_dim: 384 # (384 original, 288 reduced params)
   dropout: 0.1
-  nheads: 32
+  nheads: 6
   dim_feedforward: 1024
   enc_layers: 3
   dec_layers: 3

@@ -98,7 +98,7 @@ neck:
   pos_encoding: sine
   hidden_dim: 384 # (384 original, 288 reduced params)
   dropout: 0.1
-  nheads: 32
+  nheads: 6
   dim_feedforward: 1024
   enc_layers: 3
   dec_layers: 3
@@ -163,8 +163,8 @@ augmentation:
   flip_axis: [0, 1, 2]
 
 ANCL:
-  aux_model_path: ./runs/test_run_no_error_WORD/model_best_0.007_in_ep9.pt 
-  old_model_path: ./runs/test_run_no_error_ABDOMEN-CT-1K/model_best_0.007_in_ep9.pt
+  aux_model_path: ./runs/test_run_no_error_WORD_dataset/model_best_0.008_in_ep5.pt 
+  old_model_path: ./runs/test_run_no_error_ABDOMEN-CT-1K_dataset/model_best_0.003_in_ep4.pt
 
 # Dataset path:
 #   Windows: SET TRANSOAR_DATA=C:\Users\pascu\Documents\Thesis\datasets\

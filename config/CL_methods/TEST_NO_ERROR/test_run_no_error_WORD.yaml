@@ -2,7 +2,7 @@
 
 
 # General training
-experiment_name: test_run_no_error_WORD
+experiment_name: test_run_no_error_WORD_dataset
 resume: False # True to resume from last checkpoint
 device: cuda:0
 val_interval: 1
