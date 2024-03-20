@@ -126,6 +126,12 @@ class HungarianMatcher(nn.Module):
                 c_for_matching = c[i].repeat(1, repeats) # repeat GT
                 idx_logits, idx_classes = linear_sum_assignment(c_for_matching)
                 idx_classes = idx_classes % sizes[i] # modulo num_classes (sizes[i]) to get class_ids from matched ids
+
+                # ================================================================
+                # Remove classes idx that are higher than 5 (for training ABDOMEN-CT-1K dataset) -> It does not work
+                # idx_logits = idx_logits[idx_classes < 5]
+                # idx_classes = idx_classes[idx_classes < 5]
+                # ================================================================
                 
                 indices.append((idx_logits, idx_classes))
             ret = [(torch.as_tensor(i, dtype=torch.int64), torch.as_tensor(j, dtype=torch.int64)) for i, j in indices]
