@@ -86,6 +86,7 @@ class HungarianMatcher(nn.Module):
         # Compute the L1 cost between boxes
         cost_bbox = torch.cdist(out_bbox, tgt_bbox, p=1)
 
+        # Before computing the giou cost, we need to remove those bboxes that are invalid
         # if torch.isnan(out_bbox).all():
         #     cost_giou = torch.zeros(out_bbox.size())
         # elif torch.isnan(out_bbox).any():
