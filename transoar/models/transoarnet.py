@@ -32,7 +32,7 @@ class TransoarNet(nn.Module):
         data_path = os.environ.get('TRANSOAR_DATA')
         data_dir = Path(data_path).resolve()
         data_config = load_json(data_dir / config['dataset'] / "data_info.json")
-        self.num_classes = len(data_config['labels'])
+        self.num_classes = 10 #self.num_classes = len(data_config['labels'])
         config['neck']['num_classes'] = self.num_classes
         self._input_level = config['neck']['input_level']
 
@@ -95,7 +95,7 @@ class TransoarNet(nn.Module):
 
         if self._seg_proxy:
             in_channels = config['backbone']['start_channels']
-            out_channels = 2 if config['backbone']['fg_bg'] else config['neck']['num_organs'] + 1 # inc bg
+            out_channels = 2 if config['backbone']['fg_bg'] else config['neck']['num_organs'] + 1 # inc background
             self._seg_head = nn.Conv3d(in_channels, out_channels, kernel_size=1, stride=1)
         
 

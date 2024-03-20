@@ -71,10 +71,12 @@ class HungarianMatcher(nn.Module):
         # We flatten to compute the cost matrices in a batch
         out_prob = outputs["pred_logits"].flatten(0, 1).softmax(-1)  # [batch_size * num_queries, num_classes]
         out_bbox = outputs["pred_boxes"].flatten(0, 1)  # [batch_size * num_queries, 4]
-
+        print("out_bbox", out_bbox)
+       
         # Also concat the target labels and boxes
         tgt_ids = torch.cat([v["labels"] for v in targets])
         tgt_bbox = torch.cat([v["boxes"] for v in targets])
+
         if tgt_ids.nelement() == 0: # if no targets (for patch-based training)
             return []
         # Compute the classification cost. Contrary to the loss, we don't use the NLL,
@@ -85,32 +87,27 @@ class HungarianMatcher(nn.Module):
         # Compute the L1 cost between boxes
         cost_bbox = torch.cdist(out_bbox, tgt_bbox, p=1)
 
-        if torch.isnan(out_bbox).all():
-            #print(torch.isnan(out_bbox).all())
-            #print(torch.isnan(tgt_bbox).all())
-            #quit()
-            cost_giou = 0
-        elif torch.isnan(out_bbox).any():
-            # Identify NaNs in the output boxes and remove them
-            nan_indices = torch.isnan(out_bbox).any(dim=1)
-            out_bbox = out_bbox[~nan_indices]
-            out_prob = out_prob[~nan_indices]
-            cost_bbox = cost_bbox[~nan_indices]
-            cost_class = cost_class[~nan_indices]
-            tgt_bbox = tgt_bbox[~nan_indices]
-            tgt_ids = tgt_ids[~nan_indices]
+        # if torch.isnan(out_bbox).all():
+        #     cost_giou = torch.zeros(out_bbox.size())
+        # elif torch.isnan(out_bbox).any():
+        #     # Identify NaNs in the output boxes and remove them
+        #     nan_indices = torch.isnan(out_bbox).any(dim=1)
+        #     out_bbox = out_bbox[~nan_indices]
+        #     tgt_bbox = tgt_bbox[~nan_indices]
+        #     cost_giou = 1 - torch.diag(generalized_bbox_iou_3d(
+        #         box_cxcyczwhd_to_xyzxyz(out_bbox),
+        #         box_cxcyczwhd_to_xyzxyz(tgt_bbox))
+        #     )
+        # else:
+        #     cost_giou = 1 - torch.diag(generalized_bbox_iou_3d(
+        #         box_cxcyczwhd_to_xyzxyz(out_bbox),
+        #         box_cxcyczwhd_to_xyzxyz(tgt_bbox))
+        #     )
 
-            # Compute the giou cost betwen boxes
-            cost_giou = -generalized_bbox_iou_3d(
-                box_cxcyczwhd_to_xyzxyz(out_bbox),
-                box_cxcyczwhd_to_xyzxyz(tgt_bbox)
-            )
-        else:
-            # Compute the giou cost betwen boxes
-            cost_giou = -generalized_bbox_iou_3d(
-                box_cxcyczwhd_to_xyzxyz(out_bbox),
-                box_cxcyczwhd_to_xyzxyz(tgt_bbox)
-            )
+        cost_giou = -generalized_bbox_iou_3d(
+            box_cxcyczwhd_to_xyzxyz(out_bbox),
+            box_cxcyczwhd_to_xyzxyz(tgt_bbox)
+        )
 
         # Final cost matrix
         C = self.cost_bbox * cost_bbox + self.cost_class * cost_class + self.cost_giou * cost_giou
@@ -118,6 +115,7 @@ class HungarianMatcher(nn.Module):
         C = C.nan_to_num()
 
         sizes = [len(v["boxes"]) for v in targets]
+
         if dm_flag and self.dense_matching and not self.class_matching:
             indices = []
             for i, c in enumerate(C.split(sizes, -1)):
@@ -129,6 +127,7 @@ class HungarianMatcher(nn.Module):
                 c_for_matching = c[i].repeat(1, repeats) # repeat GT
                 idx_logits, idx_classes = linear_sum_assignment(c_for_matching)
                 idx_classes = idx_classes % sizes[i] # modulo num_classes (sizes[i]) to get class_ids from matched ids
+                
                 indices.append((idx_logits, idx_classes))
             ret = [(torch.as_tensor(i, dtype=torch.int64), torch.as_tensor(j, dtype=torch.int64)) for i, j in indices]
             return ret

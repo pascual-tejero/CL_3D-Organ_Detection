@@ -90,6 +90,7 @@ def build_criterion(config):
         seg_msa=config['backbone'].get('use_msa_seg_loss', False),
         focal_loss=config.get('focal_loss', False),
     )
+
     if config.get('hybrid_dense_matching', False):
         return criterion, hybrid_dense_criterion
     else:

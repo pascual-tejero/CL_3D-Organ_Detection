@@ -99,6 +99,7 @@ class TransoarCriterion(nn.Module):
         src_logits = outputs['pred_logits']
 
         idx = self._get_src_permutation_idx(indices)
+
         if not indices:  # only for patches without any GT bboxes, (for patch-based training)
             target_classes_o = torch.tensor([], device=src_logits.device).long()
         else:
@@ -181,6 +182,7 @@ class TransoarCriterion(nn.Module):
         """
         assert 'pred_boxes' in outputs
         idx = self._get_src_permutation_idx(indices)
+
         src_boxes = outputs['pred_boxes'][idx]
 
         if not indices: # only for patches without any GT bboxes, (for patch-based training)
@@ -194,22 +196,28 @@ class TransoarCriterion(nn.Module):
 
         loss_bbox = loss_bbox.sum() / num_boxes
         
-        if torch.isnan(src_boxes).all():
-            loss_giou = torch.zeros(src_boxes.size())
-        elif torch.isnan(src_boxes).any():
-            # Identify NaNs in the output boxes and remove them
-            nan_indices = torch.isnan(src_boxes).any(dim=1)
-            src_boxes = src_boxes[~nan_indices]
-            target_boxes = target_boxes[~nan_indices]
-            loss_giou = 1 - torch.diag(generalized_bbox_iou_3d(
-                box_cxcyczwhd_to_xyzxyz(src_boxes),
-                box_cxcyczwhd_to_xyzxyz(target_boxes))
-            )
-        else:
-            loss_giou = 1 - torch.diag(generalized_bbox_iou_3d(
-                box_cxcyczwhd_to_xyzxyz(src_boxes),
-                box_cxcyczwhd_to_xyzxyz(target_boxes))
-            )
+        # if torch.isnan(src_boxes).all():
+        #     loss_giou = torch.zeros(src_boxes.size())
+        # elif torch.isnan(src_boxes).any():
+        #     # Identify NaNs in the output boxes and remove them
+        #     nan_indices = torch.isnan(src_boxes).any(dim=1)
+        #     src_boxes = src_boxes[~nan_indices]
+        #     target_boxes = target_boxes[~nan_indices]
+        #     loss_giou = 1 - torch.diag(generalized_bbox_iou_3d(
+        #         box_cxcyczwhd_to_xyzxyz(src_boxes),
+        #         box_cxcyczwhd_to_xyzxyz(target_boxes))
+        #     )
+        # else:
+        #     loss_giou = 1 - torch.diag(generalized_bbox_iou_3d(
+        #         box_cxcyczwhd_to_xyzxyz(src_boxes),
+        #         box_cxcyczwhd_to_xyzxyz(target_boxes))
+        #     )
+
+        loss_giou = 1 - torch.diag(generalized_bbox_iou_3d(
+            box_cxcyczwhd_to_xyzxyz(src_boxes),
+            box_cxcyczwhd_to_xyzxyz(target_boxes))
+        )
+
         loss_giou = loss_giou.sum() / num_boxes
         losses = {}
         losses['bbox'] = loss_bbox
