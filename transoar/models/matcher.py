@@ -103,6 +103,9 @@ class HungarianMatcher(nn.Module):
         #         box_cxcyczwhd_to_xyzxyz(out_bbox),
         #         box_cxcyczwhd_to_xyzxyz(tgt_bbox))
         #     )
+        # torch.set_printoptions(threshold=10_000)
+        # print("out_bbox", out_bbox)
+        # print("out bbox xyzxyz", box_cxcyczwhd_to_xyzxyz(out_bbox))
 
         cost_giou = -generalized_bbox_iou_3d(
             box_cxcyczwhd_to_xyzxyz(out_bbox),
