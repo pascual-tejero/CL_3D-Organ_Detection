@@ -163,8 +163,8 @@ augmentation:
   flip_axis: [0, 1, 2]
 
 ANCL:
-  aux_model_path: ./runs/test_run_no_error_WORD_dataset/model_best_0.008_in_ep5.pt 
-  old_model_path: ./runs/test_run_no_error_ABDOMEN-CT-1K_dataset/model_best_0.003_in_ep4.pt
+  aux_model_path: ./runs/test_run_no_error_WORD_dataset/model_best_0.008_in_ep10.pt 
+  old_model_path: ./runs/test_run_no_error_ABDOMEN-CT-1K_dataset/model_best_0.000_in_ep38.pt
 
 # Dataset path:
 #   Windows: SET TRANSOAR_DATA=C:\Users\pascu\Documents\Thesis\datasets\

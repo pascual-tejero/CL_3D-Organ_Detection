@@ -19,7 +19,7 @@ class HungarianMatcher(nn.Module):
     def __init__(self, cost_class: float = 1, cost_bbox: float = 1, cost_giou: float = 1, 
                  dense_matching: bool = False, dense_matching_lambda: float = 0.5,
                  class_matching: bool = False, class_matching_query_split: list = [],
-                 recursive_dm_dn = False):
+                 recursive_dm_dn = False, extra_classes: int = 0):
         """Creates the matcher
         Params:
             cost_class: This is the relative weight of the classification error in the matching cost
@@ -38,6 +38,8 @@ class HungarianMatcher(nn.Module):
         self.class_matching = class_matching 
         self.query_split = class_matching_query_split
         self.recursive_dm_dn = recursive_dm_dn
+
+        self.extra_classes = extra_classes
         #assert (dense_matching != class_matching) or (not dense_matching and not class_matching) , "class matching in combination with dense matching not implemented yet"
         """#TODO add category wise matching
         self.classes_s = [4]
@@ -70,7 +72,8 @@ class HungarianMatcher(nn.Module):
 
         # We flatten to compute the cost matrices in a batch
         out_prob = outputs["pred_logits"].flatten(0, 1).softmax(-1)  # [batch_size * num_queries, num_classes]
-        out_bbox = outputs["pred_boxes"].flatten(0, 1)  # [batch_size * num_queries, 4]
+        out_bbox = outputs["pred_boxes"].flatten(0, 1)  # [batch_size * num_queries, 6]
+
        
         # Also concat the target labels and boxes
         tgt_ids = torch.cat([v["labels"] for v in targets])
@@ -85,27 +88,6 @@ class HungarianMatcher(nn.Module):
 
         # Compute the L1 cost between boxes
         cost_bbox = torch.cdist(out_bbox, tgt_bbox, p=1)
-
-        # Before computing the giou cost, we need to remove those bboxes that are invalid
-        # if torch.isnan(out_bbox).all():
-        #     cost_giou = torch.zeros(out_bbox.size())
-        # elif torch.isnan(out_bbox).any():
-        #     # Identify NaNs in the output boxes and remove them
-        #     nan_indices = torch.isnan(out_bbox).any(dim=1)
-        #     out_bbox = out_bbox[~nan_indices]
-        #     tgt_bbox = tgt_bbox[~nan_indices]
-        #     cost_giou = 1 - torch.diag(generalized_bbox_iou_3d(
-        #         box_cxcyczwhd_to_xyzxyz(out_bbox),
-        #         box_cxcyczwhd_to_xyzxyz(tgt_bbox))
-        #     )
-        # else:
-        #     cost_giou = 1 - torch.diag(generalized_bbox_iou_3d(
-        #         box_cxcyczwhd_to_xyzxyz(out_bbox),
-        #         box_cxcyczwhd_to_xyzxyz(tgt_bbox))
-        #     )
-        # torch.set_printoptions(threshold=10_000)
-        # print("out_bbox", out_bbox)
-        # print("out bbox xyzxyz", box_cxcyczwhd_to_xyzxyz(out_bbox))
 
         cost_giou = -generalized_bbox_iou_3d(
             box_cxcyczwhd_to_xyzxyz(out_bbox),
@@ -126,18 +108,16 @@ class HungarianMatcher(nn.Module):
                 if k == 0: # for patch based if no GT
                     repeats = 0
                 else:
-                    repeats = math.ceil(self.dense_matching_lambda * num_queries / k)
-                c_for_matching = c[i].repeat(1, repeats) # repeat GT
+                    if self.extra_classes > 0: # for extra classes in dataset
+                        c_for_matching = c[i]
+                    else:
+                        repeats = math.ceil(self.dense_matching_lambda * num_queries / k)
+                        c_for_matching = c[i].repeat(1, repeats) # repeat GT
+                # c_for_matching = c[i]
                 idx_logits, idx_classes = linear_sum_assignment(c_for_matching)
                 idx_classes = idx_classes % sizes[i] # modulo num_classes (sizes[i]) to get class_ids from matched ids
-
-                # ================================================================
-                # Remove classes idx that are higher than 5 (for training ABDOMEN-CT-1K dataset) -> It does not work
-                # idx_logits = idx_logits[idx_classes < 5]
-                # idx_classes = idx_classes[idx_classes < 5]
-                # ================================================================
-                
                 indices.append((idx_logits, idx_classes))
+
             ret = [(torch.as_tensor(i, dtype=torch.int64), torch.as_tensor(j, dtype=torch.int64)) for i, j in indices]
             return ret
         elif dm_flag and self.class_matching:

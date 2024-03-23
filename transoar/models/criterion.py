@@ -45,7 +45,7 @@ class TransoarCriterion(nn.Module):
         1) we compute hungarian assignment between ground truth boxes and the outputs of the model
         2) we supervise each pair of matched ground-truth / prediction (supervise class and box)
     """
-    def __init__(self, num_classes, matcher, seg_proxy, seg_fg_bg, seg_msa, focal_loss=False):
+    def __init__(self, num_classes, matcher, seg_proxy, seg_fg_bg, seg_msa, focal_loss=False, extra_classes=0):
         """ Create the criterion.
         Parameters:
             num_classes: number of object categories, omitting the special no-object category
@@ -64,6 +64,7 @@ class TransoarCriterion(nn.Module):
 
         self._seg_proxy &= not self._seg_msa
         self._seg_msa &= not self._seg_proxy
+        self.extra_classes = extra_classes
 
         if seg_proxy or  seg_msa:
             self._CE = nn.CrossEntropyLoss().cuda()
@@ -79,6 +80,10 @@ class TransoarCriterion(nn.Module):
         first_component = torch.tensor([1])
         rest_components = torch.full((num_classes,), 10)
         self.cls_weights = torch.cat((first_component, rest_components)).type(torch.FloatTensor)
+
+        if self.extra_classes > 0:
+            self.cls_weights = self.cls_weights[:self.extra_classes + 1]
+
         """self.cls_weights = torch.tensor(
             [1, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10]
         ).type(torch.FloatTensor)"""
@@ -100,14 +105,15 @@ class TransoarCriterion(nn.Module):
 
         idx = self._get_src_permutation_idx(indices)
 
+
         if not indices:  # only for patches without any GT bboxes, (for patch-based training)
             target_classes_o = torch.tensor([], device=src_logits.device).long()
         else:
             target_classes_o = torch.cat([t["labels"][J] for t, (_, J) in zip(targets, indices)]).long()
-        
+
         target_classes = torch.full(src_logits.shape[:2], 0,
                                     dtype=torch.int64, device=src_logits.device)
-        target_classes[idx] = target_classes_o
+        target_classes[idx] = target_classes_o # First tensor are the rows, second tensor are the columns
 
         loss_ce = F.cross_entropy(src_logits.transpose(1, 2), target_classes, self.cls_weights.to(device=src_logits.device))
         losses = {"cls": loss_ce}
@@ -151,6 +157,7 @@ class TransoarCriterion(nn.Module):
             dtype=torch.int64,
             device=src_logits.device,
         )
+
         target_classes[idx] = target_classes_o
 
         target_classes_onehot = torch.zeros(
@@ -182,7 +189,6 @@ class TransoarCriterion(nn.Module):
         """
         assert 'pred_boxes' in outputs
         idx = self._get_src_permutation_idx(indices)
-
         src_boxes = outputs['pred_boxes'][idx]
 
         if not indices: # only for patches without any GT bboxes, (for patch-based training)
@@ -195,23 +201,6 @@ class TransoarCriterion(nn.Module):
         loss_bbox = F.l1_loss(src_boxes, target_boxes, reduction='none')
 
         loss_bbox = loss_bbox.sum() / num_boxes
-        
-        # if torch.isnan(src_boxes).all():
-        #     loss_giou = torch.zeros(src_boxes.size())
-        # elif torch.isnan(src_boxes).any():
-        #     # Identify NaNs in the output boxes and remove them
-        #     nan_indices = torch.isnan(src_boxes).any(dim=1)
-        #     src_boxes = src_boxes[~nan_indices]
-        #     target_boxes = target_boxes[~nan_indices]
-        #     loss_giou = 1 - torch.diag(generalized_bbox_iou_3d(
-        #         box_cxcyczwhd_to_xyzxyz(src_boxes),
-        #         box_cxcyczwhd_to_xyzxyz(target_boxes))
-        #     )
-        # else:
-        #     loss_giou = 1 - torch.diag(generalized_bbox_iou_3d(
-        #         box_cxcyczwhd_to_xyzxyz(src_boxes),
-        #         box_cxcyczwhd_to_xyzxyz(target_boxes))
-        #     )
 
         loss_giou = 1 - torch.diag(generalized_bbox_iou_3d(
             box_cxcyczwhd_to_xyzxyz(src_boxes),
