@@ -113,7 +113,6 @@ class HungarianMatcher(nn.Module):
                     else:
                         repeats = math.ceil(self.dense_matching_lambda * num_queries / k)
                         c_for_matching = c[i].repeat(1, repeats) # repeat GT
-                # c_for_matching = c[i]
                 idx_logits, idx_classes = linear_sum_assignment(c_for_matching)
                 idx_classes = idx_classes % sizes[i] # modulo num_classes (sizes[i]) to get class_ids from matched ids
                 indices.append((idx_logits, idx_classes))
