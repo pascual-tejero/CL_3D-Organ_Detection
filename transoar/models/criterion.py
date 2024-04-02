@@ -45,7 +45,8 @@ class TransoarCriterion(nn.Module):
         1) we compute hungarian assignment between ground truth boxes and the outputs of the model
         2) we supervise each pair of matched ground-truth / prediction (supervise class and box)
     """
-    def __init__(self, num_classes, matcher, seg_proxy, seg_fg_bg, seg_msa, focal_loss=False, extra_classes=0):
+    def __init__(self, num_classes, matcher, seg_proxy, seg_fg_bg, seg_msa, focal_loss=False, extra_classes=0,
+                 num_classes_orig_dataset=0):
         """ Create the criterion.
         Parameters:
             num_classes: number of object categories, omitting the special no-object category
@@ -65,6 +66,7 @@ class TransoarCriterion(nn.Module):
         self._seg_proxy &= not self._seg_msa
         self._seg_msa &= not self._seg_proxy
         self.extra_classes = extra_classes
+        self.num_classes_orig_dataset = num_classes_orig_dataset
 
         if seg_proxy or  seg_msa:
             self._CE = nn.CrossEntropyLoss().cuda()
@@ -82,7 +84,7 @@ class TransoarCriterion(nn.Module):
         self.cls_weights = torch.cat((first_component, rest_components)).type(torch.FloatTensor)
 
         if self.extra_classes > 0:
-            self.cls_weights = self.cls_weights[:self.extra_classes + 1]
+            self.cls_weights = self.cls_weights[:self.num_classes_orig_dataset + 1]
 
         """self.cls_weights = torch.tensor(
             [1, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10]

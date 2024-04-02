@@ -19,7 +19,7 @@ class HungarianMatcher(nn.Module):
     def __init__(self, cost_class: float = 1, cost_bbox: float = 1, cost_giou: float = 1, 
                  dense_matching: bool = False, dense_matching_lambda: float = 0.5,
                  class_matching: bool = False, class_matching_query_split: list = [],
-                 recursive_dm_dn = False, extra_classes: int = 0):
+                 recursive_dm_dn = False, extra_classes: int = 0, num_classes_orig_dataset: int = 0):
         """Creates the matcher
         Params:
             cost_class: This is the relative weight of the classification error in the matching cost
@@ -40,6 +40,7 @@ class HungarianMatcher(nn.Module):
         self.recursive_dm_dn = recursive_dm_dn
 
         self.extra_classes = extra_classes
+        self.num_classes_orig_dataset = num_classes_orig_dataset
         #assert (dense_matching != class_matching) or (not dense_matching and not class_matching) , "class matching in combination with dense matching not implemented yet"
         """#TODO add category wise matching
         self.classes_s = [4]
@@ -107,6 +108,7 @@ class HungarianMatcher(nn.Module):
                 k = c[i].shape[-1] # classes=instances in GT
                 if k == 0: # for patch based if no GT
                     repeats = 0
+                    c_for_matching = c[i].repeat(1, repeats) # repeat GT
                 else:
                     if self.extra_classes > 0: # for extra classes in dataset
                         c_for_matching = c[i]

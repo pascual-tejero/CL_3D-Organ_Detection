@@ -36,6 +36,7 @@ class TransoarNet(nn.Module):
         self.extra_classes = config["backbone"]["num_organs"] - self.num_classes
         if self.extra_classes > 0:
             self.num_classes = config["backbone"]["num_organs"]
+            self.num_classes_orig_dataset = len(data_config['labels'])
 
         config['neck']['num_classes'] = self.num_classes
         self._input_level = config['neck']['input_level']
@@ -342,7 +343,7 @@ class TransoarNet(nn.Module):
         pred_boxes = torch.stack(outputs_coords)
 
         if self.extra_classes > 0: # inc background class
-            pred_logits = pred_logits[:, :, :, :self.extra_classes + 1]
+            pred_logits = pred_logits[:, :, :, :self.num_classes_orig_dataset + 1]
 
         # dn post process
         if self.dn['dn_number'] > 0 and dn_meta is not None:
@@ -365,7 +366,7 @@ class TransoarNet(nn.Module):
                         continue
                     else:
                         if self.extra_classes > 0: # inc background class
-                            value = value[:, :self.extra_classes + 1, :, :, :]
+                            value = value[:, :self.num_classes_orig_dataset + 1, :, :, :]
                         msa_seg.append(value)
             pred_seg = msa_seg
 
@@ -379,7 +380,7 @@ class TransoarNet(nn.Module):
                 item = item.view(b, c, *hwd)
                 item = self._seg_neck(item)
                 if self.extra_classes > 0: # inc background class
-                    item = item[:, :self.extra_classes + 1]
+                    item = item[:, :self.num_classes_orig_dataset + 1]
                 tmp += hwd_tmp
                 neck_enc_seg.append(item)
 

@@ -27,6 +27,7 @@ export TRANSOAR_DATA=/mnt/data/
 
 /opt/conda/envs/${ENV_name}/bin/python scripts/train.py --config CL_methods/TEST_NO_ERROR/test_run_no_error_ABDOMEN-CT-1K
 
+
 # test
 /opt/conda/envs/${ENV_name}/bin/python scripts/test.py --run msa_def_detr_ABDOMEN-CT-1K_dataset
 /opt/conda/envs/${ENV_name}/bin/python scripts/test.py --run msa_def_detr_WORD_dataset
