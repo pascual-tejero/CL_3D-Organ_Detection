@@ -163,8 +163,8 @@ augmentation:
   flip_axis: [0, 1, 2]
 
 ANCL:
-  aux_model_path: ./runs/msa_def_detr_WORD_dataset/model_best_0.347_in_ep850.pt 
-  old_model_path: ./runs/msa_def_detr_ABDOMEN-CT-1K_dataset/model_best_0.217_in_ep19.pt
+  aux_model_path: ./runs/msa_def_detr_WORD_dataset/model_best_0.512_in_ep905.pt
+  old_model_path: ./runs/msa_def_detr_ABDOMEN-CT-1K_dataset/model_best_0.817_in_ep1018.pt
 
 # Dataset path:
 #   Windows: SET TRANSOAR_DATA=C:\Users\pascu\Documents\Thesis\datasets\
