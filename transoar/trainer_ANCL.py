@@ -13,6 +13,9 @@ import matplotlib.pyplot as plt
 from torchvision.transforms import ToTensor
 import io
 
+from transoar.utils.io import write_json
+import os
+
 # helper function: generate box_plot of grads in tensorboard
 def gen_box_plot(grads_list, num_epoch_list, name=None):
     """Create a pyplot plot and save to buffer."""
@@ -28,11 +31,12 @@ def gen_box_plot(grads_list, num_epoch_list, name=None):
 class Trainer_ANCL:
 
     def __init__(
-        self, train_loader, val_loader, model, criterion, optimizer, scheduler,
+        self, train_loader, val_loader, test_loader, model, criterion, optimizer, scheduler,
         device, config, path_to_run, epoch, metric_start_val, dense_hybrid_criterion, aux_model, old_model
     ):
         self._train_loader = train_loader
         self._val_loader = val_loader
+        self._test_loader = test_loader
         self._model = model
         self._criterion = criterion
         self._optimizer = optimizer
@@ -57,7 +61,7 @@ class Trainer_ANCL:
         self._writer = SummaryWriter(log_dir=path_to_run)
         self._scaler = GradScaler()
 
-        self._evaluator = DetectionEvaluator(
+        self._evaluator_val = DetectionEvaluator(
             classes=list(config['labels'].values()),
             classes_small=config['labels_small'],
             classes_mid=config['labels_mid'],
@@ -70,6 +74,7 @@ class Trainer_ANCL:
         # Init main metric for checkpoint
         self._main_metric_key = 'mAP_coco'
         self._main_metric_max_val = metric_start_val
+        
     
     def _train_one_epoch(self, num_epoch):
         self._model.train()
@@ -175,13 +180,10 @@ class Trainer_ANCL:
                 # Create absolute loss and mult with loss coefficient 
                 loss_abs = 0
                 for loss_key, loss_val in loss_dict.items():
-                    # print(loss_key, loss_val) # debug
                     loss_abs += loss_val * self._config['loss_coefs'][loss_key.split('_')[0]]
                 for loss_key, loss_val in contrast_losses.items():
-                    # print(loss_key, loss_val) # debug
                     loss_abs += loss_val # already multiplied coefficient in transoarnet.py
                     loss_contrast_agg += loss_val 
-                # quit()
 
             self._optimizer.zero_grad()
             self._scaler.scale(loss_abs).backward()
@@ -355,7 +357,60 @@ class Trainer_ANCL:
                 for name, param in self._model.named_parameters():
                     if param.requires_grad and param.grad is not None:
                         self._writer.add_histogram('grads/' + name, param.grad, int(num_epoch))
+
+    @torch.no_grad()
+    def _test(self, num_epoch):
+        self._model.eval()
+
+        for idx, dataloader_test in enumerate(self._test_loader):
+
+            self._evaluator_test = DetectionEvaluator(
+                classes=list(self._config['labels'].values()),
+                classes_small=self._config['labels_small'],
+                classes_mid=self._config['labels_mid'],
+                classes_large=self._config['labels_large'],
+                iou_range_nndet=(0.1, 0.5, 0.05),
+                iou_range_coco=(0.5, 0.95, 0.05),
+                sparse_results=False
+            )
+
+            for data, mask, bboxes, seg_mask, paths in tqdm(dataloader_test):
+
+                data, mask = data.to(device=self._device), mask.to(device=self._device)
+
+                targets = {
+                    'boxes': bboxes[0][0].to(dtype=torch.float, device=self._device),
+                    'labels': bboxes[0][1].to(device=self._device)
+                }
+
+                out = self._model(data)
+
+                pred_boxes, pred_classes, pred_scores = inference(out)
+
+                gt_boxes = [targets['boxes'].detach().cpu().numpy()]
+                gt_classes = [targets['labels'].detach().cpu().numpy()]
+
+                # Add pred to evaluator
+                self._evaluator_test.add(
+                    pred_boxes=pred_boxes,
+                    pred_classes=pred_classes,
+                    pred_scores=pred_scores,
+                    gt_boxes=gt_boxes,
+                    gt_classes=gt_classes
+                )
+
+            metric_scores = self._evaluator_test.eval()
+
+            os.makedirs(self._path_to_run / 'test_during_training', exist_ok=True)
+            os.makedirs(self._path_to_run / 'test_during_training' / f"epoch_{num_epoch}", exist_ok=True)
+
+            if idx == 0:
+                write_json(metric_scores, self._path_to_run / 'test_during_training' / f"epoch_{num_epoch}" / 'WORD_dataset.json')
+            else:
+                write_json(metric_scores, self._path_to_run / 'test_during_training' / f"epoch_{num_epoch}" / f'ABDOMEN-CT-1K_dataset.json')
                 
+
+
 
     @torch.no_grad()
     def _validate(self, num_epoch):
@@ -422,7 +477,7 @@ class Trainer_ANCL:
 
             # Evaluate validation predictions based on metric
             pred_boxes, pred_classes, pred_scores = inference(out)
-            self._evaluator.add(
+            self._evaluator_val.add(
                 pred_boxes=pred_boxes,
                 pred_classes=pred_classes,
                 pred_scores=pred_scores,
@@ -475,8 +530,8 @@ class Trainer_ANCL:
         else:
             seg_hd95 = 0
 
-        metric_scores = self._evaluator.eval()
-        self._evaluator.reset()
+        metric_scores = self._evaluator_val.eval()
+        self._evaluator_val.reset()
 
         # Check if new best checkpoint
         if metric_scores[self._main_metric_key] >= self._main_metric_max_val \
@@ -548,8 +603,13 @@ class Trainer_ANCL:
                 self._writer.add_image('boxplot of pos queries grads', image_pos, epoch)
                 self._writer.add_image('boxplot of neg queries grads', image_neg, epoch)
 
+            # Validate model on validation set
             if epoch % self._config['val_interval'] == 0:
                 self._validate(epoch)
+
+            # Test model on test set
+            if epoch % self._config['test_interval'] == 0 and self._test_loader is not None:
+                self._test(epoch)
 
             self._scheduler.step()
 
@@ -558,6 +618,11 @@ class Trainer_ANCL:
             # fixed checkpoints at each 200 epochs:
             if (epoch % 50) == 0:
                 self._save_checkpoint(epoch, f'model_epoch_{epoch}.pt')
+
+
+
+
+
 
     def _write_to_logger(self, num_epoch, category, **kwargs):
         for key, value in kwargs.items():

@@ -71,6 +71,11 @@ def train(config, args):
         val_loader = get_loader(config, 'train')
     else:
         val_loader = get_loader(config, 'val')
+
+    if config['test']:
+        test_loader = get_loader(config, 'test', batch_size=1, ANCL=True)
+    else:
+        test_loader = None
     
     # Load model from old model checkpoint
     model = TransoarNet(config).to(device=device)
@@ -203,7 +208,7 @@ def train(config, args):
 
     # Build trainer and start training
     trainer = Trainer_ANCL(
-        train_loader, val_loader, model, criterion, optim, scheduler, device, config, 
+        train_loader, val_loader, test_loader, model, criterion, optim, scheduler, device, config, 
         path_to_run, epoch, metric_start_val, dense_hybrid_criterion, aux_model, old_model
     )
     trainer.run()

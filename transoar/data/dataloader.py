@@ -7,7 +7,7 @@ from transoar.data.dataset import TransoarDataset
 from transoar.utils.bboxes import segmentation2bbox
 
 
-def get_loader(config, split, batch_size=None):
+def get_loader(config, split, batch_size=None, ANCL=False):
     if not batch_size:
         batch_size = config['batch_size']
 
@@ -15,14 +15,30 @@ def get_loader(config, split, batch_size=None):
     collator = TransoarCollator(config, split)
     shuffle = False if split in ['test', 'val'] else config['shuffle']
 
-    dataset = TransoarDataset(config, split)
-    # for i in range(1000):   
-    #     dataset.__getitem__(i)
+    if ANCL is False:
+        dataset = TransoarDataset(config, split)
+        # for i in range(1000):   
+        #     dataset.__getitem__(i)
 
-    dataloader = DataLoader(
-        dataset, batch_size=batch_size, shuffle=shuffle,
-        num_workers=config['num_workers'], collate_fn=collator
-    )
+        dataloader = DataLoader(
+            dataset, batch_size=batch_size, shuffle=shuffle,
+            num_workers=config['num_workers'], collate_fn=collator
+        )
+    else:
+
+        dataset_1 = TransoarDataset(config, split)
+        dataloader_1 = DataLoader(
+            dataset_1, batch_size=batch_size, shuffle=shuffle,
+            num_workers=config['num_workers'], collate_fn=collator
+        )
+        dataset_2 = TransoarDataset(config, split, ANCL=True)
+        dataloader_2 = DataLoader(
+            dataset_2, batch_size=batch_size, shuffle=shuffle,
+            num_workers=config['num_workers'], collate_fn=collator
+        )
+        dataloader = (dataloader_1, dataloader_2)
+
+
     return dataloader
 
 # def init_fn(worker_id):

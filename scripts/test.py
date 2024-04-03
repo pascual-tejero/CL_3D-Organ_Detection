@@ -57,11 +57,19 @@ class Tester:
         # Get path to checkpoint
         avail_checkpoints = [path for path in path_to_run.iterdir() if 'model_' in str(path)]
         avail_checkpoints.sort(key=lambda x: len(str(x)))
-        if args.last:
+        if args.model_load == 'last':
             path_to_ckpt = avail_checkpoints[0]
-        else:
+        elif args.model_load == 'best':
             path_to_ckpt = avail_checkpoints[-1]
-
+        elif isinstance(int(args.model_load), int):
+            # Check if specific epoch is in available checkpoints
+            path_to_ckpt = [path for path in avail_checkpoints if args.model_load in str(path)]
+            if len(path_to_ckpt) == 0:
+                raise ValueError('No checkpoint found for specified epoch.')
+            path_to_ckpt = path_to_ckpt[0]
+        else:
+            raise ValueError('Please specify model_load as \'last\', \'best\' or an integer (epoch number).')
+        
         # Build necessary components
         self._set_to_eval = 'val' if args.val else 'test'
         self._test_loader = get_loader(self.config, self._set_to_eval, batch_size=1)
@@ -399,7 +407,7 @@ if __name__ == "__main__":
     parser.add_argument('--run', required=True, type=str, help='Name of experiment in ./runs.')
     parser.add_argument('--num_gpu', type=int, default=-1, help='Use model_last instead of model_best.')
     parser.add_argument('--val', action='store_true', help='Evaluate performance on test set.')
-    parser.add_argument('--last', action='store_true', help='Use model_last instead of model_best.')
+    parser.add_argument('--model_load', type=str, default='last', help='Use model last, best or specific epoch (in model_epoch_XX.pth).')
     parser.add_argument('--save_preds', action='store_true', help='Save predictions.')
     parser.add_argument('--save_attn_map', action='store_true', help='Saves sampling locations of predictions.')
     parser.add_argument('--per_sample_results', action='store_true', help='Saves per sample results of predictions.')

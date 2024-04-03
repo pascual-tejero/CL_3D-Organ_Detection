@@ -19,19 +19,20 @@ ENV_name=msadet
 export TRANSOAR_DATA=/mnt/data/
 
 
+# test no error
+/opt/conda/envs/${ENV_name}/bin/python scripts/train.py --config CL_methods/TEST_NO_ERROR/test_run_no_error_WORD_dataset
+/opt/conda/envs/${ENV_name}/bin/python scripts/train.py --config CL_methods/TEST_NO_ERROR/test_run_no_error_ABDOMEN-CT-1K
+/opt/conda/envs/${ENV_name}/bin/python scripts/train_ANCL.py --config CL_methods/ABDOMEN-CT-1K_WORD/test_run_no_error_ANCL
 
 # train
-/opt/conda/envs/${ENV_name}/bin/python scripts/train.py --config CL_methods/ABDOMEN-CT-1K_WORD/msa_def_detr_ABDOMEN-CT-1K
 /opt/conda/envs/${ENV_name}/bin/python scripts/train.py --config CL_methods/ABDOMEN-CT-1K_WORD/msa_def_detr_WORD
 /opt/conda/envs/${ENV_name}/bin/python scripts/train.py --config CL_methods/ABDOMEN-CT-1K_WORD/msa_def_detr_ANCL
-
-/opt/conda/envs/${ENV_name}/bin/python scripts/train.py --config CL_methods/TEST_NO_ERROR/test_run_no_error_ABDOMEN-CT-1K
-
+/opt/conda/envs/${ENV_name}/bin/python scripts/train_ANCL.py --config CL_methods/ABDOMEN-CT-1K_WORD/msa_def_detr_ANCL
 
 # test
-/opt/conda/envs/${ENV_name}/bin/python scripts/test.py --run msa_def_detr_ABDOMEN-CT-1K_dataset
-/opt/conda/envs/${ENV_name}/bin/python scripts/test.py --run msa_def_detr_WORD_dataset
-/opt/conda/envs/${ENV_name}/bin/python scripts/test.py --run msa_def_detr_ANCL_ABDOMEN-CT-1K_WORD_datasets
+/opt/conda/envs/${ENV_name}/bin/python scripts/test.py --run msa_def_detr_WORD_dataset --model_load best
+/opt/conda/envs/${ENV_name}/bin/python scripts/test.py --run msa_def_detr_ABDOMEN-CT-1K_dataset --model_load best
+/opt/conda/envs/${ENV_name}/bin/python scripts/test.py --run msa_def_detr_ANCL_ABDOMEN-CT-1K_WORD_datasets --model_load best
 
 
 

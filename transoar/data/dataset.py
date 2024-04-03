@@ -12,11 +12,14 @@ from transoar.data.transforms import get_transforms
 
 class TransoarDataset(Dataset):
     """Dataset class of the transoar project."""
-    def __init__(self, config, split):
+    def __init__(self, config, split, ANCL=False):
         assert split in ['train', 'val', 'test']
         self._config = config
         data_dir = Path(os.getenv("TRANSOAR_DATA")).resolve()
-        self._path_to_split = data_dir / self._config['dataset'] / split
+        if ANCL is False:
+            self._path_to_split = data_dir / self._config['dataset'] / split
+        else:
+            self._path_to_split = data_dir / self._config['dataset_2'] / split 
         self._split = split
         self._data = []
         #if split == 'train':

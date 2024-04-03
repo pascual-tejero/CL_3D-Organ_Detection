@@ -6,6 +6,7 @@ experiment_name: test_run_no_error_ANCL
 resume: False # True to resume from last checkpoint
 device: cuda:0
 val_interval: 1
+test_interval: 1
 debug_mode: False  # Doesn't save checkpoints
 seed: 10
 
@@ -21,11 +22,13 @@ lr_drop: 500
 
 # Data
 dataset: downsampled_datasets/word_64_64_64_CT
+dataset_2: downsampled_datasets/abdomenCT-1k_64_64_64_CT
 overfit: False # Use same set consisting of one image for train and val
 bbox_padding: 1
+test: True
 
 # Dataloader
-batch_size: 2 # 2 (normal, 1 reduced params)
+batch_size: 1 # 2 (normal, 1 reduced params)
 shuffle: True
 num_workers: 1 # 10 (normal, 1 lower 80GB GPU)
 
@@ -48,8 +51,8 @@ loss_coefs:
   giou: 2
   segce: 2    # Segmentation proxy
   segdice: 2
-  aux: 2 # Aux loss coefficient
-  old: 2 # Old model loss coefficient
+  aux: 10 # Aux loss coefficient
+  old: 10 # Old model loss coefficient
 
 # Model specific params
 backbone:
@@ -163,8 +166,8 @@ augmentation:
   flip_axis: [0, 1, 2]
 
 ANCL:
-  aux_model_path: ./runs/test_run_no_error_WORD_dataset/model_best_0.008_in_ep10.pt 
-  old_model_path: ./runs/test_run_no_error_ABDOMEN-CT-1K_dataset/model_best_0.000_in_ep38.pt
+  aux_model_path: ./runs/test_run_no_error_WORD_dataset/model_best_0.000_in_ep1.pt 
+  old_model_path: ./runs/test_run_no_error_ABDOMEN-CT-1K_dataset/model_best_0.006_in_ep4.pt
 
 # Dataset path:
 #   Windows: SET TRANSOAR_DATA=C:\Users\pascu\Documents\Thesis\datasets\
