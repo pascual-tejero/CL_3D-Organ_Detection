@@ -15,6 +15,7 @@ import io
 
 from transoar.utils.io import write_json
 import os
+import json
 
 # helper function: generate box_plot of grads in tensorboard
 def gen_box_plot(grads_list, num_epoch_list, name=None):
@@ -360,8 +361,9 @@ class Trainer_ANCL:
 
     @torch.no_grad()
     def _test(self, num_epoch):
-        self._model.eval()
+        self._model.eval() # Set model to evaluation mode
 
+        # Test for each dataset (WORD and ABDOMEN_CT_1K)
         for idx, dataloader_test in enumerate(self._test_loader):
 
             self._evaluator_test = DetectionEvaluator(
@@ -386,7 +388,7 @@ class Trainer_ANCL:
                 out = self._model(data)
 
                 pred_boxes, pred_classes, pred_scores = inference(out)
-
+                
                 gt_boxes = [targets['boxes'].detach().cpu().numpy()]
                 gt_classes = [targets['labels'].detach().cpu().numpy()]
 
@@ -400,17 +402,21 @@ class Trainer_ANCL:
                 )
 
             metric_scores = self._evaluator_test.eval()
+            
+            # Test especially for WORD and ABDOMEN_CT_1K dataset
+            if idx == 0: # WORD dataset
+                new_metric_scores = modify_metrics(metric_scores, 'WORD')
+            else: # ABDOMEN_CT_1K dataset
+                new_metric_scores = modify_metrics(metric_scores, 'ABDOMEN_CT_1K')
 
             os.makedirs(self._path_to_run / 'test_during_training', exist_ok=True)
-            os.makedirs(self._path_to_run / 'test_during_training' / f"epoch_{num_epoch}", exist_ok=True)
+            os.makedirs(self._path_to_run / 'test_during_training' / f"{num_epoch}_epoch", exist_ok=True)
 
-            if idx == 0:
-                write_json(metric_scores, self._path_to_run / 'test_during_training' / f"epoch_{num_epoch}" / 'WORD_dataset.json')
-            else:
-                write_json(metric_scores, self._path_to_run / 'test_during_training' / f"epoch_{num_epoch}" / f'ABDOMEN-CT-1K_dataset.json')
-                
-
-
+            if idx == 0: # WORD dataset
+                write_json(new_metric_scores, self._path_to_run / 'test_during_training' / f"{num_epoch}_epoch" / 'WORD_dataset.json')
+            else: # ABDOMEN_CT_1K dataset
+                write_json(new_metric_scores, self._path_to_run / 'test_during_training' / f"{num_epoch}_epoch" / f'ABDOMEN-CT-1K_dataset.json')
+        
 
     @torch.no_grad()
     def _validate(self, num_epoch):
@@ -647,3 +653,70 @@ def get_gpu_memory(device):
     memory_allocated = torch.cuda.memory_allocated(device)
     memory_cached = torch.cuda.memory_cached(device)
     return memory_allocated, memory_cached
+
+
+
+def modify_metrics(data_metrics, dataset_name):
+
+    # Key metrics that must be modified according to the new structure
+    key_metrics = ("mAP_coco", "mAP_nndet", "AP_IoU_0.10", "AP_IoU_0.50", "AP_IoU_0.75", "mAR_coco",
+                     "mAR_nndet", "AR_IoU_0.10", "AR_IoU_0.50", "AR_IoU_0.75")
+    
+    data_new_metrics = {} # New dictionary to store the new metrics
+
+    for metric in key_metrics:
+        dict_metrics = {}
+        for key_data in data_metrics.keys():
+
+            # TOTALSEGMENTATOR
+            if dataset_name == "TOTALSEGMENTATOR":
+                if ((metric + "_s") == key_data) or ((metric + "_m") == key_data) or ((metric + "_l") == key_data):
+                    continue
+                elif metric in key_data:
+                    dict_metrics[key_data] = data_metrics[key_data]
+
+            # WORD
+            elif dataset_name == "WORD":
+                if ((metric + "_s") == key_data) or ((metric + "_m") == key_data) or ((metric + "_l") == key_data):
+                    continue
+                elif metric in key_data:
+                    dict_metrics[key_data] = data_metrics[key_data]
+
+            # ABDOMEN_CT_1K
+            elif dataset_name == "ABDOMEN_CT_1K":
+                if ((metric + "_s") == key_data) or ((metric + "_m") == key_data) or ((metric + "_l") == key_data) or \
+                    (metric + "_stomach_" in key_data) or (metric + "_stomach" in key_data) or \
+                    (metric + "_gallbladder_" in key_data) or (metric + "_gallbladder" in key_data) or \
+                    (metric + "_duodenum_" in key_data) or (metric + "_duodenum" in key_data) or \
+                    (metric + "_colon_" in key_data) or (metric + "_colon" in key_data) or \
+                    (metric + "_intestine_" in key_data) or (metric + "_intestine" in key_data) or \
+                    (metric + "_left adrenal gland_" in key_data) or (metric + "_left adrenal gland" in key_data) or \
+                    (metric + "_rectum_" in key_data) or (metric + "_rectum" in key_data) or \
+                    (metric + "_bladder_" in key_data) or (metric + "_bladder" in key_data) or \
+                    (metric + "_right adrenal gland_" in key_data) or (metric + "_right adrenal gland" in key_data):
+                    continue
+                elif metric in key_data:
+                    dict_metrics[key_data] = data_metrics[key_data]
+
+        # Update the new dictionary with the new metrics
+        data_new_metrics.update(dict_metrics) 
+
+    # Add the number of parameters to the new dictionary
+    # data_new_metrics.update({"num_params": data_metrics["num_params"]})
+    # data_new_metrics.update({"num_backbone_params": data_metrics["num_backbone_params"]})
+    # data_new_metrics.update({"num_neck_params": data_metrics["num_neck_params"]})
+    # data_new_metrics.update({"num_head_params": data_metrics["num_head_params"]})
+
+    # Calculate the mean of the metrics
+    for metric in key_metrics:
+        mean_metric_value = []
+        for key in data_new_metrics.keys():
+            if metric == key: # If the key is the metric, we skip it because we want to update that metric which is the mean
+                continue
+            elif metric in key: # If the key is not the metric, we add the value of the metric to the list
+                mean_metric_value.append(data_new_metrics[key])
+
+        mean_metric = sum(mean_metric_value) / len(mean_metric_value) # Calculate the mean of the metrics
+        data_new_metrics[metric] = mean_metric
+
+    return data_new_metrics

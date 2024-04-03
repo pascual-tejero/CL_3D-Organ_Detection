@@ -52,8 +52,8 @@ loss_coefs:
   giou: 2
   segce: 2    # Segmentation proxy
   segdice: 2
-  aux: 10 # Aux loss coefficient
-  old: 10 # Old model loss coefficient
+  aux: 3 # Aux loss coefficient
+  old: 15 # Old model loss coefficient
 
 # Model specific params
 backbone:
