@@ -20,19 +20,25 @@ export TRANSOAR_DATA=/mnt/data/
 
 
 # test no error
-/opt/conda/envs/${ENV_name}/bin/python scripts/train.py --config CL_methods/TEST_NO_ERROR/test_run_no_error_WORD_dataset
+/opt/conda/envs/${ENV_name}/bin/python scripts/train.py --config CL_methods/TEST_NO_ERROR/test_run_no_error_WORD
 /opt/conda/envs/${ENV_name}/bin/python scripts/train.py --config CL_methods/TEST_NO_ERROR/test_run_no_error_ABDOMEN-CT-1K
 /opt/conda/envs/${ENV_name}/bin/python scripts/train_CL.py --config CL_methods/ABDOMEN-CT-1K_WORD/test_run_no_error_CL
+/opt/conda/envs/${ENV_name}/bin/python scripts/train_CL.py --config CL_methods/ABDOMEN-CT-1K_WORD/test_run_no_error_CL_few_shot
+/opt/conda/envs/${ENV_name}/bin/python scripts/train_CL.py --config CL_methods/ABDOMEN-CT-1K_WORD/test_run_no_error_CL_mixing_datasets
 
 # train
 /opt/conda/envs/${ENV_name}/bin/python scripts/train.py --config CL_methods/ABDOMEN-CT-1K_WORD/msa_def_detr_WORD
-/opt/conda/envs/${ENV_name}/bin/python scripts/train.py --config CL_methods/ABDOMEN-CT-1K_WORD/msa_def_detr_ABDOMEN-CT-1K_dataset
+/opt/conda/envs/${ENV_name}/bin/python scripts/train.py --config CL_methods/ABDOMEN-CT-1K_WORD/msa_def_detr_ABDOMEN-CT-1K
 /opt/conda/envs/${ENV_name}/bin/python scripts/train_CL.py --config CL_methods/ABDOMEN-CT-1K_WORD/msa_def_detr_CL
+/opt/conda/envs/${ENV_name}/bin/python scripts/train_CL.py --config CL_methods/ABDOMEN-CT-1K_WORD/msa_def_detr_CL_few_shot
+/opt/conda/envs/${ENV_name}/bin/python scripts/train_CL.py --config CL_methods/ABDOMEN-CT-1K_WORD/msa_def_detr_CL_mixing_datasets
 
 # test
 /opt/conda/envs/${ENV_name}/bin/python scripts/test.py --run msa_def_detr_WORD_dataset --model_load best
 /opt/conda/envs/${ENV_name}/bin/python scripts/test.py --run msa_def_detr_ABDOMEN-CT-1K_dataset --model_load best
 /opt/conda/envs/${ENV_name}/bin/python scripts/test.py --run msa_def_detr_CL_ABDOMEN-CT-1K_WORD_datasets --model_load best
+/opt/conda/envs/${ENV_name}/bin/python scripts/test.py --run msa_def_detr_CL_ABDOMEN-CT-1K_WORD_datasets_few_shot --model_load best
+/opt/conda/envs/${ENV_name}/bin/python scripts/test.py --run msa_def_detr_CL_ABDOMEN-CT-1K_WORD_datasets_mixing --model_load best
 
 
 

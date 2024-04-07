@@ -15,6 +15,8 @@ class TransoarDataset(Dataset):
     def __init__(self, config, split, dataset = 1):
         assert split in ['train', 'val', 'test']
         self._config = config
+        self._split = split
+
         data_dir = Path(os.getenv("TRANSOAR_DATA")).resolve()
 
         if config["mixing_training"] and split == "train":
@@ -25,17 +27,14 @@ class TransoarDataset(Dataset):
             for data_path, data_path_2 in zip(self._path_to_split.iterdir(), self._path_to_split_2.iterdir()):
                 self.data.append(data_path)
                 self.data.append(data_path_2)
-
         else:
             if dataset == 1:
                 self._path_to_split = data_dir / self._config['dataset'] / split
             else:
                 self._path_to_split = data_dir / self._config['dataset_2'] / split 
 
-        self._split = split
-        self._data = []
-        
-        self._data = [data_path.name for data_path in self._path_to_split.iterdir()]
+            self._data = []
+            self._data = [data_path.name for data_path in self._path_to_split.iterdir()]
 
         if config["few_shot_training"] and split == "train":
             self._data = self._data[:50]
