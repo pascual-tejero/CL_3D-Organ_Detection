@@ -17,7 +17,7 @@ einops==0.3.2
 
 
 
-# python ./scripts/train_ANCL.py --config CL_methods/msa_def_detr_ANCL
+# python ./scripts/train_CL.py --config CL_methods/msa_def_detr_CL
 # python ./scripts/train.py --config msa_def_detr_TOTALSEGMENTATOR
 
 # Windows: 

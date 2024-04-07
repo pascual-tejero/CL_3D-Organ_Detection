@@ -12,28 +12,33 @@ from transoar.data.transforms import get_transforms
 
 class TransoarDataset(Dataset):
     """Dataset class of the transoar project."""
-    def __init__(self, config, split, ANCL=False):
+    def __init__(self, config, split, dataset = 1):
         assert split in ['train', 'val', 'test']
         self._config = config
         data_dir = Path(os.getenv("TRANSOAR_DATA")).resolve()
-        if ANCL is False:
+
+        if config["mixing_training"] and split == "train":
             self._path_to_split = data_dir / self._config['dataset'] / split
+            self._path_to_split_2 = data_dir / self._config['dataset_2'] / split
+
+            self.data = [] # Add samples alternatively from both datasets
+            for data_path, data_path_2 in zip(self._path_to_split.iterdir(), self._path_to_split_2.iterdir()):
+                self.data.append(data_path)
+                self.data.append(data_path_2)
+
         else:
-            self._path_to_split = data_dir / self._config['dataset_2'] / split 
+            if dataset == 1:
+                self._path_to_split = data_dir / self._config['dataset'] / split
+            else:
+                self._path_to_split = data_dir / self._config['dataset_2'] / split 
+
         self._split = split
         self._data = []
-        #if split == 'train':
-        #    read_limit = 120
-        #elif split == 'val':
-        #    read_limit = 20
-        #elif split == 'test':
-        #    read_limit = 20
-        #for data_path in self._path_to_split.iterdir():
-        #    if len(self._data) < read_limit:
-        #        self._data.append(data_path.name)
-        #print("limited data read for ", split, ": ", len(self._data))
         
         self._data = [data_path.name for data_path in self._path_to_split.iterdir()]
+
+        if config["few_shot_training"] and split == "train":
+            self._data = self._data[:50]
         self._augmentation = get_transforms(split, config)
 
     def __len__(self):

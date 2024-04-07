@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH -J train_ANCL
+#SBATCH -J train_CL
 #SBATCH -N 1
 #SBATCH -p lrz-dgx-a100-80x8
 #SBATCH --gres=gpu:1
@@ -20,7 +20,7 @@ srun --mpi=pmi2 \
 --container-mounts=${BASE_DIR}/myData:/mnt/data,${BASE_DIR}/${CODE_DIR}:/mnt/code  \
 --container-image=${BASE_DIR}/${ENV_DIR}/msadet.sqsh \
 --container-workdir=/mnt/code \
-/opt/conda/envs/${ENV_name}/bin/python scripts/train.py --config CL_methods/ABDOMEN-CT-1K_WORD/msa_def_detr_ANCL
+/opt/conda/envs/${ENV_name}/bin/python scripts/train.py --config CL_methods/ABDOMEN-CT-1K_WORD/msa_def_detr_CL
 
 
 #### sbatch train.sbatch

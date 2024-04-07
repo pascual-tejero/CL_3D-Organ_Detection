@@ -5,9 +5,14 @@
 experiment_name: test_run_no_error_ABDOMEN-CT-1K_dataset
 resume: False # True to resume from last checkpoint
 device: cuda:0
-val_interval: 1
 debug_mode: False  # Doesn't save checkpoints
 seed: 10
+
+CL: False
+val_interval: 1
+test_interval: 1
+few_shot_training: False # Training samples limited to 50
+mixing_training: False # Mixing training samples from both datasets
 
 epochs: 2500 #1000 optimal
 lr: 2e-4

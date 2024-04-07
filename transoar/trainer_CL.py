@@ -29,7 +29,7 @@ def gen_box_plot(grads_list, num_epoch_list, name=None):
     buf.seek(0)
     return buf
 
-class Trainer_ANCL:
+class Trainer_CL:
 
     def __init__(
         self, train_loader, val_loader, test_loader, model, criterion, optimizer, scheduler,
@@ -132,23 +132,25 @@ class Trainer_ANCL:
                     hd95 = loss_dict['hd95'].item()
                 del loss_dict['hd95'] # remove Hausdorff distance from loss, so it does not influence loss_abs
 
-                # Auxiliary model loss
-                aux_out = self._aux_model(data)
-                loss_dict_aux, _ = self._criterion(aux_out, det_targets, seg_targets)
+                if self._aux_model is not None:
+                    # Auxiliary model loss
+                    aux_out = self._aux_model(data)
+                    loss_dict_aux, _ = self._criterion(aux_out, det_targets, seg_targets)
 
-                loss_dict["aux_model"] = 0 # initialize loss entry
-                del loss_dict_aux['hd95'] # remove Hausdorff distance from loss, so it does not influence loss_abs
-                for key, value in loss_dict_aux.items():
-                    loss_dict["aux_model"] += value 
+                    loss_dict["aux_model"] = 0 # initialize loss entry
+                    del loss_dict_aux['hd95'] # remove Hausdorff distance from loss, so it does not influence loss_abs
+                    for key, value in loss_dict_aux.items():
+                        loss_dict["aux_model"] += value 
 
-                # Old model loss
-                old_out = self._old_model(data)
-                loss_dict_old, _ = self._criterion(old_out, det_targets, seg_targets)
+                if self._old_model is not None:
+                    # Old model loss
+                    old_out = self._old_model(data)
+                    loss_dict_old, _ = self._criterion(old_out, det_targets, seg_targets)
 
-                loss_dict["old_model"] = 0 # Initialize loss entry
-                del loss_dict_old['hd95'] # remove Hausdorff distance from loss, so it does not influence loss_abs
-                for key, value in loss_dict_old.items():
-                    loss_dict["old_model"] += value
+                    loss_dict["old_model"] = 0 # Initialize loss entry
+                    del loss_dict_old['hd95'] # remove Hausdorff distance from loss, so it does not influence loss_abs
+                    for key, value in loss_dict_old.items():
+                        loss_dict["old_model"] += value
                 
                 # for key, value in loss_dict.items():
                 #     print(key, value)
@@ -220,8 +222,8 @@ class Trainer_ANCL:
             loss_cls_agg += loss_dict['cls'].item()
             loss_seg_ce_agg += loss_dict['segce'].item()
             loss_seg_dice_agg += loss_dict['segdice'].item()
-            loss_aux_model = loss_dict["aux_model"].item()
-            loss_old_model = loss_dict["old_model"].item()
+            loss_aux_model = loss_dict["aux_model"].item() if self._aux_model is not None else 0
+            loss_old_model = loss_dict["old_model"].item() if self._old_model is not None else 0
             
             if self._hybrid: # hybrid matching
                 loss_bbox_one2many_agg += loss_dict['bbox_one2many'].item()
@@ -277,8 +279,8 @@ class Trainer_ANCL:
         loss_cls = loss_cls_agg / len(self._train_loader)
         loss_seg_ce = loss_seg_ce_agg / len(self._train_loader)
         loss_seg_dice = loss_seg_dice_agg / len(self._train_loader)
-        loss_aux_model = loss_aux_model / len(self._train_loader)
-        loss_old_model = loss_old_model / len(self._train_loader)
+        loss_aux_model = loss_aux_model / len(self._train_loader) if self._aux_model is not None else 0
+        loss_old_model = loss_old_model / len(self._train_loader) if self._old_model is not None else 0
 
         if self._hybrid: # hybrid matching
             loss_bbox_one2many = loss_bbox_one2many_agg / len(self._train_loader)
@@ -461,20 +463,22 @@ class Trainer_ANCL:
                 del loss_dict['hd95'] # remove HD from loss, so it does not influence loss_abs
 
                 # Auxiliary model loss
-                aux_out = self._aux_model(data)
-                loss_dict_aux, _ = self._criterion(aux_out, det_targets, seg_targets)
-                loss_dict["aux_model"] = 0 # initialize loss entry
-                del loss_dict_aux['hd95'] # remove Hausdorff distance from loss, so it does not influence loss_abs
-                for key, value in loss_dict_aux.items():
-                    loss_dict["aux_model"] += value
+                if self._aux_model is not None:
+                    aux_out = self._aux_model(data) 
+                    loss_dict_aux, _ = self._criterion(aux_out, det_targets, seg_targets)
+                    loss_dict["aux_model"] = 0 # initialize loss entry
+                    del loss_dict_aux['hd95'] # remove Hausdorff distance from loss, so it does not influence loss_abs
+                    for key, value in loss_dict_aux.items():
+                        loss_dict["aux_model"] += value
 
                 # Old model loss
-                old_out = self._old_model(data)
-                loss_dict_old, _ = self._criterion(old_out, det_targets, seg_targets)
-                loss_dict["old_model"] = 0 # Initialize loss entry
-                del loss_dict_old['hd95'] # remove Hausdorff distance from loss, so it does not influence loss_abs
-                for key, value in loss_dict_old.items():
-                    loss_dict["old_model"] += value
+                if self._old_model is not None:
+                    old_out = self._old_model(data)
+                    loss_dict_old, _ = self._criterion(old_out, det_targets, seg_targets)
+                    loss_dict["old_model"] = 0 # Initialize loss entry
+                    del loss_dict_old['hd95'] # remove Hausdorff distance from loss, so it does not influence loss_abs
+                    for key, value in loss_dict_old.items():
+                        loss_dict["old_model"] += value
 
                 # Create absolute loss and mult with loss coefficient
                 loss_abs = 0
@@ -497,8 +501,8 @@ class Trainer_ANCL:
             loss_cls_agg += loss_dict['cls'].item()
             loss_seg_ce_agg += loss_dict['segce'].item()
             loss_seg_dice_agg += loss_dict['segdice'].item()
-            loss_aux_model = loss_dict["aux_model"].item()
-            loss_old_model = loss_dict["old_model"].item()
+            loss_aux_model = loss_dict["aux_model"].item() if self._aux_model is not None else 0
+            loss_old_model = loss_dict["old_model"].item() if self._old_model is not None else 0
 
             if self._criterion._seg_proxy: # log Hausdorff
                 hd95_agg += hd95
@@ -528,8 +532,8 @@ class Trainer_ANCL:
         loss_cls = loss_cls_agg / len(self._val_loader)
         loss_seg_ce = loss_seg_ce_agg / len(self._val_loader)
         loss_seg_dice = loss_seg_dice_agg / len(self._val_loader)
-        loss_aux_model = loss_aux_model / len(self._val_loader)
-        loss_old_model = loss_old_model / len(self._val_loader)
+        loss_aux_model = loss_aux_model / len(self._val_loader) if self._aux_model is not None else 0
+        loss_old_model = loss_old_model / len(self._val_loader) if self._old_model is not None else 0
 
         if self._criterion._seg_proxy:  # log Hausdorff
             seg_hd95 = hd95_agg / len(self._val_loader)

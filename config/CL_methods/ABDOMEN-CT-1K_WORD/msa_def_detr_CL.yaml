@@ -2,13 +2,17 @@
 
 
 # General training
-experiment_name: msa_def_detr_ANCL_WORD_TOTAL_SEGMENTATOR_datasets
+experiment_name: msa_def_detr_CL_ABDOMEN-CT-1K_WORD_datasets
 resume: False # True to resume from last checkpoint
 device: cuda:0
-val_interval: 1
-test_interval: 1  
 debug_mode: False  # Doesn't save checkpoints
 seed: 10
+
+CL: True
+val_interval: 1
+test_interval: 1
+few_shot_training: False # Training samples limited to 50
+mixing_training: False # Mixing training samples from both datasets
 
 epochs: 2500 #1000 optimal
 lr: 2e-4
@@ -22,15 +26,15 @@ lr_drop: 500
 
 # Data
 dataset: matched_datasets/word_224_224_160_CT
-dataset_2: matched_datasets/total_segmentator_224_224_160_CT
+dataset_2: matched_datasets/abdomenCT-1k_224_224_160_CT
 overfit: False # Use same set consisting of one image for train and val
 bbox_padding: 1
 test: True
 
 # Dataloader
-batch_size: 1 # 2 (normal)
+batch_size: 1 # 2 (normal, 1 reduced params)
 shuffle: True
-num_workers: 1 # 10 (normal)
+num_workers: 10 # 10 (normal, 1 lower 80GB GPU)
 
 
 # Hungarian matching
@@ -51,8 +55,8 @@ loss_coefs:
   giou: 2
   segce: 2    # Segmentation proxy
   segdice: 2
-  aux: 5 # Aux loss coefficient
-  old: 15 # Old model loss coefficient
+  aux: 3 # Aux loss coefficient 
+  old: 15 # Old model loss coefficient 
 
 # Model specific params
 backbone:
@@ -64,11 +68,11 @@ backbone:
   start_channels: 32  # Channels after first encoder block
   bias: False
   norm_type: instance
-  data_size: [256, 256, 256] 
+  data_size: [224, 224, 160] 
 
   
   # Standard params
-  fpn_channels: 288 # Final output channels (384 original)
+  fpn_channels: 384 # Final output channels (384 original, 288 reduced params)
   out_fmaps: [P4, P3, P2]  # P0, P1, P2, P3, P4, P5
 
   kernel_size: 3
@@ -85,7 +89,7 @@ backbone:
 
 
   # Segmentation proxy loss
-  num_organs: 19 
+  num_organs: 10 
   use_msa_seg_loss: True #<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
   fg_bg: False
   use_seg_proxy_loss: False  # never use it with msa
@@ -99,7 +103,7 @@ neck:
   num_feature_levels: 3
 
   pos_encoding: sine
-  hidden_dim: 288 # (384 original)
+  hidden_dim: 384 # (384 original, 288 reduced params)
   dropout: 0.1
   nheads: 6
   dim_feedforward: 1024
@@ -165,11 +169,9 @@ augmentation:
   shear_range: [0.1, 0.1, 0.1]
   flip_axis: [0, 1, 2]
 
-ANCL:
-  aux_model_path: ./runs/test_to_run_with_no_error_TOTALSEGMENTATOR/model_best_0.008_in_ep9.pt
-  old_model_path: ./runs/test_to_run_with_no_error_WORD/model_best_0.008_in_ep9.pt
-
-
+CL:
+  aux_model_path: ./runs/msa_def_detr_WORD_dataset/model_best_0.512_in_ep905.pt
+  old_model_path: ./runs/msa_def_detr_ABDOMEN-CT-1K_dataset/model_best_0.817_in_ep1018.pt
 
 # Dataset path:
 #   Windows: SET TRANSOAR_DATA=C:\Users\pascu\Documents\Thesis\datasets\
@@ -180,4 +182,4 @@ ANCL:
 #   Linux: export CUDA_VISIBLE_DEVICES=0
 
 # Run command
-#   python ./scripts/train_ANCL.py --config CL_methods/WORD_TOTALSEGMENTATOR/msa_def_detr_ANCL
+#   python ./scripts/train_CL.py --config CL_methods/ABDOMEN-CT-1K_WORD/msa_def_detr_CL

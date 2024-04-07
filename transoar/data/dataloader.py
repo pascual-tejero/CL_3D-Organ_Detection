@@ -7,7 +7,7 @@ from transoar.data.dataset import TransoarDataset
 from transoar.utils.bboxes import segmentation2bbox
 
 
-def get_loader(config, split, batch_size=None, ANCL=False):
+def get_loader(config, split, batch_size=None):
     if not batch_size:
         batch_size = config['batch_size']
 
@@ -15,29 +15,33 @@ def get_loader(config, split, batch_size=None, ANCL=False):
     collator = TransoarCollator(config, split)
     shuffle = False if split in ['test', 'val'] else config['shuffle']
 
-    if ANCL is False:
+    if config["CL"] is False: # Normal training without CL, just on the first dataset
         dataset = TransoarDataset(config, split)
-        # for i in range(1000):   
-        #     dataset.__getitem__(i)
 
         dataloader = DataLoader(
             dataset, batch_size=batch_size, shuffle=shuffle,
             num_workers=config['num_workers'], collate_fn=collator
         )
-    else:
+    else: # CL training
+        if split == 'test': # Test on both datasets to see the evolution of performance with CL method
+            dataset_1 = TransoarDataset(config, split)
+            dataloader_1 = DataLoader(
+                dataset_1, batch_size=batch_size, shuffle=shuffle,
+                num_workers=config['num_workers'], collate_fn=collator
+            )
+            dataset_2 = TransoarDataset(config, split, dataset=2)
+            dataloader_2 = DataLoader(
+                dataset_2, batch_size=batch_size, shuffle=shuffle,
+                num_workers=config['num_workers'], collate_fn=collator
+            )
+            dataloader = (dataloader_1, dataloader_2)
 
-        dataset_1 = TransoarDataset(config, split)
-        dataloader_1 = DataLoader(
-            dataset_1, batch_size=batch_size, shuffle=shuffle,
-            num_workers=config['num_workers'], collate_fn=collator
-        )
-        dataset_2 = TransoarDataset(config, split, ANCL=True)
-        dataloader_2 = DataLoader(
-            dataset_2, batch_size=batch_size, shuffle=shuffle,
-            num_workers=config['num_workers'], collate_fn=collator
-        )
-        dataloader = (dataloader_1, dataloader_2)
-
+        else: # Train and validation on the first dataset
+            dataset = TransoarDataset(config, split)
+            dataloader = DataLoader(
+                dataset, batch_size=batch_size, shuffle=shuffle,
+                num_workers=config['num_workers'], collate_fn=collator
+            )
 
     return dataloader
 

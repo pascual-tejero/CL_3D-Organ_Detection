@@ -14,7 +14,7 @@ import numpy as np
 import torch
 import monai, re
 
-from transoar.trainer_ANCL import Trainer_ANCL
+from transoar.trainer_CL import Trainer_CL
 from transoar.data.dataloader import get_loader
 from transoar.utils.io import get_config, write_json, get_meta_data
 from transoar.models.transoarnet import TransoarNet
@@ -73,14 +73,15 @@ def train(config, args):
         val_loader = get_loader(config, 'val')
 
     if config['test']:
-        test_loader = get_loader(config, 'test', batch_size=1, ANCL=True)
+        test_loader = get_loader(config, 'test', batch_size=1)
     else:
         test_loader = None
     
     # Load model from old model checkpoint
     model = TransoarNet(config).to(device=device)
-    checkpoint_model = torch.load(config["ANCL"]["old_model_path"]) # Start main model with old model
-    model.load_state_dict(checkpoint_model['model_state_dict'])
+    if config["mixing_training"] is False:
+        checkpoint_model = torch.load(config["CL"]["old_model_path"]) # Start main model with old model
+        model.load_state_dict(checkpoint_model['model_state_dict'])
     
 
     if args.medicalnet:  # Download pretrained model from https://github.com/Tencent/MedicalNet
@@ -189,25 +190,28 @@ def train(config, args):
 
     write_json(config, path_to_run / 'config.json')
 
+    if config["mixing_training"]:
+        aux_model = None
+        old_model = None
+    else:
+        # Load auxiliary model from config["CL"]["aux_model_path"]
+        aux_model = TransoarNet(config).to(device=device)
+        checkpoint_aux_model = torch.load(config["CL"]["aux_model_path"])
+        aux_model.load_state_dict(checkpoint_aux_model['model_state_dict'])
+        aux_model.eval()
+        for param in aux_model.parameters():
+            param.requires_grad = False
 
-    # Load auxiliary model from config["ANCL"]["aux_model_path"]
-    aux_model = TransoarNet(config).to(device=device)
-    checkpoint_aux_model = torch.load(config["ANCL"]["aux_model_path"])
-    aux_model.load_state_dict(checkpoint_aux_model['model_state_dict'])
-    aux_model.eval()
-    for param in aux_model.parameters():
-        param.requires_grad = False
-
-    # Load old model from config["ANCL"]["old_model_path"]
-    old_model = TransoarNet(config).to(device=device)
-    checkpoint_old_model = torch.load(config["ANCL"]["old_model_path"])
-    old_model.load_state_dict(checkpoint_old_model['model_state_dict'])
-    old_model.eval()
-    for param in old_model.parameters():
-        param.requires_grad = False
+        # Load old model from config["CL"]["old_model_path"]
+        old_model = TransoarNet(config).to(device=device)
+        checkpoint_old_model = torch.load(config["CL"]["old_model_path"])
+        old_model.load_state_dict(checkpoint_old_model['model_state_dict'])
+        old_model.eval()
+        for param in old_model.parameters():
+            param.requires_grad = False
 
     # Build trainer and start training
-    trainer = Trainer_ANCL(
+    trainer = Trainer_CL(
         train_loader, val_loader, test_loader, model, criterion, optim, scheduler, device, config, 
         path_to_run, epoch, metric_start_val, dense_hybrid_criterion, aux_model, old_model
     )
