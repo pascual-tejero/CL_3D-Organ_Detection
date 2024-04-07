@@ -38,6 +38,10 @@ def get_loader(config, split, batch_size=None):
 
         else: # Train and validation on the first dataset
             dataset = TransoarDataset(config, split)
+
+            if config["mixing_training"]:
+                shuffle = False
+
             dataloader = DataLoader(
                 dataset, batch_size=batch_size, shuffle=shuffle,
                 num_workers=config['num_workers'], collate_fn=collator

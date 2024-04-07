@@ -23,10 +23,10 @@ class TransoarDataset(Dataset):
             self._path_to_split = data_dir / self._config['dataset'] / split
             self._path_to_split_2 = data_dir / self._config['dataset_2'] / split
 
-            self.data = [] # Add samples alternatively from both datasets
+            self._data = [] # Add samples alternatively from both datasets
             for data_path, data_path_2 in zip(self._path_to_split.iterdir(), self._path_to_split_2.iterdir()):
-                self.data.append(data_path)
-                self.data.append(data_path_2)
+                self._data.append(data_path.name)
+                self._data.append(data_path_2.name)
         else:
             if dataset == 1:
                 self._path_to_split = data_dir / self._config['dataset'] / split
@@ -48,7 +48,15 @@ class TransoarDataset(Dataset):
             idx = 0
 
         case = self._data[idx]
-        path_to_case = self._path_to_split / case
+
+        if self._config["mixing_training"] and self._split == "train":
+            if idx % 2 == 0:
+                path_to_case = self._path_to_split / case
+            else:
+                path_to_case = self._path_to_split_2 / case
+        else:
+            path_to_case = self._path_to_split / case
+
         data_path, label_path = sorted(list(path_to_case.iterdir()), key=lambda x: len(str(x)))
 
         # Load npy files
