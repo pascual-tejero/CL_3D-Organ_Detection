@@ -626,7 +626,7 @@ class Trainer_CL:
             if not self._config['debug_mode']:
                 self._save_checkpoint(epoch, 'model_last.pt')
             # fixed checkpoints at each 200 epochs:
-            if (epoch % 50) == 0:
+            if (epoch % 500) == 0:
                 self._save_checkpoint(epoch, f'model_epoch_{epoch}.pt')
 
 
