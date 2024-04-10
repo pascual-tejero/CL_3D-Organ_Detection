@@ -700,19 +700,15 @@ def modify_metrics(data_metrics, dataset_name):
         # Update the new dictionary with the new metrics
         data_new_metrics.update(dict_metrics) 
 
-    # Add the number of parameters to the new dictionary
-    data_new_metrics.update({"num_params": data_metrics["num_params"]})
-    data_new_metrics.update({"num_backbone_params": data_metrics["num_backbone_params"]})
-    data_new_metrics.update({"num_neck_params": data_metrics["num_neck_params"]})
-    data_new_metrics.update({"num_head_params": data_metrics["num_head_params"]})
-
     # Calculate the mean of the metrics
     for metric in key_metrics:
         mean_metric_value = []
         for key in data_new_metrics.keys():
             if metric == key: # If the key is the metric, we skip it because we want to update that metric which is the mean
                 continue
-            elif metric in key and not ((metric + "_s") or (metric + "_m") or (metric + "_l")): # If the metric is in the key, we add the value to the list
+            elif key == (metric + "_s") or key == (metric + "_m") or key == (metric + "_l"):
+                continue
+            elif metric in key:
                 mean_metric_value.append(data_new_metrics[key])
 
         mean_metric = sum(mean_metric_value) / len(mean_metric_value) # Calculate the mean of the metrics
