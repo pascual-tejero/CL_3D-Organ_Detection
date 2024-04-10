@@ -674,22 +674,17 @@ def modify_metrics(data_metrics, dataset_name):
 
             # TOTALSEGMENTATOR
             if dataset_name == "TOTALSEGMENTATOR":
-                if ((metric + "_s") == key_data) or ((metric + "_m") == key_data) or ((metric + "_l") == key_data):
-                    continue
-                elif metric in key_data:
+                if metric in key_data:
                     dict_metrics[key_data] = data_metrics[key_data]
 
             # WORD
             elif dataset_name == "WORD":
-                if ((metric + "_s") == key_data) or ((metric + "_m") == key_data) or ((metric + "_l") == key_data):
-                    continue
-                elif metric in key_data:
+                if metric in key_data:
                     dict_metrics[key_data] = data_metrics[key_data]
 
             # ABDOMEN_CT_1K
             elif dataset_name == "ABDOMEN_CT_1K":
-                if ((metric + "_s") == key_data) or ((metric + "_m") == key_data) or ((metric + "_l") == key_data) or \
-                    (metric + "_stomach_" in key_data) or (metric + "_stomach" in key_data) or \
+                if (metric + "_stomach_" in key_data) or (metric + "_stomach" in key_data) or \
                     (metric + "_gallbladder_" in key_data) or (metric + "_gallbladder" in key_data) or \
                     (metric + "_duodenum_" in key_data) or (metric + "_duodenum" in key_data) or \
                     (metric + "_colon_" in key_data) or (metric + "_colon" in key_data) or \
@@ -706,10 +701,10 @@ def modify_metrics(data_metrics, dataset_name):
         data_new_metrics.update(dict_metrics) 
 
     # Add the number of parameters to the new dictionary
-    # data_new_metrics.update({"num_params": data_metrics["num_params"]})
-    # data_new_metrics.update({"num_backbone_params": data_metrics["num_backbone_params"]})
-    # data_new_metrics.update({"num_neck_params": data_metrics["num_neck_params"]})
-    # data_new_metrics.update({"num_head_params": data_metrics["num_head_params"]})
+    data_new_metrics.update({"num_params": data_metrics["num_params"]})
+    data_new_metrics.update({"num_backbone_params": data_metrics["num_backbone_params"]})
+    data_new_metrics.update({"num_neck_params": data_metrics["num_neck_params"]})
+    data_new_metrics.update({"num_head_params": data_metrics["num_head_params"]})
 
     # Calculate the mean of the metrics
     for metric in key_metrics:
@@ -717,7 +712,7 @@ def modify_metrics(data_metrics, dataset_name):
         for key in data_new_metrics.keys():
             if metric == key: # If the key is the metric, we skip it because we want to update that metric which is the mean
                 continue
-            elif metric in key: # If the key is not the metric, we add the value of the metric to the list
+            elif metric in key and not ((metric + "_s") or (metric + "_m") or (metric + "_l")): # If the metric is in the key, we add the value to the list
                 mean_metric_value.append(data_new_metrics[key])
 
         mean_metric = sum(mean_metric_value) / len(mean_metric_value) # Calculate the mean of the metrics
