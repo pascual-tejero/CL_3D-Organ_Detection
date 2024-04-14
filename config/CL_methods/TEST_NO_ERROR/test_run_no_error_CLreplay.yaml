@@ -2,17 +2,19 @@
 
 
 # General training
-experiment_name: test_run_no_error_CL_mixing_datasets
+experiment_name: test_run_no_error_CLreplay
 resume: False # True to resume from last checkpoint
 device: cuda:0
 debug_mode: False  # Doesn't save checkpoints
 seed: 10
 
-CL: True
+CL_replay: True # Continual learning with replay
+CL_replay_samples: 50
+CL_reg: False
 val_interval: 1
 test_interval: 1
 few_shot_training: False # Training samples limited to 50
-mixing_training: True # Mixing training samples from both datasets
+mixing_training: False # Mixes two datasets
 
 epochs: 2500 #1000 optimal
 lr: 2e-4
@@ -32,7 +34,7 @@ bbox_padding: 1
 test: True
 
 # Dataloader
-batch_size: 2 # 2 (normal, 1 reduced params)
+batch_size: 1 # 2 (normal, 1 reduced params)
 shuffle: True
 num_workers: 1 # 10 (normal, 1 lower 80GB GPU)
 
@@ -169,6 +171,9 @@ augmentation:
   shear_range: [0.1, 0.1, 0.1]
   flip_axis: [0, 1, 2]
 
+CL_models:
+  aux_model_path: ./runs/test_run_no_error_WORD_dataset/model_last.pt 
+  old_model_path: ./runs/test_run_no_error_ABDOMEN-CT-1K_dataset/model_last.pt
 
 # Dataset path:
 #   Windows: SET TRANSOAR_DATA=C:\Users\pascu\Documents\Thesis\datasets\
@@ -179,4 +184,4 @@ augmentation:
 #   Linux: export CUDA_VISIBLE_DEVICES=0
 
 # Run command
-#   python ./scripts/train_CL.py --config CL_methods/TEST_NO_ERROR/test_run_no_error_CL_mixing_datasets
+#   python ./scripts/train_CL.py --config CL_methods/TEST_NO_ERROR/test_run_no_error_CLreplay

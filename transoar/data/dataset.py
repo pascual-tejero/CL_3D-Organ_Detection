@@ -12,10 +12,12 @@ from transoar.data.transforms import get_transforms
 
 class TransoarDataset(Dataset):
     """Dataset class of the transoar project."""
-    def __init__(self, config, split, dataset = 1):
+    def __init__(self, config, split, dataset = 1, selected_samples = None):
         assert split in ['train', 'val', 'test']
         self._config = config
         self._split = split
+        self._dataset = dataset
+        self._selected_samples = selected_samples
 
         data_dir = Path(os.getenv("TRANSOAR_DATA")).resolve()
 
@@ -28,17 +30,28 @@ class TransoarDataset(Dataset):
                 self._data.append(data_path.name)
                 self._data.append(data_path_2.name)
         else:
-            if dataset == 1:
+            if self._dataset == 1:
                 self._path_to_split = data_dir / self._config['dataset'] / split
             else:
                 self._path_to_split = data_dir / self._config['dataset_2'] / split 
-
+            
             self._data = []
-            self._data = [data_path.name for data_path in self._path_to_split.iterdir()]
+
+            if isinstance(self._selected_samples, dict):
+                # Selected samples is dict whose keys are the names of the folder where the samples are located
+                for key in self._selected_samples.keys():
+                    self._data.append(key)
+
+                self._data = [path.parts[-1] for path in self._data]
+
+            else:
+                self._data = [data_path.name for data_path in self._path_to_split.iterdir()]
 
         if config["few_shot_training"] and split == "train":
             self._data = self._data[:50]
+
         self._augmentation = get_transforms(split, config)
+
 
     def __len__(self):
         return len(self._data)
@@ -54,6 +67,7 @@ class TransoarDataset(Dataset):
                 path_to_case = self._path_to_split / case
             else:
                 path_to_case = self._path_to_split_2 / case
+
         else:
             path_to_case = self._path_to_split / case
 
@@ -80,5 +94,7 @@ class TransoarDataset(Dataset):
         
         if self._split == 'test':
             return data, label, path_to_case # path is used for visualization of predictions on source data
+        elif self._config["CL_replay"] and self._split == "train" and self._dataset == 2 and self._selected_samples is None:
+            return data, label, path_to_case
         else:
             return data, label

@@ -2,13 +2,13 @@
 
 
 # General training
-experiment_name: msa_def_detr_CL_ABDOMEN-CT-1K_WORD_datasets_mixing
+experiment_name: msa_def_detr_ABDOMEN-CT-1K_WORD_datasets_mixing
 resume: False # True to resume from last checkpoint
 device: cuda:0
 debug_mode: False  # Doesn't save checkpoints
 seed: 10
 
-CL: True
+CL_reg: True
 val_interval: 1
 test_interval: 1
 few_shot_training: False # Training samples limited to 50
@@ -179,4 +179,4 @@ augmentation:
 #   Linux: export CUDA_VISIBLE_DEVICES=0
 
 # Run command
-#   python ./scripts/train_CL.py --config CL_methods/ABDOMEN-CT-1K_WORD/msa_def_detr_CL_mixing_datasets
+#   python ./scripts/train_CL.py --config CL_methods/ABDOMEN-CT-1K_WORD/msa_def_detr_mixing_datasets

@@ -1,6 +1,7 @@
 """Module containing the trainer of the transoar project."""
 
 import copy
+import itertools
 import torch
 from torch.cuda.amp import GradScaler, autocast
 from torch.utils.tensorboard import SummaryWriter
@@ -12,6 +13,8 @@ from transoar.inference import inference
 import matplotlib.pyplot as plt
 from torchvision.transforms import ToTensor
 import io
+from transoar.data.dataloader import get_loader_CLreplay_selected_samples
+from transoar.models.transoarnet import TransoarNet
 
 from transoar.utils.io import write_json
 import os
@@ -109,84 +112,129 @@ class Trainer_CL:
         pos_query_grads_list = torch.Tensor([])
         neg_query_grads_list = torch.Tensor([])
 
-        progress_bar = tqdm(self._train_loader)
-        for data, _, bboxes, seg_targets in progress_bar:
-            # Put data to gpu
-            data, seg_targets = data.to(device=self._device), seg_targets.to(device=self._device)
-        
-            det_targets = []
-            for item in bboxes:
-                target = {
-                    'boxes': item[0].to(dtype=torch.float, device=self._device),
-                    'labels': item[1].to(device=self._device)
-                }
-                det_targets.append(target)
 
-            # Make prediction
-            with autocast(): 
-                # Main model loss
-                out, contrast_losses, dn_meta = self._model(data, det_targets, num_epoch=num_epoch)
-                loss_dict, pos_indices = self._criterion(out, det_targets, seg_targets, dn_meta, num_epoch=num_epoch)
+        if self._config["CL_replay"]:
+            train_loader1, train_loader2 = self._train_loader
 
-                if self._criterion._seg_proxy: # log Hausdorff
-                    hd95 = loss_dict['hd95'].item()
-                del loss_dict['hd95'] # remove Hausdorff distance from loss, so it does not influence loss_abs
+            # The idea is to while loop over the first dataloader is not empty, we take a sample
+            # from the first dataloader and the second dataloader and train the model with the two samples
+            # The train_loader1 is a replay buffer so it has less samples than the train_loader2
+            progress_bar = tqdm(train_loader1)
+            for data1, _, bboxes1, seg_targets1 in progress_bar:
+                try:
+                    data2, _, bboxes2, seg_targets2 = next(iter(train_loader2))
+                except StopIteration:
+                    train_loader2 = get_loader_CLreplay_selected_samples(config=self._config, 
+                                                    split='train', 
+                                                    batch_size=1,
+                                                    selected_samples=self._replay_samples)
+                    data2, _, bboxes2, seg_targets2 = next(iter(train_loader2))
 
-                if self._aux_model is not None:
-                    # Auxiliary model loss
-                    aux_out = self._aux_model(data)
-                    loss_dict_aux, _ = self._criterion(aux_out, det_targets, seg_targets)
+                data1, seg_targets1 = data1.to(device=self._device), seg_targets1.to(device=self._device)
+                data2, seg_targets2 = data2.to(device=self._device), seg_targets2.to(device=self._device)
 
-                    loss_dict["aux_model"] = 0 # initialize loss entry
-                    del loss_dict_aux['hd95'] # remove Hausdorff distance from loss, so it does not influence loss_abs
-                    for key, value in loss_dict_aux.items():
-                        loss_dict["aux_model"] += value 
+                # Make a batch with the two samples
+                data = torch.cat((data1, data2), 0)
+                seg_targets = torch.cat((seg_targets1, seg_targets2), 0)
 
-                if self._old_model is not None:
-                    # Old model loss
-                    old_out = self._old_model(data)
-                    loss_dict_old, _ = self._criterion(old_out, det_targets, seg_targets)
+                det_targets = []
 
-                    loss_dict["old_model"] = 0 # Initialize loss entry
-                    del loss_dict_old['hd95'] # remove Hausdorff distance from loss, so it does not influence loss_abs
-                    for key, value in loss_dict_old.items():
-                        loss_dict["old_model"] += value
+                for item in bboxes1:
+                    target = {
+                        'boxes': item[0].to(dtype=torch.float, device=self._device),
+                        'labels': item[1].to(device=self._device)
+                    }
+                    det_targets.append(target)
+
+                for item in bboxes2:
+                    target = {
+                        'boxes': item[0].to(dtype=torch.float, device=self._device),
+                        'labels': item[1].to(device=self._device)
+                    }
+                    det_targets.append(target)
+
+
+        else:
+            progress_bar = tqdm(self._train_loader)
+
+            for data, _, bboxes, seg_targets in progress_bar:
                 
-                # for key, value in loss_dict.items():
-                #     print(key, value)
-                # quit()
+                # Put data to gpu
+                data, seg_targets = data.to(device=self._device), seg_targets.to(device=self._device)
+            
+                det_targets = []
+                for item in bboxes:
+                    target = {
+                        'boxes': item[0].to(dtype=torch.float, device=self._device),
+                        'labels': item[1].to(device=self._device)
+                    }
+                    det_targets.append(target)
 
-                if self._hybrid: # hybrid matching
-                    outputs_one2many = dict()
-                    outputs_one2many["pred_logits"] = out["pred_logits_one2many"]
-                    outputs_one2many["pred_boxes"] = out["pred_boxes_one2many"]
-                    outputs_one2many["aux_outputs"] = out["aux_outputs_one2many"]
-                    outputs_one2many["seg_one2many"] = True
-                    if self._dense_hybrid_criterion: # DM in additional branch
-                        loss_dict_one2many, _ = self._dense_hybrid_criterion(outputs_one2many, det_targets, seg_targets) # det_targets replaces det_many_targets
-                    else:  # regular one-to-many branch
-                        det_many_targets = copy.deepcopy(det_targets)
-                        # repeat the targets
-                        for target in det_many_targets:
-                            target["boxes"] = target["boxes"].repeat(self._hybrid_K, 1)
-                            target["labels"] = target["labels"].repeat(self._hybrid_K)
+        # Make prediction
+        with autocast(): 
+            # Main model loss
+            out, contrast_losses, dn_meta = self._model(data, det_targets, num_epoch=num_epoch)
+            loss_dict, pos_indices = self._criterion(out, det_targets, seg_targets, dn_meta, num_epoch=num_epoch)
 
-                        loss_dict_one2many, _ = self._criterion(outputs_one2many, det_many_targets, seg_targets)
-                    del loss_dict_one2many['hd95']
-                    for key, value in loss_dict_one2many.items():
-                        if key + "_one2many" in loss_dict.keys():
-                            loss_dict[key + "_one2many"] += value * self._config['hybrid_loss_weight_one2many']
-                        else:
-                            loss_dict[key + "_one2many"] = value * self._config['hybrid_loss_weight_one2many']
+            if self._criterion._seg_proxy: # log Hausdorff
+                hd95 = loss_dict['hd95'].item()
+            del loss_dict['hd95'] # remove Hausdorff distance from loss, so it does not influence loss_abs
+
+            if self._aux_model is not None:
+                # Auxiliary model loss
+                aux_out = self._aux_model(data)
+                loss_dict_aux, _ = self._criterion(aux_out, det_targets, seg_targets)
+
+                loss_dict["aux_model"] = 0 # initialize loss entry
+                del loss_dict_aux['hd95'] # remove Hausdorff distance from loss, so it does not influence loss_abs
+                for key, value in loss_dict_aux.items():
+                    loss_dict["aux_model"] += value 
+
+            if self._old_model is not None:
+                # Old model loss
+                old_out = self._old_model(data)
+                loss_dict_old, _ = self._criterion(old_out, det_targets, seg_targets)
+
+                loss_dict["old_model"] = 0 # Initialize loss entry
+                del loss_dict_old['hd95'] # remove Hausdorff distance from loss, so it does not influence loss_abs
+                for key, value in loss_dict_old.items():
+                    loss_dict["old_model"] += value
+        
+        # for key, value in loss_dict.items():
+        #     print(key, value)
+        # quit()
+
+            if self._hybrid: # hybrid matching
+                outputs_one2many = dict()
+                outputs_one2many["pred_logits"] = out["pred_logits_one2many"]
+                outputs_one2many["pred_boxes"] = out["pred_boxes_one2many"]
+                outputs_one2many["aux_outputs"] = out["aux_outputs_one2many"]
+                outputs_one2many["seg_one2many"] = True
+                if self._dense_hybrid_criterion: # DM in additional branch
+                    loss_dict_one2many, _ = self._dense_hybrid_criterion(outputs_one2many, det_targets, seg_targets) # det_targets replaces det_many_targets
+                else:  # regular one-to-many branch
+                    det_many_targets = copy.deepcopy(det_targets)
+                    # repeat the targets
+                    for target in det_many_targets:
+                        target["boxes"] = target["boxes"].repeat(self._hybrid_K, 1)
+                        target["labels"] = target["labels"].repeat(self._hybrid_K)
+
+                    loss_dict_one2many, _ = self._criterion(outputs_one2many, det_many_targets, seg_targets)
+                del loss_dict_one2many['hd95']
+                for key, value in loss_dict_one2many.items():
+                    if key + "_one2many" in loss_dict.keys():
+                        loss_dict[key + "_one2many"] += value * self._config['hybrid_loss_weight_one2many']
+                    else:
+                        loss_dict[key + "_one2many"] = value * self._config['hybrid_loss_weight_one2many']
 
 
-                # Create absolute loss and mult with loss coefficient 
-                loss_abs = 0
-                for loss_key, loss_val in loss_dict.items():
-                    loss_abs += loss_val * self._config['loss_coefs'][loss_key.split('_')[0]]
-                for loss_key, loss_val in contrast_losses.items():
-                    loss_abs += loss_val # already multiplied coefficient in transoarnet.py
-                    loss_contrast_agg += loss_val 
+            # Create absolute loss and mult with loss coefficient 
+            loss_abs = 0
+            for loss_key, loss_val in loss_dict.items():
+                loss_abs += loss_val * self._config['loss_coefs'][loss_key.split('_')[0]]
+            for loss_key, loss_val in contrast_losses.items():
+                loss_abs += loss_val # already multiplied coefficient in transoarnet.py
+                loss_contrast_agg += loss_val 
 
             self._optimizer.zero_grad()
             self._scaler.scale(loss_abs).backward()
@@ -378,7 +426,7 @@ class Trainer_CL:
                 sparse_results=False
             )
 
-            for data, mask, bboxes, seg_mask, paths in tqdm(dataloader_test):
+            for data, mask, bboxes, _, _ in tqdm(dataloader_test):
 
                 data, mask = data.to(device=self._device), mask.to(device=self._device)
 
@@ -592,7 +640,11 @@ class Trainer_CL:
     def run(self):
         if self._epoch_to_start == 0:   # For initial performance estimation
             self._validate(0)
-        
+
+        if self._config['CL_replay']: # Select samples for replay
+            self._train_loader =  self._select_samples_for_replay()
+
+                
         for epoch in range(self._epoch_to_start + 1, self._config['epochs'] + 1):
             print("starting epoch ", epoch)
             self._train_one_epoch(epoch)
@@ -630,8 +682,69 @@ class Trainer_CL:
                 self._save_checkpoint(epoch, f'model_epoch_{epoch}.pt')
 
 
+    def _select_samples_for_replay(self):
+        train_loader_dataset2 = self._train_loader[1]
 
+        evaluator_replay = DetectionEvaluator(
+            classes=list(self._config['labels'].values()),
+            classes_small=self._config['labels_small'],
+            classes_mid=self._config['labels_mid'],
+            classes_large=self._config['labels_large'],
+            iou_range_nndet=(0.1, 0.5, 0.05),
+            iou_range_coco=(0.5, 0.95, 0.05),
+            sparse_results=False
+        )
+        replay_scores = {}
 
+        # Load old model from config["CL_models"]["old_model_path"]
+        old_model = TransoarNet(self._config).to(device=self._device)
+        checkpoint_old_model = torch.load(self._config["CL_models"]["old_model_path"])
+        old_model.load_state_dict(checkpoint_old_model['model_state_dict'])
+        old_model.eval()
+        for param in old_model.parameters():
+            param.requires_grad = False
+
+        for data, mask, bboxes, _, path in tqdm(train_loader_dataset2):
+
+            data, mask = data.to(device=self._device), mask.to(device=self._device)
+
+            targets = {
+                'boxes': bboxes[0][0].to(dtype=torch.float, device=self._device),
+                'labels': bboxes[0][1].to(device=self._device)
+            }
+
+            out = old_model(data)
+
+            pred_boxes, pred_classes, pred_scores = inference(out)
+            
+            gt_boxes = [targets['boxes'].detach().cpu().numpy()]
+            gt_classes = [targets['labels'].detach().cpu().numpy()] 
+
+            # Add pred to evaluator
+            result = evaluator_replay.replay_evaluator(
+                pred_boxes=pred_boxes,
+                pred_classes=pred_classes,
+                pred_scores=pred_scores,
+                gt_boxes=gt_boxes,
+                gt_classes=gt_classes
+            )
+            metric_scores = evaluator_replay.eval_replay(result)
+            replay_scores[path[0]] = metric_scores['mAP_coco']
+
+        # Sort the replay scores in ascending order
+        replay_scores = dict(sorted(replay_scores.items(), key=lambda item: item[1]))
+
+        # Get the top CL_replay_samples samples
+        self._replay_samples = dict(itertools.islice(replay_scores.items(), self._config['CL_replay_samples']))
+        
+        # Make a new dataloader with the replay samples
+        dataloader_2 = get_loader_CLreplay_selected_samples(config=self._config, 
+                                                                split='train', 
+                                                                batch_size=1,
+                                                                selected_samples=self._replay_samples)
+        
+        self._train_loader = [self._train_loader[0], dataloader_2]
+        return self._train_loader
 
 
     def _write_to_logger(self, num_epoch, category, **kwargs):
@@ -715,3 +828,5 @@ def modify_metrics(data_metrics, dataset_name):
         data_new_metrics[metric] = mean_metric
 
     return data_new_metrics
+
+

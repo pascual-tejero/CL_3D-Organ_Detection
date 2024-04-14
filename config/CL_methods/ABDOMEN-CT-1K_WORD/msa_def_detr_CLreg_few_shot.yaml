@@ -2,13 +2,15 @@
 
 
 # General training
-experiment_name: test_run_no_error_CL_few_shot
+experiment_name: msa_def_detr_CLreg_ABDOMEN-CT-1K_WORD_datasets_few_shot
 resume: False # True to resume from last checkpoint
 device: cuda:0
 debug_mode: False  # Doesn't save checkpoints
 seed: 10
 
-CL: True
+CL_replay: False # Continual learning with replay
+CL_replay_samples: 50
+CL_reg: True
 val_interval: 1
 test_interval: 1
 few_shot_training: True # Training samples limited to 50
@@ -25,8 +27,8 @@ clip_max_norm: 1   # Not used
 lr_drop: 500
 
 # Data
-dataset: downsampled_datasets/word_64_64_64_CT
-dataset_2: downsampled_datasets/abdomenCT-1k_64_64_64_CT
+dataset: matched_datasets/word_224_224_160_CT
+dataset_2: matched_datasets/abdomenCT-1k_224_224_160_CT
 overfit: False # Use same set consisting of one image for train and val
 bbox_padding: 1
 test: True
@@ -34,7 +36,7 @@ test: True
 # Dataloader
 batch_size: 1 # 2 (normal, 1 reduced params)
 shuffle: True
-num_workers: 1 # 10 (normal, 1 lower 80GB GPU)
+num_workers: 10 # 10 (normal, 1 lower 80GB GPU)
 
 
 # Hungarian matching
@@ -55,8 +57,8 @@ loss_coefs:
   giou: 2
   segce: 2    # Segmentation proxy
   segdice: 2
-  aux: 10 # Aux loss coefficient
-  old: 10 # Old model loss coefficient
+  aux: 3 # Aux loss coefficient 
+  old: 15 # Old model loss coefficient 
 
 # Model specific params
 backbone:
@@ -68,7 +70,7 @@ backbone:
   start_channels: 32  # Channels after first encoder block
   bias: False
   norm_type: instance
-  data_size: [64, 64, 64] 
+  data_size: [224, 224, 160] 
 
   
   # Standard params
@@ -89,7 +91,7 @@ backbone:
 
 
   # Segmentation proxy loss
-  num_organs: 10
+  num_organs: 10 
   use_msa_seg_loss: True #<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
   fg_bg: False
   use_seg_proxy_loss: False  # never use it with msa
@@ -169,9 +171,9 @@ augmentation:
   shear_range: [0.1, 0.1, 0.1]
   flip_axis: [0, 1, 2]
 
-CL:
-  aux_model_path: ./runs/test_run_no_error_WORD_dataset/model_last.pt 
-  old_model_path: ./runs/test_run_no_error_ABDOMEN-CT-1K_dataset/model_last.pt
+CL_models:
+  aux_model_path: ./runs/msa_def_detr_WORD_dataset/model_best_0.512_in_ep905.pt
+  old_model_path: ./runs/msa_def_detr_ABDOMEN-CT-1K_dataset/model_best_0.817_in_ep1018.pt
 
 # Dataset path:
 #   Windows: SET TRANSOAR_DATA=C:\Users\pascu\Documents\Thesis\datasets\
@@ -182,4 +184,4 @@ CL:
 #   Linux: export CUDA_VISIBLE_DEVICES=0
 
 # Run command
-#   python ./scripts/train_CL.py --config CL_methods/TEST_NO_ERROR/test_run_no_error_CL_few_shot
+#   python ./scripts/train_CL.py --config CL_methods/ABDOMEN-CT-1K_WORD/msa_def_detr_CLreg_few_shot

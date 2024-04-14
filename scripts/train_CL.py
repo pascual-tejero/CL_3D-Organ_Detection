@@ -80,7 +80,7 @@ def train(config, args):
     # Load model from old model checkpoint
     model = TransoarNet(config).to(device=device)
     if config["mixing_training"] is False:
-        checkpoint_model = torch.load(config["CL"]["old_model_path"]) # Start main model with old model
+        checkpoint_model = torch.load(config["CL_models"]["old_model_path"]) # Start main model with old model
         model.load_state_dict(checkpoint_model['model_state_dict'])
     
 
@@ -190,21 +190,21 @@ def train(config, args):
 
     write_json(config, path_to_run / 'config.json')
 
-    if config["mixing_training"]:
+    if config["mixing_training"] or config["CL_replay"]:
         aux_model = None
         old_model = None
     else:
-        # Load auxiliary model from config["CL"]["aux_model_path"]
+        # Load auxiliary model from config["CL_models"]["aux_model_path"]
         aux_model = TransoarNet(config).to(device=device)
-        checkpoint_aux_model = torch.load(config["CL"]["aux_model_path"])
+        checkpoint_aux_model = torch.load(config["CL_models"]["aux_model_path"])
         aux_model.load_state_dict(checkpoint_aux_model['model_state_dict'])
         aux_model.eval()
         for param in aux_model.parameters():
             param.requires_grad = False
 
-        # Load old model from config["CL"]["old_model_path"]
+        # Load old model from config["CL_models"]["old_model_path"]
         old_model = TransoarNet(config).to(device=device)
-        checkpoint_old_model = torch.load(config["CL"]["old_model_path"])
+        checkpoint_old_model = torch.load(config["CL_models"]["old_model_path"])
         old_model.load_state_dict(checkpoint_old_model['model_state_dict'])
         old_model.eval()
         for param in old_model.parameters():
