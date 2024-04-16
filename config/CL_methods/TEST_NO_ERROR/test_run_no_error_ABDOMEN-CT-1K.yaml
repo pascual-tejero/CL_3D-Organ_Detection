@@ -10,6 +10,7 @@ seed: 10
 
 CL_replay: False # Continual learning with replay
 CL_replay_samples: 50
+CL_replay_mult: 100
 CL_reg: False
 val_interval: 1
 test_interval: 1

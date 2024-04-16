@@ -114,13 +114,6 @@ class Trainer_CL:
 
         # self._replay_samples
 
-
-        if self._config["CL_replay"]:
-            self._train_loader = get_loader_CLreplay_selected_samples(config=self._config,
-                                                                split='train',
-                                                                batch_size=2,
-                                                                selected_samples=self._replay_samples)
-
         progress_bar = tqdm(self._train_loader)
 
         for idx, (data, _, bboxes, seg_targets) in enumerate(progress_bar):
@@ -136,88 +129,88 @@ class Trainer_CL:
                 }
                 det_targets.append(target)
 
-        # Make prediction
-        with autocast(): 
-            # Main model loss
-            out, contrast_losses, dn_meta = self._model(data, det_targets, num_epoch=num_epoch)
-            loss_dict, pos_indices = self._criterion(out, det_targets, seg_targets, dn_meta, num_epoch=num_epoch)
+            # Make prediction
+            with autocast():   
+                # Main model loss
+                out, contrast_losses, dn_meta = self._model(data, det_targets, num_epoch=num_epoch)
+                loss_dict, pos_indices = self._criterion(out, det_targets, seg_targets, dn_meta, num_epoch=num_epoch)
 
-            if self._criterion._seg_proxy: # log Hausdorff
-                hd95 = loss_dict['hd95'].item()
-            del loss_dict['hd95'] # remove Hausdorff distance from loss, so it does not influence loss_abs
+                if self._criterion._seg_proxy: # log Hausdorff
+                    hd95 = loss_dict['hd95'].item()
+                del loss_dict['hd95'] # remove Hausdorff distance from loss, so it does not influence loss_abs
 
-            if self._aux_model is not None:
-                # Auxiliary model loss
-                aux_out = self._aux_model(data)
-                loss_dict_aux, _ = self._criterion(aux_out, det_targets, seg_targets)
+                if self._aux_model is not None:
+                    # Auxiliary model loss
+                    aux_out = self._aux_model(data)
+                    loss_dict_aux, _ = self._criterion(aux_out, det_targets, seg_targets)
 
-                loss_dict["aux_model"] = 0 # initialize loss entry
-                del loss_dict_aux['hd95'] # remove Hausdorff distance from loss, so it does not influence loss_abs
-                for key, value in loss_dict_aux.items():
-                    loss_dict["aux_model"] += value 
+                    loss_dict["aux_model"] = 0 # initialize loss entry
+                    del loss_dict_aux['hd95'] # remove Hausdorff distance from loss, so it does not influence loss_abs
+                    for key, value in loss_dict_aux.items():
+                        loss_dict["aux_model"] += value 
 
-            if self._old_model is not None:
-                # Old model loss
-                old_out = self._old_model(data)
-                loss_dict_old, _ = self._criterion(old_out, det_targets, seg_targets)
+                if self._old_model is not None:
+                    # Old model loss
+                    old_out = self._old_model(data)
+                    loss_dict_old, _ = self._criterion(old_out, det_targets, seg_targets)
 
-                loss_dict["old_model"] = 0 # Initialize loss entry
-                del loss_dict_old['hd95'] # remove Hausdorff distance from loss, so it does not influence loss_abs
-                for key, value in loss_dict_old.items():
-                    loss_dict["old_model"] += value
-        
-        # for key, value in loss_dict.items():
-        #     print(key, value)
-        # quit()
-
-            if self._hybrid: # hybrid matching
-                outputs_one2many = dict()
-                outputs_one2many["pred_logits"] = out["pred_logits_one2many"]
-                outputs_one2many["pred_boxes"] = out["pred_boxes_one2many"]
-                outputs_one2many["aux_outputs"] = out["aux_outputs_one2many"]
-                outputs_one2many["seg_one2many"] = True
-                if self._dense_hybrid_criterion: # DM in additional branch
-                    loss_dict_one2many, _ = self._dense_hybrid_criterion(outputs_one2many, det_targets, seg_targets) # det_targets replaces det_many_targets
-                else:  # regular one-to-many branch
-                    det_many_targets = copy.deepcopy(det_targets)
-                    # repeat the targets
-                    for target in det_many_targets:
-                        target["boxes"] = target["boxes"].repeat(self._hybrid_K, 1)
-                        target["labels"] = target["labels"].repeat(self._hybrid_K)
-
-                    loss_dict_one2many, _ = self._criterion(outputs_one2many, det_many_targets, seg_targets)
-                del loss_dict_one2many['hd95']
-                for key, value in loss_dict_one2many.items():
-                    if key + "_one2many" in loss_dict.keys():
-                        loss_dict[key + "_one2many"] += value * self._config['hybrid_loss_weight_one2many']
-                    else:
-                        loss_dict[key + "_one2many"] = value * self._config['hybrid_loss_weight_one2many']
-
-
-            # Create absolute loss and mult with loss coefficient 
+                    loss_dict["old_model"] = 0 # Initialize loss entry
+                    del loss_dict_old['hd95'] # remove Hausdorff distance from loss, so it does not influence loss_abs
+                    for key, value in loss_dict_old.items():
+                        loss_dict["old_model"] += value
             
-            # If sample is replayed, loss_coefs are divided by 100. Otherwise, they are multiplied by 100.
-            if self._config["CL_replay"]:
-                loss_abs = 0
-                if idx % 2 == 0:
-                    for loss_key, loss_value in loss_dict.items():
-                        loss_abs += loss_value * self._config['loss_coefs'][loss_key.split('_')[0]] 
-                    for loss_key, loss_value in contrast_losses.items():
-                        loss_abs += loss_value # already multiplied coefficient in transoarnet.py
-                        loss_contrast_agg += loss_value 
+            # for key, value in loss_dict.items():
+            #     print(key, value)
+            # quit()
+
+                if self._hybrid: # hybrid matching
+                    outputs_one2many = dict()
+                    outputs_one2many["pred_logits"] = out["pred_logits_one2many"]
+                    outputs_one2many["pred_boxes"] = out["pred_boxes_one2many"]
+                    outputs_one2many["aux_outputs"] = out["aux_outputs_one2many"]
+                    outputs_one2many["seg_one2many"] = True
+                    if self._dense_hybrid_criterion: # DM in additional branch
+                        loss_dict_one2many, _ = self._dense_hybrid_criterion(outputs_one2many, det_targets, seg_targets) # det_targets replaces det_many_targets
+                    else:  # regular one-to-many branch
+                        det_many_targets = copy.deepcopy(det_targets)
+                        # repeat the targets
+                        for target in det_many_targets:
+                            target["boxes"] = target["boxes"].repeat(self._hybrid_K, 1)
+                            target["labels"] = target["labels"].repeat(self._hybrid_K)
+
+                        loss_dict_one2many, _ = self._criterion(outputs_one2many, det_many_targets, seg_targets)
+                    del loss_dict_one2many['hd95']
+                    for key, value in loss_dict_one2many.items():
+                        if key + "_one2many" in loss_dict.keys():
+                            loss_dict[key + "_one2many"] += value * self._config['hybrid_loss_weight_one2many']
+                        else:
+                            loss_dict[key + "_one2many"] = value * self._config['hybrid_loss_weight_one2many']
+
+
+                # Create absolute loss and mult with loss coefficient 
+                
+                # If sample is replayed, loss_coefs are divided by 100. Otherwise, they are multiplied by 100.
+                if self._config["CL_replay"]:
+                    loss_abs = 0
+                    if idx % 2 == 0:
+                        for loss_key, loss_value in loss_dict.items():
+                            loss_abs += loss_value * self._config['loss_coefs'][loss_key.split('_')[0]] * self._config['CL_replay_mult']
+                        for loss_key, loss_value in contrast_losses.items():
+                            loss_abs += loss_value # already multiplied coefficient in transoarnet.py
+                            loss_contrast_agg += loss_value
+                    else:
+                        for loss_key, loss_value in loss_dict.items():
+                            loss_abs += loss_value * self._config['loss_coefs'][loss_key.split('_')[0]] 
+                        for loss_key, loss_value in contrast_losses.items():
+                            loss_abs += loss_value  # already multiplied coefficient in transoarnet.py
+                            loss_contrast_agg += loss_value 
                 else:
-                    for loss_key, loss_value in loss_dict.items():
-                        loss_abs += loss_value * self._config['loss_coefs'][loss_key.split('_')[0]] / 100
-                    for loss_key, loss_value in contrast_losses.items():
-                        loss_abs += loss_value / 100 # already multiplied coefficient in transoarnet.py
-                        loss_contrast_agg += loss_value / 100
-            else:
-                loss_abs = 0
-                for loss_key, loss_val in loss_dict.items():
-                    loss_abs += loss_val * self._config['loss_coefs'][loss_key.split('_')[0]]
-                for loss_key, loss_val in contrast_losses.items():
-                    loss_abs += loss_val # already multiplied coefficient in transoarnet.py
-                    loss_contrast_agg += loss_val 
+                    loss_abs = 0
+                    for loss_key, loss_val in loss_dict.items():
+                        loss_abs += loss_val * self._config['loss_coefs'][loss_key.split('_')[0]]
+                    for loss_key, loss_val in contrast_losses.items():
+                        loss_abs += loss_val # already multiplied coefficient in transoarnet.py
+                        loss_contrast_agg += loss_val 
 
             self._optimizer.zero_grad()
             self._scaler.scale(loss_abs).backward()
@@ -727,7 +720,13 @@ class Trainer_CL:
         replay_scores = dict(sorted(replay_scores.items(), key=lambda item: item[1]))
 
         # Get the top CL_replay_samples samples
-        self._replay_samples = dict(itertools.islice(replay_scores.items(), self._config['CL_replay_samples']))
+        replay_samples = dict(itertools.islice(replay_scores.items(), self._config['CL_replay_samples']))
+
+        self._train_loader = None
+        self._train_loader = get_loader_CLreplay_selected_samples(config=self._config,
+                                                                split='train',
+                                                                batch_size=self._config['batch_size'],
+                                                                selected_samples=replay_samples)
 
     def _write_to_logger(self, num_epoch, category, **kwargs):
         for key, value in kwargs.items():

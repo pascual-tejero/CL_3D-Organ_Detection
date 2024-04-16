@@ -190,7 +190,7 @@ def train(config, args):
 
     write_json(config, path_to_run / 'config.json')
 
-    if config["mixing_training"] or config["CL_replay"]:
+    if config["mixing_training"] or config["CL_replay"]: # Load auxiliary model and old model
         aux_model = None
         old_model = None
     else:

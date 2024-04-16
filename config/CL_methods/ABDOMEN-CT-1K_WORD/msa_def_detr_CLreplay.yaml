@@ -10,6 +10,7 @@ seed: 10
 
 CL_replay: True # Continual learning with replay
 CL_replay_samples: 50
+CL_replay_mult: 5
 CL_reg: False # Continual learning with regularization
 val_interval: 1
 test_interval: 1
@@ -57,8 +58,8 @@ loss_coefs:
   giou: 2
   segce: 2    # Segmentation proxy
   segdice: 2
-  aux: 3 # Aux loss coefficient 
-  old: 15 # Old model loss coefficient 
+  aux: 50 # Aux loss coefficient 
+  old: 10 # Old model loss coefficient 
 
 # Model specific params
 backbone:

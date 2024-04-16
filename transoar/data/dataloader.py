@@ -50,13 +50,13 @@ def get_loader(config, split, batch_size=None):
         if split == 'test':
             dataset_1 = TransoarDataset(config, split)
             dataloader_1 = DataLoader(
-                dataset_1, batch_size=2, shuffle=shuffle,
+                dataset_1, batch_size=batch_size, shuffle=shuffle,
                 num_workers=config['num_workers'], collate_fn=collator
             )
 
             dataset_2 = TransoarDataset(config, split, dataset=2)
             dataloader_2 = DataLoader(
-                dataset_2, batch_size=2, shuffle=shuffle,
+                dataset_2, batch_size=batch_size, shuffle=shuffle,
                 num_workers=config['num_workers'], collate_fn=collator
             )
             dataloader = (dataloader_1, dataloader_2)
@@ -74,7 +74,7 @@ def get_loader(config, split, batch_size=None):
             dataset = TransoarDataset(config, split)
 
             dataloader = DataLoader(
-                dataset, batch_size=2, shuffle=shuffle,
+                dataset, batch_size=batch_size, shuffle=shuffle,
                 num_workers=config['num_workers'], collate_fn=collator
             )
     else:
@@ -93,7 +93,7 @@ def get_loader_CLreplay_selected_samples(config, split, batch_size=None, selecte
     dataset = TransoarDataset(config, split, dataset=1, selected_samples=selected_samples)
 
     dataloader = DataLoader(
-        dataset, batch_size=1, shuffle=shuffle,
+        dataset, batch_size=batch_size, shuffle=shuffle,
         num_workers=config['num_workers'], collate_fn=collator
     )
 
