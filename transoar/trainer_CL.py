@@ -112,63 +112,29 @@ class Trainer_CL:
         pos_query_grads_list = torch.Tensor([])
         neg_query_grads_list = torch.Tensor([])
 
+        # self._replay_samples
+
 
         if self._config["CL_replay"]:
-            train_loader1, train_loader2 = self._train_loader
+            self._train_loader = get_loader_CLreplay_selected_samples(config=self._config,
+                                                                split='train',
+                                                                batch_size=2,
+                                                                selected_samples=self._replay_samples)
 
-            # The idea is to while loop over the first dataloader is not empty, we take a sample
-            # from the first dataloader and the second dataloader and train the model with the two samples
-            # The train_loader1 is a replay buffer so it has less samples than the train_loader2
-            progress_bar = tqdm(train_loader1)
-            for data1, _, bboxes1, seg_targets1 in progress_bar:
-                try:
-                    data2, _, bboxes2, seg_targets2 = next(iter(train_loader2))
-                except StopIteration:
-                    train_loader2 = get_loader_CLreplay_selected_samples(config=self._config, 
-                                                    split='train', 
-                                                    batch_size=1,
-                                                    selected_samples=self._replay_samples)
-                    data2, _, bboxes2, seg_targets2 = next(iter(train_loader2))
+        progress_bar = tqdm(self._train_loader)
 
-                data1, seg_targets1 = data1.to(device=self._device), seg_targets1.to(device=self._device)
-                data2, seg_targets2 = data2.to(device=self._device), seg_targets2.to(device=self._device)
-
-                # Make a batch with the two samples
-                data = torch.cat((data1, data2), 0)
-                seg_targets = torch.cat((seg_targets1, seg_targets2), 0)
-
-                det_targets = []
-
-                for item in bboxes1:
-                    target = {
-                        'boxes': item[0].to(dtype=torch.float, device=self._device),
-                        'labels': item[1].to(device=self._device)
-                    }
-                    det_targets.append(target)
-
-                for item in bboxes2:
-                    target = {
-                        'boxes': item[0].to(dtype=torch.float, device=self._device),
-                        'labels': item[1].to(device=self._device)
-                    }
-                    det_targets.append(target)
-
-
-        else:
-            progress_bar = tqdm(self._train_loader)
-
-            for data, _, bboxes, seg_targets in progress_bar:
-                
-                # Put data to gpu
-                data, seg_targets = data.to(device=self._device), seg_targets.to(device=self._device)
+        for data, _, bboxes, seg_targets in progress_bar:
             
-                det_targets = []
-                for item in bboxes:
-                    target = {
-                        'boxes': item[0].to(dtype=torch.float, device=self._device),
-                        'labels': item[1].to(device=self._device)
-                    }
-                    det_targets.append(target)
+            # Put data to gpu
+            data, seg_targets = data.to(device=self._device), seg_targets.to(device=self._device)
+        
+            det_targets = []
+            for item in bboxes:
+                target = {
+                    'boxes': item[0].to(dtype=torch.float, device=self._device),
+                    'labels': item[1].to(device=self._device)
+                }
+                det_targets.append(target)
 
         # Make prediction
         with autocast(): 
@@ -642,7 +608,7 @@ class Trainer_CL:
             self._validate(0)
 
         if self._config['CL_replay']: # Select samples for replay
-            self._train_loader =  self._select_samples_for_replay()
+            self._select_samples_for_replay()
 
                 
         for epoch in range(self._epoch_to_start + 1, self._config['epochs'] + 1):
@@ -683,8 +649,7 @@ class Trainer_CL:
 
 
     def _select_samples_for_replay(self):
-        train_loader_dataset2 = self._train_loader[1]
-
+        
         evaluator_replay = DetectionEvaluator(
             classes=list(self._config['labels'].values()),
             classes_small=self._config['labels_small'],
@@ -704,7 +669,7 @@ class Trainer_CL:
         for param in old_model.parameters():
             param.requires_grad = False
 
-        for data, mask, bboxes, _, path in tqdm(train_loader_dataset2):
+        for data, mask, bboxes, _, path in tqdm(self._train_loader):
 
             data, mask = data.to(device=self._device), mask.to(device=self._device)
 
@@ -736,16 +701,6 @@ class Trainer_CL:
 
         # Get the top CL_replay_samples samples
         self._replay_samples = dict(itertools.islice(replay_scores.items(), self._config['CL_replay_samples']))
-        
-        # Make a new dataloader with the replay samples
-        dataloader_2 = get_loader_CLreplay_selected_samples(config=self._config, 
-                                                                split='train', 
-                                                                batch_size=1,
-                                                                selected_samples=self._replay_samples)
-        
-        self._train_loader = [self._train_loader[0], dataloader_2]
-        return self._train_loader
-
 
     def _write_to_logger(self, num_epoch, category, **kwargs):
         for key, value in kwargs.items():

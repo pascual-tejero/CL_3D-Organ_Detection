@@ -38,11 +38,20 @@ class TransoarDataset(Dataset):
             self._data = []
 
             if isinstance(self._selected_samples, dict):
-                # Selected samples is dict whose keys are the names of the folder where the samples are located
-                for key in self._selected_samples.keys():
-                    self._data.append(key)
+                self._path_to_split = data_dir / self._config['dataset'] / split
+                self._path_to_split_2 = data_dir / self._config['dataset_2'] / split
 
-                self._data = [path.parts[-1] for path in self._data]
+                # Get keys from selected samples dict in a list
+                list_keys = list(self._selected_samples.keys())
+
+                # Selected samples is dict whose keys are the names of the folder where the samples are located
+                count = 0
+                for  data_path in self._path_to_split.iterdir():
+                    self._data.append(data_path.name)
+                    self._data.append(list_keys[count].parts[-1])
+                    count += 1
+                    if count == len(list_keys) - 1:
+                        count = 0
 
             else:
                 self._data = [data_path.name for data_path in self._path_to_split.iterdir()]
@@ -62,7 +71,7 @@ class TransoarDataset(Dataset):
 
         case = self._data[idx]
 
-        if self._config["mixing_training"] and self._split == "train":
+        if self._config["mixing_training"] and self._split == "train" or isinstance(self._selected_samples, dict):
             if idx % 2 == 0:
                 path_to_case = self._path_to_split / case
             else:

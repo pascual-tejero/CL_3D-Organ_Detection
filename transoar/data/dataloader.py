@@ -62,20 +62,13 @@ def get_loader(config, split, batch_size=None):
             dataloader = (dataloader_1, dataloader_2)
 
         elif split == 'train':
-            collator = TransoarCollator(config, split)
-            dataset_1 = TransoarDataset(config, split)
-            dataloader_1 = DataLoader(
-                dataset_1, batch_size=1, shuffle=shuffle,
+            collator = TransoarCollator(config, split, CL_replay=True)
+            dataset = TransoarDataset(config, split, dataset=2)
+            dataloader = DataLoader(
+                dataset, batch_size=1, shuffle=shuffle,
                 num_workers=config['num_workers'], collate_fn=collator
             )
 
-            collator = TransoarCollator(config, split, CL_replay=True)
-            dataset_2 = TransoarDataset(config, split, dataset=2)
-            dataloader_2 = DataLoader(
-                dataset_2, batch_size=1, shuffle=shuffle,
-                num_workers=config['num_workers'], collate_fn=collator
-            )
-            dataloader = (dataloader_1, dataloader_2)
 
         elif split == 'val':
             dataset = TransoarDataset(config, split)
@@ -95,12 +88,12 @@ def get_loader_CLreplay_selected_samples(config, split, batch_size=None, selecte
 
     # Init collator
     collator = TransoarCollator(config, split)
-    shuffle = False if split in ['test', 'val'] else config['shuffle']
+    shuffle = False 
 
-    dataset = TransoarDataset(config, split, dataset=2, selected_samples=selected_samples)
+    dataset = TransoarDataset(config, split, dataset=1, selected_samples=selected_samples)
 
     dataloader = DataLoader(
-        dataset, batch_size=1, shuffle=shuffle,
+        dataset, batch_size=2, shuffle=shuffle,
         num_workers=config['num_workers'], collate_fn=collator
     )
 
