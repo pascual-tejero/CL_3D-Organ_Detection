@@ -123,7 +123,7 @@ class Trainer_CL:
 
         progress_bar = tqdm(self._train_loader)
 
-        for data, _, bboxes, seg_targets in progress_bar:
+        for idx, (data, _, bboxes, seg_targets) in enumerate(progress_bar):
             
             # Put data to gpu
             data, seg_targets = data.to(device=self._device), seg_targets.to(device=self._device)
@@ -195,12 +195,29 @@ class Trainer_CL:
 
 
             # Create absolute loss and mult with loss coefficient 
-            loss_abs = 0
-            for loss_key, loss_val in loss_dict.items():
-                loss_abs += loss_val * self._config['loss_coefs'][loss_key.split('_')[0]]
-            for loss_key, loss_val in contrast_losses.items():
-                loss_abs += loss_val # already multiplied coefficient in transoarnet.py
-                loss_contrast_agg += loss_val 
+            
+            # If sample is replayed, loss_coefs are divided by 100. Otherwise, they are multiplied by 100.
+            if self._config["CL_replay"]:
+                loss_abs = 0
+                if idx % 2 == 0:
+                    for loss_key, loss_value in loss_dict.items():
+                        loss_abs += loss_value * self._config['loss_coefs'][loss_key.split('_')[0]] 
+                    for loss_key, loss_value in contrast_losses.items():
+                        loss_abs += loss_value # already multiplied coefficient in transoarnet.py
+                        loss_contrast_agg += loss_value 
+                else:
+                    for loss_key, loss_value in loss_dict.items():
+                        loss_abs += loss_value * self._config['loss_coefs'][loss_key.split('_')[0]] / 100
+                    for loss_key, loss_value in contrast_losses.items():
+                        loss_abs += loss_value / 100 # already multiplied coefficient in transoarnet.py
+                        loss_contrast_agg += loss_value / 100
+            else:
+                loss_abs = 0
+                for loss_key, loss_val in loss_dict.items():
+                    loss_abs += loss_val * self._config['loss_coefs'][loss_key.split('_')[0]]
+                for loss_key, loss_val in contrast_losses.items():
+                    loss_abs += loss_val # already multiplied coefficient in transoarnet.py
+                    loss_contrast_agg += loss_val 
 
             self._optimizer.zero_grad()
             self._scaler.scale(loss_abs).backward()
@@ -455,7 +472,7 @@ class Trainer_CL:
         loss_enc_giou_agg = 0
         loss_enc_cls_agg = 0
         progress_bar = tqdm(self._val_loader)
-        for data, _, bboxes, seg_targets in progress_bar:
+        for idx, (data, _, bboxes, seg_targets) in enumerate(progress_bar):
             # Put data to gpu
             data, seg_targets = data.to(device=self._device), seg_targets.to(device=self._device)
         
@@ -495,9 +512,19 @@ class Trainer_CL:
                         loss_dict["old_model"] += value
 
                 # Create absolute loss and mult with loss coefficient
-                loss_abs = 0
-                for loss_key, loss_val in loss_dict.items():
-                    loss_abs += loss_val * self._config['loss_coefs'][loss_key.split('_')[0]]
+
+                if self._config["CL_replay"]:
+                    if idx % 2 == 0:
+                        loss_abs = 0
+                        for loss_key, loss_value in loss_dict.items():
+                            loss_abs += loss_value * self._config['loss_coefs'][loss_key.split('_')[0]]
+                    else:
+                        for loss_key, loss_value in loss_dict.items():
+                            loss_abs += loss_value * self._config['loss_coefs'][loss_key.split('_')[0]] / 100
+                else:
+                    loss_abs = 0
+                    for loss_key, loss_val in loss_dict.items():
+                        loss_abs += loss_val * self._config['loss_coefs'][loss_key.split('_')[0]]
 
             # Evaluate validation predictions based on metric
             pred_boxes, pred_classes, pred_scores = inference(out)

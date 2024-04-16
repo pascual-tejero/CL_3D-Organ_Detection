@@ -93,7 +93,7 @@ def get_loader_CLreplay_selected_samples(config, split, batch_size=None, selecte
     dataset = TransoarDataset(config, split, dataset=1, selected_samples=selected_samples)
 
     dataloader = DataLoader(
-        dataset, batch_size=2, shuffle=shuffle,
+        dataset, batch_size=1, shuffle=shuffle,
         num_workers=config['num_workers'], collate_fn=collator
     )
 
