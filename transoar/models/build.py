@@ -94,7 +94,8 @@ def build_criterion(config):
         class_matching_query_split=config.get('class_matching_query_split', []),
         recursive_dm_dn=config['neck'].get('dn', {}).get('enabled', False), # if dn and dm are enabled, use them recursively
         extra_classes=extra_classes,
-        num_classes_orig_dataset=num_classes_orig_dataset
+        num_classes_orig_dataset=num_classes_orig_dataset,
+        config=config
     )
 
     criterion = TransoarCriterion(
