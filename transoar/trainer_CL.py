@@ -117,22 +117,36 @@ class Trainer_CL:
         progress_bar = tqdm(self._train_loader)
 
         for idx, (data, _, bboxes, seg_targets) in enumerate(progress_bar):
-            
-            # Put data to gpu
-            data, seg_targets = data.to(device=self._device), seg_targets.to(device=self._device)
-        
-            det_targets = []
-            for item in bboxes:
-                target = {
-                    'boxes': item[0].to(dtype=torch.float, device=self._device),
-                    'labels': item[1].to(device=self._device)
-                }
-                det_targets.append(target)
+                
+            if self._config["only_class_labels"]: # only class labels, bboxes and seg_targets are None
+                # Put data to gpu
+                data, seg_targets = data.to(device=self._device), None
+
+                det_targets = []
+                for item in bboxes:
+                    target = {
+                        'boxes': None,
+                        'labels': item[1].to(device=self._device)
+                    }
+                    det_targets.append(target)
+
+            else:
+                # Put data to gpu
+                data, seg_targets = data.to(device=self._device), seg_targets.to(device=self._device)
+
+                det_targets = []
+                for item in bboxes:
+                    target = {
+                        'boxes': item[0].to(dtype=torch.float, device=self._device),
+                        'labels': item[1].to(device=self._device)
+                    }
+                    det_targets.append(target)
 
             # Make prediction
             with autocast():   
                 # Main model loss
                 out, contrast_losses, dn_meta = self._model(data, det_targets, num_epoch=num_epoch)
+                
                 loss_dict, pos_indices = self._criterion(out, det_targets, seg_targets, dn_meta, num_epoch=num_epoch)
 
                 if self._criterion._seg_proxy: # log Hausdorff

@@ -16,6 +16,7 @@ val_interval: 1 # Validation interval
 test_interval: 1 # Test interval
 few_shot_training: False # Training samples limited to 50
 mixing_training: False # Mixing training samples from both datasets
+only_class_labels: False # only class labels are used for training
 
 epochs: 2500 #1000 optimal
 lr: 2e-4

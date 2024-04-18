@@ -46,7 +46,7 @@ class TransoarCriterion(nn.Module):
         2) we supervise each pair of matched ground-truth / prediction (supervise class and box)
     """
     def __init__(self, num_classes, matcher, seg_proxy, seg_fg_bg, seg_msa, focal_loss=False, extra_classes=0,
-                 num_classes_orig_dataset=0):
+                 num_classes_orig_dataset=0, config=None):
         """ Create the criterion.
         Parameters:
             num_classes: number of object categories, omitting the special no-object category
@@ -75,7 +75,7 @@ class TransoarCriterion(nn.Module):
             )
             self._hausdorff_distance = HausdorffDistanceMetric(include_background=False, distance_metric="euclidean", directed=False, percentile=95.0)
 
-
+        self.config = config
 
 
         # Hack to make deterministic, https://github.com/pytorch/pytorch/issues/46024
@@ -190,6 +190,13 @@ class TransoarCriterion(nn.Module):
            The target boxes are expected in format (center_x, center_y, w, h), normalized by the image size.
         """
         assert 'pred_boxes' in outputs
+        if self.config["only_class_labels"]:
+            losses = {}
+            losses['bbox'] = torch.tensor(0).to(device=outputs['pred_logits'].device)
+            losses['giou'] = torch.tensor(0).to(device=outputs['pred_logits'].device)
+            return losses
+
+
         idx = self._get_src_permutation_idx(indices)
         src_boxes = outputs['pred_boxes'][idx]
 
@@ -342,7 +349,10 @@ class TransoarCriterion(nn.Module):
         """
         outputs_without_aux = {k: v for k, v in outputs.items() if k != 'aux_outputs' and k != 'enc_outputs'}
         # Retrieve the matching between the outputs of the last layer and the targets
-        pos_indices = self.matcher(outputs_without_aux, targets, num_epoch)
+        if targets[0]["boxes"] is None and seg_targets is None:
+            pos_indices = []
+        else:
+            pos_indices = self.matcher(outputs_without_aux, targets, num_epoch)
 
         # Compute the average number of target boxes accross all nodes, for normalization purposes
         num_boxes = sum(len(t["labels"]) for t in targets)
@@ -384,7 +394,8 @@ class TransoarCriterion(nn.Module):
             losses.update(loss_dict)
 
         #  seg_one2many check to block segmentation loss in one2many branch
-        if (self._seg_msa or self._seg_proxy ) and not 'seg_one2many' in outputs:
+        if (self._seg_msa or self._seg_proxy ) and not 'seg_one2many' in outputs \
+            and not self.config["only_class_labels"]:
             loss_dict = self.loss_segmentation(outputs, seg_targets)
             losses.update(loss_dict) 
             with torch.no_grad():

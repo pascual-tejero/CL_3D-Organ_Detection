@@ -73,7 +73,8 @@ def build_criterion(config):
             seg_proxy=config['backbone']['use_seg_proxy_loss'] and not config['backbone'].get('use_msa_seg_loss', False),
             seg_fg_bg=config['backbone']['fg_bg'],
             seg_msa=config['backbone'].get('use_msa_seg_loss', False),
-            focal_loss=config.get('focal_loss', False)
+            focal_loss=config.get('focal_loss', False),
+            config=config
         )
 
     # Check if there is extra classes in the dataset
@@ -106,7 +107,8 @@ def build_criterion(config):
         seg_msa=config['backbone'].get('use_msa_seg_loss', False),
         focal_loss=config.get('focal_loss', False),
         extra_classes=extra_classes,
-        num_classes_orig_dataset=num_classes_orig_dataset
+        num_classes_orig_dataset=num_classes_orig_dataset, 
+        config=config
     )
 
     if config.get('hybrid_dense_matching', False):
