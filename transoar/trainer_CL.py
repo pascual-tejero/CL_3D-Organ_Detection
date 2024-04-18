@@ -673,6 +673,8 @@ class Trainer_CL:
     def run(self):
         if self._epoch_to_start == 0:   # For initial performance estimation
             self._validate(0)
+            if self._test_loader is not None:
+                self._test(0)
 
         if self._config['CL_replay']: # Select samples for replay
             self._select_samples_for_replay()
