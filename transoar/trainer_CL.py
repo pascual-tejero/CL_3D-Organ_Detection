@@ -486,8 +486,8 @@ class Trainer_CL:
                 write_json(new_metric_scores, self._path_to_run / 'test_during_training' / f"{num_epoch}_epoch" / f'ABDOMEN-CT-1K_dataset.json')
         
         mean_mAP_coco = np.mean(mean_mAP_coco)
-        if self.best_performance_value < mean_mAP_coco:
 
+        if self.best_performance_value < mean_mAP_coco:
             self.best_performance_value = mean_mAP_coco
             self._save_checkpoint(num_epoch, f'model_best_test_{mean_mAP_coco:.3f}_in_ep{num_epoch}.pt')
 
