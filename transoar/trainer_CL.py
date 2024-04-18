@@ -117,12 +117,33 @@ class Trainer_CL:
         progress_bar = tqdm(self._train_loader)
 
         for idx, (data, _, bboxes, seg_targets) in enumerate(progress_bar):
-                
-            if self._config["only_class_labels"]: # only class labels, bboxes and seg_targets are None
-                # Put data to gpu
-                data, seg_targets = data.to(device=self._device), None
 
-                det_targets = []
+            data = data.to(device=self._device)
+            det_targets = []
+
+            if self._config["only_class_labels"] and self._config["CL_replay"] and idx % 2 == 0:
+                seg_targets = None
+
+                for item in bboxes:
+                    target = {
+                        'boxes': None,
+                        'labels': item[1].to(device=self._device)
+                    }
+                    det_targets.append(target)
+
+            elif self._config["only_class_labels"] and self._config["CL_replay"] and idx % 2 != 0:
+                seg_targets = seg_targets.to(device=self._device)   
+
+                for item in bboxes:
+                    target = {
+                        'boxes': item[0].to(dtype=torch.float, device=self._device),
+                        'labels': item[1].to(device=self._device)
+                    }
+                    det_targets.append(target)
+
+            elif self._config["only_class_labels"]:
+                seg_targets = None
+
                 for item in bboxes:
                     target = {
                         'boxes': None,
@@ -132,7 +153,7 @@ class Trainer_CL:
 
             else:
                 # Put data to gpu
-                data, seg_targets = data.to(device=self._device), seg_targets.to(device=self._device)
+                seg_targets = seg_targets.to(device=self._device)
 
                 det_targets = []
                 for item in bboxes:
@@ -141,11 +162,37 @@ class Trainer_CL:
                         'labels': item[1].to(device=self._device)
                     }
                     det_targets.append(target)
+            
+                
+            # if self._config["only_class_labels"]: # only class labels, bboxes and seg_targets are None
+            #     # Put data to gpu
+            #     data, seg_targets = data.to(device=self._device), None
+
+            #     det_targets = []
+            #     for item in bboxes:
+            #         target = {
+            #             'boxes': None,
+            #             'labels': item[1].to(device=self._device)
+            #         }
+            #         det_targets.append(target)
+
+            # else:
+            #     # Put data to gpu
+            #     data, seg_targets = data.to(device=self._device), seg_targets.to(device=self._device)
+
+            #     det_targets = []
+            #     for item in bboxes:
+            #         target = {
+            #             'boxes': item[0].to(dtype=torch.float, device=self._device),
+            #             'labels': item[1].to(device=self._device)
+            #         }
+            #         det_targets.append(target)
 
             # Make prediction
             with autocast():   
                 # Main model loss
                 out, contrast_losses, dn_meta = self._model(data, det_targets, num_epoch=num_epoch)
+                print(out)
                 
                 loss_dict, pos_indices = self._criterion(out, det_targets, seg_targets, dn_meta, num_epoch=num_epoch)
 

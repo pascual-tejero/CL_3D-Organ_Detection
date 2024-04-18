@@ -23,17 +23,26 @@ export TRANSOAR_DATA=/mnt/data/
 /opt/conda/envs/${ENV_name}/bin/python scripts/train.py --config CL_methods/TEST_NO_ERROR/test_run_no_error_WORD
 /opt/conda/envs/${ENV_name}/bin/python scripts/train.py --config CL_methods/TEST_NO_ERROR/test_run_no_error_ABDOMEN-CT-1K
 /opt/conda/envs/${ENV_name}/bin/python scripts/train_CL.py --config CL_methods/ABDOMEN-CT-1K_WORD/test_run_no_error_CLreg
-/opt/conda/envs/${ENV_name}/bin/python scripts/train_CL.py --config CL_methods/ABDOMEN-CT-1K_WORD/test_run_no_error_CLreg_few_shot
+/opt/conda/envs/${ENV_name}/bin/python scripts/train_CL.py --config CL_methods/ABDOMEN-CT-1K_WORD/test_run_no_error_CLreg_onlyClassLabels
+/opt/conda/envs/${ENV_name}/bin/python scripts/train_CL.py --config CL_methods/ABDOMEN-CT-1K_WORD/test_run_no_error_CLreg_fewshot
+/opt/conda/envs/${ENV_name}/bin/python scripts/train_CL.py --config CL_methods/ABDOMEN-CT-1K_WORD/test_run_no_error_CLreg_fewshot_onlyClassLabels
 /opt/conda/envs/${ENV_name}/bin/python scripts/train_CL.py --config CL_methods/ABDOMEN-CT-1K_WORD/test_run_no_error_mixing_datasets
+/opt/conda/envs/${ENV_name}/bin/python scripts/train_CL.py --config CL_methods/ABDOMEN-CT-1K_WORD/test_run_no_error_mixing_datasets_onlyClassLabels
 /opt/conda/envs/${ENV_name}/bin/python scripts/train_CL.py --config CL_methods/ABDOMEN-CT-1K_WORD/test_run_no_error_CLreplay
+/opt/conda/envs/${ENV_name}/bin/python scripts/train_CL.py --config CL_methods/ABDOMEN-CT-1K_WORD/test_run_no_error_CLreplay_onlyClassLabels
 
 # train
 /opt/conda/envs/${ENV_name}/bin/python scripts/train.py --config CL_methods/ABDOMEN-CT-1K_WORD/msa_def_detr_WORD
 /opt/conda/envs/${ENV_name}/bin/python scripts/train.py --config CL_methods/ABDOMEN-CT-1K_WORD/msa_def_detr_ABDOMEN-CT-1K
 /opt/conda/envs/${ENV_name}/bin/python scripts/train_CL.py --config CL_methods/ABDOMEN-CT-1K_WORD/msa_def_detr_CLreg
-/opt/conda/envs/${ENV_name}/bin/python scripts/train_CL.py --config CL_methods/ABDOMEN-CT-1K_WORD/msa_def_detr_CLreg_few_shot
+/opt/conda/envs/${ENV_name}/bin/python scripts/train_CL.py --config CL_methods/ABDOMEN-CT-1K_WORD/msa_def_detr_CLreg_onlyClassLabels
+/opt/conda/envs/${ENV_name}/bin/python scripts/train_CL.py --config CL_methods/ABDOMEN-CT-1K_WORD/msa_def_detr_CLreg_fewshot
+/opt/conda/envs/${ENV_name}/bin/python scripts/train_CL.py --config CL_methods/ABDOMEN-CT-1K_WORD/msa_def_detr_CLreg_fewshot_onlyClassLabels
 /opt/conda/envs/${ENV_name}/bin/python scripts/train_CL.py --config CL_methods/ABDOMEN-CT-1K_WORD/msa_def_detr_mixing_datasets
+/opt/conda/envs/${ENV_name}/bin/python scripts/train_CL.py --config CL_methods/ABDOMEN-CT-1K_WORD/msa_def_detr_mixing_datasets_onlyClassLabels
 /opt/conda/envs/${ENV_name}/bin/python scripts/train_CL.py --config CL_methods/ABDOMEN-CT-1K_WORD/msa_def_detr_CLreplay
+/opt/conda/envs/${ENV_name}/bin/python scripts/train_CL.py --config CL_methods/ABDOMEN-CT-1K_WORD/msa_def_detr_CLreplay_onlyClassLabels
+
 
 
 # test
