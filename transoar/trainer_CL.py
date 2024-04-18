@@ -19,6 +19,7 @@ from transoar.models.transoarnet import TransoarNet
 from transoar.utils.io import write_json
 import os
 import json
+import glob
 
 # helper function: generate box_plot of grads in tensorboard
 def gen_box_plot(grads_list, num_epoch_list, name=None):
@@ -78,6 +79,8 @@ class Trainer_CL:
         # Init main metric for checkpoint
         self._main_metric_key = 'mAP_coco'
         self._main_metric_max_val = metric_start_val
+
+        self.best_performance_value = 0 # for test performance to save best model
         
     
     def _train_one_epoch(self, num_epoch):
@@ -167,7 +170,6 @@ class Trainer_CL:
             with autocast():   
                 # Main model loss
                 out, contrast_losses, dn_meta = self._model(data, det_targets, num_epoch=num_epoch)
-                print(out)
                 
                 loss_dict, pos_indices = self._criterion(out, det_targets, seg_targets, dn_meta, num_epoch=num_epoch)
 
@@ -425,6 +427,8 @@ class Trainer_CL:
     def _test(self, num_epoch):
         self._model.eval() # Set model to evaluation mode
 
+        mean_mAP_coco = []
+
         # Test for each dataset (WORD and ABDOMEN_CT_1K)
         for idx, dataloader_test in enumerate(self._test_loader):
 
@@ -474,11 +478,18 @@ class Trainer_CL:
             os.makedirs(self._path_to_run / 'test_during_training', exist_ok=True)
             os.makedirs(self._path_to_run / 'test_during_training' / f"{num_epoch}_epoch", exist_ok=True)
 
+            mean_mAP_coco.append(new_metric_scores['mAP_coco'])
+
             if idx == 0: # WORD dataset
                 write_json(new_metric_scores, self._path_to_run / 'test_during_training' / f"{num_epoch}_epoch" / 'WORD_dataset.json')
             else: # ABDOMEN_CT_1K dataset
                 write_json(new_metric_scores, self._path_to_run / 'test_during_training' / f"{num_epoch}_epoch" / f'ABDOMEN-CT-1K_dataset.json')
         
+        mean_mAP_coco = np.mean(mean_mAP_coco)
+        if self.best_performance_value < mean_mAP_coco:
+
+            self.best_performance_value = mean_mAP_coco
+            self._save_checkpoint(num_epoch, f'model_best_test_{mean_mAP_coco:.3f}_in_ep{num_epoch}.pt')
 
     @torch.no_grad()
     def _validate(self, num_epoch):
@@ -619,7 +630,7 @@ class Trainer_CL:
             self._main_metric_max_val = metric_scores[self._main_metric_key]
             self._save_checkpoint(
                 num_epoch,
-                f'model_best_{metric_scores[self._main_metric_key]:.3f}_in_ep{num_epoch}.pt'
+                f'model_best_val_{metric_scores[self._main_metric_key]:.3f}_in_ep{num_epoch}.pt'
             )
             
         if len(loss_aux_agg) != 0:
@@ -701,7 +712,8 @@ class Trainer_CL:
                 self._save_checkpoint(epoch, 'model_last.pt')
 
             # fixed checkpoint saving interval and additional checkpoints every 500 epochs
-            if (epoch % self.config['save_checkpoint_interval'] == 0) or (epoch % 500 == 0):
+            # if (epoch % self.config['save_checkpoint_interval'] == 0) or (epoch % 500 == 0):
+            if epoch % 500 == 0:
                 self._save_checkpoint(epoch, f'model_epoch_{epoch}.pt')
 
 
@@ -772,8 +784,11 @@ class Trainer_CL:
 
     def _save_checkpoint(self, num_epoch, name):
         # Delete prior best checkpoint
-        if 'best' in name:
-            [path.unlink() for path in self._path_to_run.iterdir() if 'best' in str(path)]
+        if 'model_best_val' in name:
+            [path.unlink() for path in self._path_to_run.iterdir() if 'model_best_val' in str(path)]
+
+        if 'model_best_test' in name:
+            [path.unlink() for path in self._path_to_run.iterdir() if 'model_best_test' in str(path)]
 
         torch.save({
             'epoch': num_epoch,

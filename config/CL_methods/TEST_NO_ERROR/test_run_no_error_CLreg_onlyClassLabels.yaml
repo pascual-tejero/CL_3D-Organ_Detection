@@ -13,8 +13,9 @@ CL_replay: False # Continual learning with replay
 CL_replay_samples: 50  # Number of samples to replay
 CL_replay_mult: 1.5 # max = 1.5, otherwise will give error at some point
 CL_reg: True # Continual learning with regularization
-val_interval: 1
-test_interval: 1
+val_interval: 1 # Validation interval
+test_interval: 1 # Test interval
+save_checkpoint_interval: 200 # Save checkpoint interval
 few_shot_training: False # Training samples limited to 50
 mixing_training: False # Mixes two datasets
 only_class_labels: True # No bbox and segmap in the dataset, just class labels
