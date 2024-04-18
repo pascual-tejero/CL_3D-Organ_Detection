@@ -162,32 +162,7 @@ class Trainer_CL:
                         'labels': item[1].to(device=self._device)
                     }
                     det_targets.append(target)
-            
-                
-            # if self._config["only_class_labels"]: # only class labels, bboxes and seg_targets are None
-            #     # Put data to gpu
-            #     data, seg_targets = data.to(device=self._device), None
-
-            #     det_targets = []
-            #     for item in bboxes:
-            #         target = {
-            #             'boxes': None,
-            #             'labels': item[1].to(device=self._device)
-            #         }
-            #         det_targets.append(target)
-
-            # else:
-            #     # Put data to gpu
-            #     data, seg_targets = data.to(device=self._device), seg_targets.to(device=self._device)
-
-            #     det_targets = []
-            #     for item in bboxes:
-            #         target = {
-            #             'boxes': item[0].to(dtype=torch.float, device=self._device),
-            #             'labels': item[1].to(device=self._device)
-            #         }
-            #         det_targets.append(target)
-
+        
             # Make prediction
             with autocast():   
                 # Main model loss
@@ -724,8 +699,9 @@ class Trainer_CL:
 
             if not self._config['debug_mode']:
                 self._save_checkpoint(epoch, 'model_last.pt')
-            # fixed checkpoints at each 200 epochs:
-            if (epoch % 500) == 0:
+
+            # fixed checkpoint saving interval and additional checkpoints every 500 epochs
+            if (epoch % self.config['save_checkpoint_interval'] == 0) or (epoch % 500 == 0):
                 self._save_checkpoint(epoch, f'model_epoch_{epoch}.pt')
 
 
