@@ -190,10 +190,11 @@ def train(config, args):
 
     write_json(config, path_to_run / 'config.json')
 
-    if config["mixing_training"] or config["CL_replay"]: # Load auxiliary model and old model
+    
+    if config["mixing_training"] or config["CL_replay"]:  
         aux_model = None
         old_model = None
-    else:
+    else: # Load auxiliary model and old model for taking their outputs into account
         # Load auxiliary model from config["CL_models"]["aux_model_path"]
         aux_model = TransoarNet(config).to(device=device)
         checkpoint_aux_model = torch.load(config["CL_models"]["aux_model_path"])
