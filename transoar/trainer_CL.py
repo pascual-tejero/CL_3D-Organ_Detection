@@ -82,6 +82,10 @@ class Trainer_CL:
 
         self.best_performance_value = 0 # for test performance to save best model
         
+        # In case of CL_replay or mixing training, we need to keep track of the samples
+        if self._config["only_class_labels"] and (self._config["CL_replay"] or self._config["mixing_training"]):
+            assert self._config["batch_size"] == 1, "Batch size must be 1 for CL_replay with only class labels or mixing training"
+        
     
     def _train_one_epoch(self, num_epoch):
         self._model.train()
@@ -116,6 +120,7 @@ class Trainer_CL:
         neg_query_grads_list = torch.Tensor([])
 
         # self._replay_samples
+        
 
         progress_bar = tqdm(self._train_loader)
 
@@ -124,33 +129,42 @@ class Trainer_CL:
             data = data.to(device=self._device)
             det_targets = []
 
-            if self._config["only_class_labels"] and self._config["CL_replay"] and idx % 2 == 0:
-                seg_targets = None
+            if self._config["only_class_labels"] and (self._config["CL_replay"] or self._config["mixing_training"]):
+                # In the case of CL_replay or mixing training, WORD and ABDOMENCT-1K datasets are mixed
+                # in a interleaved way. The first sample is from WORD dataset and the second sample is from
+                # ABDOMENCT-1K dataset, and so on. Therefore, we remove segmentation maps and bboxes from WORD,
+                # and only keep class labels. For ABDOMENCT-1K, we keep all the data.
+                if idx % 2 == 0: # WORD dataset
+                    seg_targets = None
 
-                for item in bboxes:
-                    target = {
-                        'boxes': None,
-                        'labels': item[1].to(device=self._device)
-                    }
-                    det_targets.append(target)
+                    for item in bboxes:
+                        target = {
+                            'boxes': None,
+                            'labels': item[1].to(device=self._device) 
+                        }
+                        # Remove those class labels whose value is between 6 and 10
+                        target['labels'][target['labels'] > 5] = 0
+                        det_targets.append(target)
 
-            elif self._config["only_class_labels"] and self._config["CL_replay"] and idx % 2 != 0:
-                seg_targets = seg_targets.to(device=self._device)   
+                else: # ABDOMENCT-1K dataset
+                    # Put data to gpu
+                    seg_targets = seg_targets.to(device=self._device)
 
-                for item in bboxes:
-                    target = {
-                        'boxes': item[0].to(dtype=torch.float, device=self._device),
-                        'labels': item[1].to(device=self._device)
-                    }
-                    det_targets.append(target)
-
+                    det_targets = []
+                    for item in bboxes:
+                        target = {
+                            'boxes': item[0].to(dtype=torch.float, device=self._device),
+                            'labels': item[1].to(device=self._device)
+                        }
+                        det_targets.append(target)
+                
             elif self._config["only_class_labels"]:
                 seg_targets = None
 
                 for item in bboxes:
                     target = {
                         'boxes': None,
-                        'labels': item[1].to(device=self._device)
+                        'labels': item[1].to(device=self._device) 
                     }
                     det_targets.append(target)
 
@@ -164,6 +178,8 @@ class Trainer_CL:
                         'boxes': item[0].to(dtype=torch.float, device=self._device),
                         'labels': item[1].to(device=self._device)
                     }
+                    # Remove those class labels whose value is between 6 and 10
+                    target['labels'][target['labels'] > 5] = 0
                     det_targets.append(target)
         
             # Make prediction
@@ -177,8 +193,8 @@ class Trainer_CL:
                     hd95 = loss_dict['hd95'].item()
                 del loss_dict['hd95'] # remove Hausdorff distance from loss, so it does not influence loss_abs
 
-                if self._aux_model is not None:
-                    # Auxiliary model loss
+                # Auxiliary model loss
+                if self._aux_model is not None:   
                     aux_out = self._aux_model(data)
                     loss_dict_aux, _ = self._criterion(aux_out, det_targets, seg_targets)
 
@@ -186,9 +202,9 @@ class Trainer_CL:
                     del loss_dict_aux['hd95'] # remove Hausdorff distance from loss, so it does not influence loss_abs
                     for key, value in loss_dict_aux.items():
                         loss_dict["aux_model"] += value 
-
-                if self._old_model is not None:
-                    # Old model loss
+                
+                # Old model loss
+                if self._old_model is not None: 
                     old_out = self._old_model(data)
                     loss_dict_old, _ = self._criterion(old_out, det_targets, seg_targets)
 
@@ -196,10 +212,6 @@ class Trainer_CL:
                     del loss_dict_old['hd95'] # remove Hausdorff distance from loss, so it does not influence loss_abs
                     for key, value in loss_dict_old.items():
                         loss_dict["old_model"] += value
-            
-            # for key, value in loss_dict.items():
-            #     print(key, value)
-            # quit()
 
                 if self._hybrid: # hybrid matching
                     outputs_one2many = dict()
@@ -224,34 +236,16 @@ class Trainer_CL:
                         else:
                             loss_dict[key + "_one2many"] = value * self._config['hybrid_loss_weight_one2many']
 
-
-                # Create absolute loss and mult with loss coefficient 
-                
-                # If sample is replayed, loss_coefs are divided by 100. Otherwise, they are multiplied by 100.
-                if self._config["CL_replay"]:
-                    loss_abs = 0
-                    if idx % 2 == 0:
-                        for loss_key, loss_value in loss_dict.items():
-                            loss_abs += loss_value * self._config['loss_coefs'][loss_key.split('_')[0]] * self._config['CL_replay_mult']
-                        for loss_key, loss_value in contrast_losses.items():
-                            loss_abs += loss_value # already multiplied coefficient in transoarnet.py
-                            loss_contrast_agg += loss_value
-                    else:
-                        for loss_key, loss_value in loss_dict.items():
-                            loss_abs += loss_value * self._config['loss_coefs'][loss_key.split('_')[0]] 
-                        for loss_key, loss_value in contrast_losses.items():
-                            loss_abs += loss_value  # already multiplied coefficient in transoarnet.py
-                            loss_contrast_agg += loss_value 
-                else:
-                    loss_abs = 0
-                    for loss_key, loss_val in loss_dict.items():
-                        loss_abs += loss_val * self._config['loss_coefs'][loss_key.split('_')[0]]
-                    for loss_key, loss_val in contrast_losses.items():
-                        loss_abs += loss_val # already multiplied coefficient in transoarnet.py
-                        loss_contrast_agg += loss_val 
-
-            self._optimizer.zero_grad()
-            self._scaler.scale(loss_abs).backward()
+                # Create absolute loss and mult with loss coefficient                
+                loss_abs = 0
+                for loss_key, loss_val in loss_dict.items():
+                    loss_abs += loss_val * self._config['loss_coefs'][loss_key.split('_')[0]]
+                for loss_key, loss_val in contrast_losses.items():
+                    loss_abs += loss_val # already multiplied coefficient in transoarnet.py
+                    loss_contrast_agg += loss_val 
+                    
+            self._optimizer.zero_grad() # Zero gradients
+            self._scaler.scale(loss_abs).backward() # Backward pass
             
             # Clip grads to counter exploding grads
             max_norm = self._config['clip_max_norm']
@@ -471,9 +465,9 @@ class Trainer_CL:
             
             # Test especially for WORD and ABDOMEN_CT_1K dataset
             if idx == 0: # WORD dataset
-                new_metric_scores = modify_metrics(metric_scores, 'WORD')
+                new_metric_scores = modify_metrics(metric_scores, 'WORD', self._config)
             else: # ABDOMEN_CT_1K dataset
-                new_metric_scores = modify_metrics(metric_scores, 'ABDOMEN_CT_1K')
+                new_metric_scores = modify_metrics(metric_scores, 'ABDOMEN_CT_1K', self._config)
 
             os.makedirs(self._path_to_run / 'test_during_training', exist_ok=True)
             os.makedirs(self._path_to_run / 'test_during_training' / f"{num_epoch}_epoch", exist_ok=True)
@@ -486,8 +480,8 @@ class Trainer_CL:
                 write_json(new_metric_scores, self._path_to_run / 'test_during_training' / f"{num_epoch}_epoch" / f'ABDOMEN-CT-1K_dataset.json')
         
         mean_mAP_coco = np.mean(mean_mAP_coco)
-
         if self.best_performance_value < mean_mAP_coco:
+
             self.best_performance_value = mean_mAP_coco
             self._save_checkpoint(num_epoch, f'model_best_test_{mean_mAP_coco:.3f}_in_ep{num_epoch}.pt')
 
@@ -808,7 +802,7 @@ def get_gpu_memory(device):
 
 
 
-def modify_metrics(data_metrics, dataset_name):
+def modify_metrics(data_metrics, dataset_name, config):
 
     # Key metrics that must be modified according to the new structure
     key_metrics = ("mAP_coco", "mAP_nndet", "AP_IoU_0.10", "AP_IoU_0.50", "AP_IoU_0.75", "mAR_coco",
@@ -820,18 +814,8 @@ def modify_metrics(data_metrics, dataset_name):
         dict_metrics = {}
         for key_data in data_metrics.keys():
 
-            # TOTALSEGMENTATOR
-            if dataset_name == "TOTALSEGMENTATOR":
-                if metric in key_data:
-                    dict_metrics[key_data] = data_metrics[key_data]
-
-            # WORD
-            elif dataset_name == "WORD":
-                if metric in key_data:
-                    dict_metrics[key_data] = data_metrics[key_data]
-
             # ABDOMEN_CT_1K
-            elif dataset_name == "ABDOMEN_CT_1K":
+            if dataset_name == "ABDOMEN_CT_1K" or config["only_class_labels"]:
                 if (metric + "_stomach_" in key_data) or (metric + "_stomach" in key_data) or \
                     (metric + "_gallbladder_" in key_data) or (metric + "_gallbladder" in key_data) or \
                     (metric + "_duodenum_" in key_data) or (metric + "_duodenum" in key_data) or \
@@ -843,6 +827,16 @@ def modify_metrics(data_metrics, dataset_name):
                     (metric + "_right adrenal gland_" in key_data) or (metric + "_right adrenal gland" in key_data):
                     continue
                 elif metric in key_data:
+                    dict_metrics[key_data] = data_metrics[key_data]
+
+            # TOTALSEGMENTATOR            
+            if dataset_name == "TOTALSEGMENTATOR":
+                if metric in key_data:
+                    dict_metrics[key_data] = data_metrics[key_data]
+
+            # WORD
+            elif dataset_name == "WORD":
+                if metric in key_data:
                     dict_metrics[key_data] = data_metrics[key_data]
 
         # Update the new dictionary with the new metrics

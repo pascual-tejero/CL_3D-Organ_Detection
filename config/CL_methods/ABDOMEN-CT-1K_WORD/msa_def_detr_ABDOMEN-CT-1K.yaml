@@ -3,7 +3,7 @@
 
 # General training
 experiment_name: msa_def_detr_ABDOMEN-CT-1K_dataset 
-resume: False # True to resume from last checkpoint
+resume: True # True to resume from last checkpoint
 device: cuda:0
 debug_mode: False  # Doesn't save checkpoints
 seed: 10

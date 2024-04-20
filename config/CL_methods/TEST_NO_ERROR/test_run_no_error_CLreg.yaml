@@ -2,7 +2,7 @@
 
 
 # General training
-experiment_name: test_run_no_error_CLreg
+experiment_name: test_run_no_error_ABDOMEN-CT-1K_dataset_TEST
 resume: False # True to resume from last checkpoint
 device: cuda:0
 debug_mode: False  # Doesn't save checkpoints
@@ -19,6 +19,7 @@ save_checkpoint_interval: 200 # Save checkpoint interval
 few_shot_training: False # Training samples limited to 50
 mixing_training: False # Mixes two datasets
 only_class_labels: False # only class labels are used for training
+num_classes_orig_dataset: 10 # Number of classes in the original dataset
 
 epochs: 2500 #1000 optimal
 lr: 2e-4

@@ -119,10 +119,9 @@ class TransoarCriterion(nn.Module):
 
         loss_ce = F.cross_entropy(src_logits.transpose(1, 2), target_classes, self.cls_weights.to(device=src_logits.device))
         losses = {"cls": loss_ce}
-        
+
         return losses
-
-
+    
     def downsampler_fn(self, img, out_size):
         """
         input sahep: B,C,H,W,D
@@ -348,6 +347,7 @@ class TransoarCriterion(nn.Module):
                       The expected keys in each dict depends on the losses applied, see each loss' doc
         """
         outputs_without_aux = {k: v for k, v in outputs.items() if k != 'aux_outputs' and k != 'enc_outputs'}
+
         # Retrieve the matching between the outputs of the last layer and the targets
         if targets[0]["boxes"] is None and seg_targets is None:
             pos_indices = []
@@ -442,6 +442,7 @@ class TransoarCriterion(nn.Module):
                 loss_dict = self.get_loss(loss, enc_outputs, bin_targets, indices, num_boxes)
                 loss_dict = {k + f"_enc": v for k, v in loss_dict.items()}
                 losses.update(loss_dict)
+
 
         return losses, pos_indices
 

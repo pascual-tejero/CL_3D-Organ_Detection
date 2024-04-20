@@ -18,7 +18,8 @@ test_interval: 1 # Test interval
 save_checkpoint_interval: 100 # Save checkpoint interval
 few_shot_training: False # Training samples limited to 50
 mixing_training: True # Mixing training samples from both datasets
-only_class_labels: False # only class labels are used for training
+only_class_labels: True # only class labels are used for training
+num_classes_orig_dataset: False # Number of classes in the original dataset
 
 epochs: 2500 #1000 optimal
 lr: 2e-4
@@ -38,7 +39,7 @@ bbox_padding: 1
 test: True
 
 # Dataloader
-batch_size: 2 # 2 (normal, 1 reduced params)
+batch_size: 1 # 2 (normal, 1 reduced params)
 shuffle: True
 num_workers: 1 # 10 (normal, 1 lower 80GB GPU)
 

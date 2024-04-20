@@ -19,6 +19,7 @@ save_checkpoint_interval: 100 # Save checkpoint interval
 few_shot_training: False # Training samples limited to 50
 mixing_training: False # Mixing training samples from both datasets
 only_class_labels: False # only class labels are used for training
+num_classes_orig_dataset: 5 # Number of classes in the original dataset
 
 epochs: 2500 #1000 optimal
 lr: 2e-4
