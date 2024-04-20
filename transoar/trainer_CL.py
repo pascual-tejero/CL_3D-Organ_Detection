@@ -477,7 +477,7 @@ class Trainer_CL:
             if idx == 0: # WORD dataset
                 write_json(new_metric_scores, self._path_to_run / 'test_during_training' / f"{num_epoch}_epoch" / 'WORD_dataset.json')
             else: # ABDOMEN_CT_1K dataset
-                write_json(new_metric_scores, self._path_to_run / 'test_during_training' / f"{num_epoch}_epoch" / f'ABDOMEN-CT-1K_dataset.json')
+                write_json(new_metric_scores, self._path_to_run / 'test_during_training' / f"{num_epoch}_epoch" / f'ABDOMENCT-1K_dataset.json')
         
         mean_mAP_coco = np.mean(mean_mAP_coco)
         if self.best_performance_value < mean_mAP_coco:

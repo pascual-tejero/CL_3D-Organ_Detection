@@ -20,7 +20,7 @@ srun --mpi=pmi2 \
 --container-mounts=${BASE_DIR}/myData:/mnt/data,${BASE_DIR}/${CODE_DIR}:/mnt/code  \
 --container-image=${BASE_DIR}/${ENV_DIR}/msadet.sqsh \
 --container-workdir=/mnt/code \
-/opt/conda/envs/${ENV_name}/bin/python scripts/train.py --config CL_methods/ABDOMEN-CT-1K_WORD/msa_def_detr_CL
+/opt/conda/envs/${ENV_name}/bin/python scripts/train.py --config CL_methods/ABDOMENCT-1K_WORD/msa_def_detr_CL
 
 
 #### sbatch train.sbatch

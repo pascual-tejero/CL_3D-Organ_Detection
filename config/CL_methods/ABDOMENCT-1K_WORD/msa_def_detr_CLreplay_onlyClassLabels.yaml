@@ -2,7 +2,7 @@
 
 
 # General training
-experiment_name: msa_def_detr_CLreplay_ABDOMEN-CT-1K_WORD_datasets_onlyClassLabels_50samples
+experiment_name: msa_def_detr_CLreplay_ABDOMENCT-1K_WORD_datasets_onlyClassLabels_50samples
 resume: True # True to resume from last checkpoint
 device: cuda:0
 debug_mode: False  # Doesn't save checkpoints
@@ -177,7 +177,7 @@ augmentation:
 
 CL_models:
   aux_model_path: ./runs/msa_def_detr_WORD_dataset/model_best_0.512_in_ep905.pt
-  old_model_path: ./runs/msa_def_detr_ABDOMEN-CT-1K_dataset/model_best_0.818_in_ep1057.pt
+  old_model_path: ./runs/msa_def_detr_ABDOMENCT-1K_dataset/model_best_0.818_in_ep1057.pt
 
 # Dataset path:
 #   Windows: SET TRANSOAR_DATA=C:\Users\pascu\Documents\Thesis\datasets\
@@ -188,4 +188,4 @@ CL_models:
 #   Linux: export CUDA_VISIBLE_DEVICES=0
 
 # Run command
-#   python ./scripts/train_CL.py --config CL_methods/ABDOMEN-CT-1K_WORD/msa_def_detr_CLreplay_onlyClassLabels
+#   python ./scripts/train_CL.py --config CL_methods/ABDOMENCT-1K_WORD/msa_def_detr_CLreplay_onlyClassLabels

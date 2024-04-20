@@ -2,7 +2,7 @@
 
 
 # General training
-experiment_name: msa_def_detr_CLreg_ABDOMEN-CT-1K_WORD_datasets
+experiment_name: msa_def_detr_CLreg_ABDOMENCT-1K_WORD_datasets_fewshot
 resume: False # True to resume from last checkpoint
 device: cuda:0
 debug_mode: False  # Doesn't save checkpoints
@@ -15,8 +15,8 @@ CL_replay_mult: 1.5 # max = 1.5, otherwise will give error at some point
 CL_reg: True # Continual learning with regularization
 val_interval: 1 # Validation interval
 test_interval: 1 # Test interval
-save_checkpoint_interval: 50 # Save checkpoint interval
-few_shot_training: False # Training samples limited to 50
+save_checkpoint_interval: 200 # Save checkpoint interval
+few_shot_training: True # Training samples limited to 50
 mixing_training: False # Mixing training samples from both datasets
 only_class_labels: False # only class labels are used for training
 
@@ -79,13 +79,13 @@ backbone:
   
   # Standard params
   fpn_channels: 384 # Final output channels (384 original, 288 reduced params)
-  out_fmaps: [P4, P3, P2]  # [P4, P3, P2] or [P4, P3]
+  out_fmaps: [P4, P3, P2]  # P0, P1, P2, P3, P4, P5
 
   kernel_size: 3
   patch_size: 2
   mlp_ratio: 2
-  num_heads: 32 # 32 original, 16 reduced params 3 #1
-  depths: 2 # 1 to reduce params #1
+  num_heads: 32
+  depths: 2
   drop_path_rate: 0.0
   attn_drop_rate: 0.0
   drop_rate: 0.0
@@ -105,7 +105,7 @@ backbone:
 neck:
   name: def_detr
   use_encoder: True 
-  input_level: P2 # P2 or P3
+  input_level: P2
   num_feature_levels: 3
 
   pos_encoding: sine
@@ -145,7 +145,7 @@ neck:
 # Augmentation
 augmentation:
   use_augmentation: True
-  patch_size: [224, 224, 160]  
+  patch_size: [224, 224, 160] 
 
 
   p_gaussian_noise: 0
@@ -177,7 +177,7 @@ augmentation:
 
 CL_models:
   aux_model_path: ./runs/msa_def_detr_WORD_dataset/model_best_0.512_in_ep905.pt
-  old_model_path: ./runs/msa_def_detr_ABDOMEN-CT-1K_dataset/model_best_0.817_in_ep1018.pt
+  old_model_path: ./runs/msa_def_detr_ABDOMENCT-1K_dataset/model_best_0.818_in_ep1057.pt
 
 # Dataset path:
 #   Windows: SET TRANSOAR_DATA=C:\Users\pascu\Documents\Thesis\datasets\
@@ -188,4 +188,4 @@ CL_models:
 #   Linux: export CUDA_VISIBLE_DEVICES=0
 
 # Run command
-#   python ./scripts/train_CL.py --config CL_methods/ABDOMEN-CT-1K_WORD/msa_def_detr_CLreg
+#   python ./scripts/train_CL.py --config CL_methods/ABDOMENCT-1K_WORD/msa_def_detr_CLreg_fewshot

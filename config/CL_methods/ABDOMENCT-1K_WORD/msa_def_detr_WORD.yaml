@@ -2,16 +2,15 @@
 
 
 # General training
-experiment_name: msa_def_detr_ABDOMEN-CT-1K_dataset 
-resume: True # True to resume from last checkpoint
+experiment_name: msa_def_detr_WORD_dataset 
+resume: False # True to resume from last checkpoint
 device: cuda:0
 debug_mode: False  # Doesn't save checkpoints
 seed: 10
 
-# Continual learning
 CL_replay: False # Continual learning with replay
 CL_replay_samples: 50 # Number of samples to replay
-CL_replay_mult: 1.5 # max = 1.5, otherwise will give error at some point
+CL_replay_mult: 3 # max = 3, otherwise will give error at some point
 CL_reg: False # Continual learning with regularization
 val_interval: 1 # Validation interval
 test_interval: 1 # Test interval
@@ -31,7 +30,7 @@ clip_max_norm: 1   # Not used
 lr_drop: 500
 
 # Data
-dataset: matched_datasets/abdomenCT-1k_224_224_160_CT
+dataset: matched_datasets/word_224_224_160_CT
 overfit: False # Use same set consisting of one image for train and val
 bbox_padding: 1
 
@@ -92,7 +91,7 @@ backbone:
 
 
   # Segmentation proxy loss
-  num_organs: 10
+  num_organs: 10 
   use_msa_seg_loss: True #<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
   fg_bg: False
   use_seg_proxy_loss: False  # never use it with msa
@@ -182,4 +181,4 @@ augmentation:
 #   Linux: export CUDA_VISIBLE_DEVICES=0
 
 # Run command
-#   python ./scripts/train.py --config CL_methods/ABDOMEN-CT-1K_WORD/msa_def_detr_ABDOMEN-CT-1K
+#   python ./scripts/train.py --config CL_methods/ABDOMENCT-1K_WORD/msa_def_detr_WORD
