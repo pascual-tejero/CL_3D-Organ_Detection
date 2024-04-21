@@ -10,14 +10,13 @@ seed: 10
 
 CL_replay: False # Continual learning with replay
 CL_replay_samples: 50 # Number of samples to replay
-CL_replay_mult: 3 # max = 3, otherwise will give error at some point
 CL_reg: False # Continual learning with regularization
 val_interval: 1 # Validation interval
 test_interval: 1 # Test interval
-save_checkpoint_interval: 200 # Save checkpoint interval
 few_shot_training: False # Training samples limited to 50
 mixing_training: False # Mixing training samples from both datasets
-only_class_labels: False # only class labels are used for training
+only_class_labels: False
+remove_labels: False # only class labels are used for training
 
 epochs: 2500 #1000 optimal
 lr: 2e-4
