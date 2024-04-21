@@ -21,6 +21,24 @@ import os
 import json
 import glob
 
+ABDOMENCT_1K = {
+    "num_classes": 5,
+    "labels": {"1": "liver", "2": "right kidney", "3": "spleen", "4": "pancreas", "5": "left kidney"},
+    "labels_small": {"4": "pancreas"},
+    "labels_mid": {"2": "right kidney", "3": "spleen", "5": "left kidney"},
+    "labels_large": {"1": "liver"}
+}
+
+WORD = {
+    "num_classes": 10,
+    "labels": {"1": "liver", "2": "right kidney", "3": "spleen", "4": "pancreas", "5": "left kidney", 
+               "6": "stomach", "7": "duodenum", "8": "colon", "9": "intestine", "10": "bladder"},
+    "labels_small": {"4": "pancreas", "7": "duodenum"},
+    "labels_mid": {"2": "right kidney", "3": "spleen", "5": "left kidney", "10": "bladder"},
+    "labels_large": {"1": "liver", "6": "stomach", "8": "colon", "9": "intestine"}
+}
+
+
 # helper function: generate box_plot of grads in tensorboard
 def gen_box_plot(grads_list, num_epoch_list, name=None):
     """Create a pyplot plot and save to buffer."""
@@ -75,6 +93,7 @@ class Trainer_CL:
             iou_range_coco=(0.5, 0.95, 0.05),
             sparse_results=True
         )
+        
 
         # Init main metric for checkpoint
         self._main_metric_key = 'mAP_coco'
@@ -441,16 +460,27 @@ class Trainer_CL:
 
         # Test for each dataset (WORD and ABDOMEN_CT_1K)
         for idx, dataloader_test in enumerate(self._test_loader):
-
-            self._evaluator_test = DetectionEvaluator(
-                classes=list(self._config['labels'].values()),
-                classes_small=self._config['labels_small'],
-                classes_mid=self._config['labels_mid'],
-                classes_large=self._config['labels_large'],
-                iou_range_nndet=(0.1, 0.5, 0.05),
-                iou_range_coco=(0.5, 0.95, 0.05),
-                sparse_results=False
-            )
+            
+            if idx == 0 and not self._config["only_class_labels"] and not self._config["remove_labels"]: # WORD dataset
+                self._evaluator_test = DetectionEvaluator(
+                    classes=list(WORD['labels'].values()),
+                    classes_small=WORD['labels_small'],
+                    classes_mid=WORD['labels_mid'],
+                    classes_large=WORD['labels_large'],
+                    iou_range_nndet=(0.1, 0.5, 0.05),
+                    iou_range_coco=(0.5, 0.95, 0.05),
+                    sparse_results=False
+                )
+            else: # ABDOMEN_CT_1K dataset
+                self._evaluator_test = DetectionEvaluator(
+                    classes=list(ABDOMENCT_1K['labels'].values()),
+                    classes_small=ABDOMENCT_1K['labels_small'],
+                    classes_mid=ABDOMENCT_1K['labels_mid'],
+                    classes_large=ABDOMENCT_1K['labels_large'],
+                    iou_range_nndet=(0.1, 0.5, 0.05),
+                    iou_range_coco=(0.5, 0.95, 0.05),
+                    sparse_results=False
+                )
 
             for data, mask, bboxes, _, _ in tqdm(dataloader_test):
 
@@ -479,25 +509,19 @@ class Trainer_CL:
 
             metric_scores = self._evaluator_test.eval()
             
-            # Test especially for WORD and ABDOMEN_CT_1K dataset
-            if idx == 0: # WORD dataset
-                new_metric_scores = modify_metrics(metric_scores, 'WORD', self._config)
-            else: # ABDOMEN_CT_1K dataset
-                new_metric_scores = modify_metrics(metric_scores, 'ABDOMEN_CT_1K', self._config)
-
             os.makedirs(self._path_to_run / 'test_during_training', exist_ok=True)
             os.makedirs(self._path_to_run / 'test_during_training' / f"{num_epoch}_epoch", exist_ok=True)
 
-            mean_mAP_coco.append(new_metric_scores['mAP_coco'])
+            mean_mAP_coco.append(metric_scores['mAP_coco'])
 
             if idx == 0: # WORD dataset
-                write_json(new_metric_scores, self._path_to_run / 'test_during_training' / f"{num_epoch}_epoch" / 'WORD_dataset.json')
+                write_json(metric_scores, self._path_to_run / 'test_during_training' / f"{num_epoch}_epoch" / 'WORD_dataset.json')
             else: # ABDOMEN_CT_1K dataset
-                write_json(new_metric_scores, self._path_to_run / 'test_during_training' / f"{num_epoch}_epoch" / f'ABDOMENCT-1K_dataset.json')
+                write_json(metric_scores, self._path_to_run / 'test_during_training' / f"{num_epoch}_epoch" / f'ABDOMENCT-1K_dataset.json')
         
         mean_mAP_coco = np.mean(mean_mAP_coco)
+        
         if self.best_performance_value < mean_mAP_coco:
-
             self.best_performance_value = mean_mAP_coco
             self._save_checkpoint(num_epoch, f'model_best_test_{mean_mAP_coco:.3f}_in_ep{num_epoch}.pt')
 
@@ -681,10 +705,10 @@ class Trainer_CL:
         
 
     def run(self):
-        # if self._epoch_to_start == 0:   # For initial performance estimation
-        #     self._validate(0)
-        #     if self._test_loader is not None:
-        #         self._test(0)
+        if self._epoch_to_start == 0:   # For initial performance estimation
+            self._validate(0)
+            if self._test_loader is not None:
+                self._test(0)
 
         if self._config['CL_replay']: # Select samples for replay
             self._select_samples_for_replay()
@@ -815,63 +839,3 @@ def get_gpu_memory(device):
     memory_allocated = torch.cuda.memory_allocated(device)
     memory_cached = torch.cuda.memory_cached(device)
     return memory_allocated, memory_cached
-
-
-
-def modify_metrics(data_metrics, dataset_name, config):
-
-    # Key metrics that must be modified according to the new structure
-    key_metrics = ("mAP_coco", "mAP_nndet", "AP_IoU_0.10", "AP_IoU_0.50", "AP_IoU_0.75", "mAR_coco",
-                     "mAR_nndet", "AR_IoU_0.10", "AR_IoU_0.50", "AR_IoU_0.75")
-    
-    data_new_metrics = {} # New dictionary to store the new metrics
-
-    for metric in key_metrics:
-        dict_metrics = {}
-        for key_data in data_metrics.keys():
-
-            # ABDOMEN_CT_1K
-            if dataset_name == "ABDOMEN_CT_1K" or config["only_class_labels"]:
-                if (metric + "_stomach_" in key_data) or (metric + "_stomach" in key_data) or \
-                    (metric + "_gallbladder_" in key_data) or (metric + "_gallbladder" in key_data) or \
-                    (metric + "_duodenum_" in key_data) or (metric + "_duodenum" in key_data) or \
-                    (metric + "_colon_" in key_data) or (metric + "_colon" in key_data) or \
-                    (metric + "_intestine_" in key_data) or (metric + "_intestine" in key_data) or \
-                    (metric + "_left adrenal gland_" in key_data) or (metric + "_left adrenal gland" in key_data) or \
-                    (metric + "_rectum_" in key_data) or (metric + "_rectum" in key_data) or \
-                    (metric + "_bladder_" in key_data) or (metric + "_bladder" in key_data) or \
-                    (metric + "_right adrenal gland_" in key_data) or (metric + "_right adrenal gland" in key_data):
-                    continue
-                elif metric in key_data:
-                    dict_metrics[key_data] = data_metrics[key_data]
-
-            # TOTALSEGMENTATOR            
-            if dataset_name == "TOTALSEGMENTATOR":
-                if metric in key_data:
-                    dict_metrics[key_data] = data_metrics[key_data]
-
-            # WORD
-            elif dataset_name == "WORD":
-                if metric in key_data:
-                    dict_metrics[key_data] = data_metrics[key_data]
-
-        # Update the new dictionary with the new metrics
-        data_new_metrics.update(dict_metrics) 
-
-    # Calculate the mean of the metrics
-    for metric in key_metrics:
-        mean_metric_value = []
-        for key in data_new_metrics.keys():
-            if metric == key: # If the key is the metric, we skip it because we want to update that metric which is the mean
-                continue
-            elif key == (metric + "_s") or key == (metric + "_m") or key == (metric + "_l"):
-                continue
-            elif metric in key:
-                mean_metric_value.append(data_new_metrics[key])
-
-        mean_metric = sum(mean_metric_value) / len(mean_metric_value) # Calculate the mean of the metrics
-        data_new_metrics[metric] = mean_metric
-
-    return data_new_metrics
-
-
