@@ -506,8 +506,6 @@ class Trainer_CL:
                     gt_boxes=gt_boxes,
                     gt_classes=gt_classes
                 )
-                # gt_boxes=[target['boxes'].detach().cpu().numpy() for target in det_targets],
-                # gt_classes=[target['labels'].detach().cpu().numpy() for target in det_targets]
 
             metric_scores = self._evaluator_test.eval()
             
