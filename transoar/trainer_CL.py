@@ -482,9 +482,9 @@ class Trainer_CL:
                     sparse_results=False
                 )
 
-            for data, mask, bboxes, _, _ in tqdm(dataloader_test):
+            for data, _, bboxes, _, _ in tqdm(dataloader_test):
 
-                data, mask = data.to(device=self._device), mask.to(device=self._device)
+                data = data.to(device=self._device)
 
                 targets = {
                     'boxes': bboxes[0][0].to(dtype=torch.float, device=self._device),
@@ -506,6 +506,8 @@ class Trainer_CL:
                     gt_boxes=gt_boxes,
                     gt_classes=gt_classes
                 )
+                # gt_boxes=[target['boxes'].detach().cpu().numpy() for target in det_targets],
+                # gt_classes=[target['labels'].detach().cpu().numpy() for target in det_targets]
 
             metric_scores = self._evaluator_test.eval()
             
@@ -774,9 +776,9 @@ class Trainer_CL:
         for param in old_model.parameters():
             param.requires_grad = False
 
-        for data, mask, bboxes, _, path in tqdm(self._train_loader):
+        for data, _, bboxes, _, path in tqdm(self._train_loader):
 
-            data, mask = data.to(device=self._device), mask.to(device=self._device)
+            data = data.to(device=self._device)
 
             targets = {
                 'boxes': bboxes[0][0].to(dtype=torch.float, device=self._device),

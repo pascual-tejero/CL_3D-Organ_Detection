@@ -8,6 +8,7 @@ from transoar.utils.bboxes import segmentation2bbox
 
 
 def get_loader(config, split, batch_size=None):
+
     if not batch_size:
         batch_size = config['batch_size']
 
