@@ -167,17 +167,7 @@ class Trainer_CL:
                     if self._config["remove_labels"]:
                         target['labels'][target['labels'] > 5] = 0
 
-                # seg_targets = None
 
-                # for item in bboxes:
-                #     target = {
-                #         'boxes': None,
-                #         'labels': item[1].to(device=self._device) 
-                #     }
-                #     # Remove those class labels whose value is between 6 and 10
-                #     target['labels'][target['labels'] > 5] = 0
-                #     det_targets.append(target)
-                
             elif self.flag_b1_ocl:
                 seg_targets = None
 

@@ -77,7 +77,6 @@ class TransoarCriterion(nn.Module):
 
         self.config = config
 
-
         # Hack to make deterministic, https://github.com/pytorch/pytorch/issues/46024
         first_component = torch.tensor([1])
         rest_components = torch.full((num_classes,), 10)
@@ -435,6 +434,10 @@ class TransoarCriterion(nn.Module):
             # For this case, seg_targets is the second target of the batch and
             # outputs is the second output of the batch
             loss_dict = self.loss_segmentation(outputs_without_aux_2, seg_targets)
+            losses.update(loss_dict)
+            with torch.no_grad():
+                loss_dict = self.hd95_loss(outputs_without_aux_2, seg_targets)
+            losses.update(loss_dict)
             
         else:
             losses['segce'] = torch.tensor(0)
