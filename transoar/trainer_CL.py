@@ -165,7 +165,7 @@ class Trainer_CL:
                 # Batch size must be 1 for this case.
 
                 # Put data to gpu
-                if idx % 2: 
+                if idx % 2 == 0:
                     seg_targets = None
                     for item in bboxes:
                         target = {
@@ -213,8 +213,6 @@ class Trainer_CL:
                         'boxes': item[0].to(dtype=torch.float, device=self._device),
                         'labels': item[1].to(device=self._device)
                     }
-                    # Remove those class labels whose value is between 6 and 10
-                    target['labels'][target['labels'] > 5] = 0
                     det_targets.append(target)
         
             # Make prediction
@@ -222,8 +220,7 @@ class Trainer_CL:
                 # Main model loss
                 out, contrast_losses, dn_meta = self._model(data, det_targets, num_epoch=num_epoch)
                 
-                loss_dict, pos_indices = self._criterion(out, det_targets, seg_targets, dn_meta, 
-                                                         num_epoch)
+                loss_dict, pos_indices = self._criterion(out, det_targets, seg_targets, dn_meta, num_epoch)
                 
 
                 if self._criterion._seg_proxy: # log Hausdorff
@@ -233,7 +230,7 @@ class Trainer_CL:
                 # Auxiliary model loss
                 if self._aux_model is not None:   
                     aux_out = self._aux_model(data)
-                    loss_dict_aux, _ = self._criterion(aux_out, det_targets, seg_targets)
+                    loss_dict_aux, _ = self._criterion(aux_out, det_targets, seg_targets, dn_meta, num_epoch)
 
                     loss_dict["aux_model"] = 0 # initialize loss entry
                     del loss_dict_aux['hd95'] # remove Hausdorff distance from loss, so it does not influence loss_abs
@@ -243,7 +240,7 @@ class Trainer_CL:
                 # Old model loss
                 if self._old_model is not None: 
                     old_out = self._old_model(data)
-                    loss_dict_old, _ = self._criterion(old_out, det_targets, seg_targets)
+                    loss_dict_old, _ = self._criterion(old_out, det_targets, seg_targets, dn_meta, num_epoch)
 
                     loss_dict["old_model"] = 0 # Initialize loss entry
                     del loss_dict_old['hd95'] # remove Hausdorff distance from loss, so it does not influence loss_abs
@@ -479,7 +476,7 @@ class Trainer_CL:
         for idx, dataloader_test in enumerate(self._test_loader):
             
             if idx == 0 and not self._config["only_class_labels"] and not self._config["remove_labels"]: # WORD dataset
-                self._evaluator_test = DetectionEvaluator(
+                evaluator_test = DetectionEvaluator(
                     classes=list(WORD['labels'].values()),
                     classes_small=WORD['labels_small'],
                     classes_mid=WORD['labels_mid'],
@@ -489,7 +486,7 @@ class Trainer_CL:
                     sparse_results=False
                 )
             else: # ABDOMEN_CT_1K dataset
-                self._evaluator_test = DetectionEvaluator(
+                evaluator_test = DetectionEvaluator(
                     classes=list(ABDOMENCT_1K['labels'].values()),
                     classes_small=ABDOMENCT_1K['labels_small'],
                     classes_mid=ABDOMENCT_1K['labels_mid'],
@@ -516,7 +513,7 @@ class Trainer_CL:
                 gt_classes = [targets['labels'].detach().cpu().numpy()]
 
                 # Add pred to evaluator
-                self._evaluator_test.add(
+                evaluator_test.add(
                     pred_boxes=pred_boxes,
                     pred_classes=pred_classes,
                     pred_scores=pred_scores,
@@ -524,7 +521,7 @@ class Trainer_CL:
                     gt_classes=gt_classes
                 )
 
-            metric_scores = self._evaluator_test.eval()
+            metric_scores = evaluator_test.eval()
             
             os.makedirs(self._path_to_run / 'test_during_training', exist_ok=True)
             os.makedirs(self._path_to_run / 'test_during_training' / f"{num_epoch}_epoch", exist_ok=True)
@@ -533,7 +530,7 @@ class Trainer_CL:
 
             if idx == 0: # WORD dataset
                 write_json(metric_scores, self._path_to_run / 'test_during_training' / f"{num_epoch}_epoch" / 'WORD_dataset.json')
-            else: # ABDOMEN_CT_1K dataset
+            else: # ABDOMENCT_1K dataset
                 write_json(metric_scores, self._path_to_run / 'test_during_training' / f"{num_epoch}_epoch" / f'ABDOMENCT-1K_dataset.json')
         
         mean_mAP_coco = np.mean(mean_mAP_coco)
