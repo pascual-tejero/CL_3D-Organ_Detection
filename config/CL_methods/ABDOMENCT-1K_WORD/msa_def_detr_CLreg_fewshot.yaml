@@ -177,7 +177,7 @@ augmentation:
 
 CL_models:
   aux_model_path: ./runs/msa_def_detr_WORD_dataset/model_best_0.512_in_ep905.pt
-  old_model_path: ./runs/msa_def_detr_ABDOMENCT-1K_dataset/model_best_0.818_in_ep1202.pt
+  old_model_path: ./runs/msa_def_detr_ABDOMENCT-1K_dataset/model_best_0.818_in_ep1329.pt
 
 # Dataset path:
 #   Windows: SET TRANSOAR_DATA=C:\Users\pascu\Documents\Thesis\datasets\

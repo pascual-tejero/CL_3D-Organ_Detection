@@ -34,6 +34,7 @@ class TransoarNet(nn.Module):
         data_config = load_json(data_dir / config['dataset'] / "data_info.json")
         self.num_classes = len(data_config['labels'])
         self.extra_classes = config["backbone"]["num_organs"] - self.num_classes
+
         if self.extra_classes > 0:
             self.num_classes = config["backbone"]["num_organs"]
             self.num_classes_orig_dataset = len(data_config['labels'])

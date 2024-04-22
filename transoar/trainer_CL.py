@@ -103,15 +103,15 @@ class Trainer_CL:
         
         # In case of CL_replay or mixing training, we need to keep track of the samples
         if self._config["only_class_labels"] and (self._config["CL_replay"] or self._config["mixing_training"]):
-            self.flag_b2_ocl_re_mix = True
+            self.flag_b1_ocl_rep_mix = True
             self.flag_b1_ocl = False
-            assert self._config["batch_size"] == 2, "Batch size must be 2 for or mixing training CL_replay with only class labels"
+            assert self._config["batch_size"] == 1, "Batch size must be 1 for or mixing training CL_replay with only class labels"
         elif self._config["only_class_labels"]:
-            self.flag_b2_ocl_re_mix = False
+            self.flag_b1_ocl_rep_mix = False
             self.flag_b1_ocl = True
             assert self._config["batch_size"] == 1, "Batch size must be 1 for only class labels"
         else:
-            self.flag_b2_ocl_re_mix = False
+            self.flag_b1_ocl_rep_mix = False
             self.flag_b1_ocl = False
         
     
@@ -152,40 +152,42 @@ class Trainer_CL:
 
         progress_bar = tqdm(self._train_loader)
 
-        for data, _, bboxes, seg_targets in progress_bar:
+        for idx, (data, _, bboxes, seg_targets) in enumerate(progress_bar):
 
             data = data.to(device=self._device)
             det_targets = []
 
-            if self.flag_b2_ocl_re_mix:
+            if self.flag_b1_ocl_rep_mix:
                 # In the case of CL_replay or mixing training, WORD and ABDOMENCT-1K datasets are mixed
                 # in a interleaved way. The first sample is from WORD dataset and the second sample is from
                 # ABDOMENCT-1K dataset, and so on. Therefore, we remove segmentation maps and bboxes from WORD,
                 # and only keep class labels. For ABDOMENCT-1K, we keep all the data.
-
-                # Since batch size is 2, we have two samples in the batch. We have to remove the first sample
-                # from WORD dataset and keep only class labels. For the second sample, we keep all the data.
+                # Batch size must be 1 for this case.
 
                 # Put data to gpu
-                seg_targets = seg_targets[1, :, :, :, :].to(device=self._device).unsqueeze(0)
-
-                det_targets = []
-                for idx_item, item in enumerate(bboxes):
-                    if idx_item == 0:
+                if idx % 2: 
+                    seg_targets = None
+                    for item in bboxes:
                         target = {
                             'boxes': None,
                             'labels': item[1].to(device=self._device)
                         }
-                    else:
+                        det_targets.append(target)
+
+                        if self._config["remove_labels"]:
+                            target['labels'][target['labels'] > 5] = 0
+
+                else:
+                    seg_targets = seg_targets.to(device=self._device)
+
+                    for item in bboxes:
                         target = {
                             'boxes': item[0].to(dtype=torch.float, device=self._device),
                             'labels': item[1].to(device=self._device)
                         }
-                    det_targets.append(target)
-
-                    if self._config["remove_labels"]:
+                        # Remove those class labels whose value is between 6 and 10
                         target['labels'][target['labels'] > 5] = 0
-
+                        det_targets.append(target)
 
             elif self.flag_b1_ocl:
                 seg_targets = None
@@ -221,8 +223,7 @@ class Trainer_CL:
                 out, contrast_losses, dn_meta = self._model(data, det_targets, num_epoch=num_epoch)
                 
                 loss_dict, pos_indices = self._criterion(out, det_targets, seg_targets, dn_meta, 
-                                                         num_epoch, self.flag_b2_ocl_re_mix,
-                                                         self.flag_b1_ocl)
+                                                         num_epoch)
 
                 if self._criterion._seg_proxy: # log Hausdorff
                     hd95 = loss_dict['hd95'].item()
