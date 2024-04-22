@@ -224,6 +224,7 @@ class Trainer_CL:
                 
                 loss_dict, pos_indices = self._criterion(out, det_targets, seg_targets, dn_meta, 
                                                          num_epoch)
+                
 
                 if self._criterion._seg_proxy: # log Hausdorff
                     hd95 = loss_dict['hd95'].item()
@@ -274,11 +275,26 @@ class Trainer_CL:
 
                 # Create absolute loss and mult with loss coefficient                
                 loss_abs = 0
-                for loss_key, loss_val in loss_dict.items():
-                    loss_abs += loss_val * self._config['loss_coefs'][loss_key.split('_')[0]]
-                for loss_key, loss_val in contrast_losses.items():
-                    loss_abs += loss_val # already multiplied coefficient in transoarnet.py
-                    loss_contrast_agg += loss_val 
+
+                if self._config["CL_replay"]:
+                    if idx % 2 == 0:
+                        for loss_key, loss_value in loss_dict.items():
+                            loss_abs += loss_value * self._config['loss_coefs'][loss_key.split('_')[0]]
+                        for loss_key, loss_value in contrast_losses.items():
+                            loss_abs += loss_value
+                            loss_contrast_agg += loss_value
+                    else:
+                        for loss_key, loss_value in loss_dict.items():
+                            loss_abs += loss_value * self._config['loss_coefs'][loss_key.split('_')[0]] * 0.5
+                        for loss_key, loss_value in contrast_losses.items():
+                            loss_abs += loss_value * 0.5
+                            loss_contrast_agg += loss_value * 0.5
+                else:
+                    for loss_key, loss_value in loss_dict.items():
+                        loss_abs += loss_value * self._config['loss_coefs'][loss_key.split('_')[0]]
+                    for loss_key, loss_value in contrast_losses.items():
+                        loss_abs += loss_value # already multiplied coefficient in transoarnet.py
+                        loss_contrast_agg += loss_value 
                     
             self._optimizer.zero_grad() # Zero gradients
             self._scaler.scale(loss_abs).backward() # Backward pass
@@ -587,19 +603,9 @@ class Trainer_CL:
                         loss_dict["old_model"] += value
 
                 # Create absolute loss and mult with loss coefficient
-
-                if self._config["CL_replay"]:
-                    if idx % 2 == 0:
-                        loss_abs = 0
-                        for loss_key, loss_value in loss_dict.items():
-                            loss_abs += loss_value * self._config['loss_coefs'][loss_key.split('_')[0]]
-                    else:
-                        for loss_key, loss_value in loss_dict.items():
-                            loss_abs += loss_value * self._config['loss_coefs'][loss_key.split('_')[0]] / 100
-                else:
-                    loss_abs = 0
-                    for loss_key, loss_val in loss_dict.items():
-                        loss_abs += loss_val * self._config['loss_coefs'][loss_key.split('_')[0]]
+                loss_abs = 0
+                for loss_key, loss_val in loss_dict.items():
+                    loss_abs += loss_val * self._config['loss_coefs'][loss_key.split('_')[0]]
 
             # Evaluate validation predictions based on metric
             pred_boxes, pred_classes, pred_scores = inference(out)
