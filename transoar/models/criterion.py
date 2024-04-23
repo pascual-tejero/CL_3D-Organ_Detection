@@ -338,7 +338,8 @@ class TransoarCriterion(nn.Module):
         src_idx = torch.cat([src for (src, _) in indices])
         return batch_idx, src_idx
 
-    def forward(self, outputs, targets, seg_targets, dn_meta=None, num_epoch:int=-1):
+    def forward(self, outputs, targets, seg_targets, dn_meta=None, num_epoch:int=-1,
+                flag_b2_ocl_rep_mix:bool=False, flag_b1_ocl:bool=False):
         """ This performs the loss computation.
         Parameters:
              outputs: dict of tensors, see the output specification of the model for the format
@@ -349,8 +350,22 @@ class TransoarCriterion(nn.Module):
         outputs_without_aux = {k: v for k, v in outputs.items() if k != 'aux_outputs' and k != 'enc_outputs'}
 
         # Retrieve the matching between the outputs of the last layer and the targets
-        if seg_targets is None and targets[0]["boxes"] is None:
+        if flag_b1_ocl: # Case we have only class labels which batch size is 1
             pos_indices = []
+        elif flag_b2_ocl_rep_mix: # Case we have replay or mixing datasets data which batch size is 2
+            # Get the second sample of the batch (size=2) and the second target
+            outputs_without_aux_2 = {}
+            outputs_without_aux_2["pred_logits"] = outputs_without_aux["pred_logits"][1].unsqueeze(0)
+            outputs_without_aux_2["pred_boxes"] = outputs_without_aux["pred_boxes"][1].unsqueeze(0)
+            outputs_without_aux_2["pred_seg"] = [outputs_without_aux["pred_seg"][0][1].unsqueeze(0), 
+                                                 outputs_without_aux["pred_seg"][1][1].unsqueeze(0), 
+                                                 outputs_without_aux["pred_seg"][2][1].unsqueeze(0)]
+            outputs_without_aux_2["neck_enc_seg"] = [outputs_without_aux["neck_enc_seg"][0][1].unsqueeze(0), 
+                                                     outputs_without_aux["neck_enc_seg"][1][1].unsqueeze(0), 
+                                                     outputs_without_aux["neck_enc_seg"][2][1].unsqueeze(0)]
+            targets_2 = [targets[1]]
+            pos_indices = self.matcher(outputs_without_aux_2, targets_2, num_epoch)
+
         else:
             pos_indices = self.matcher(outputs_without_aux, targets, num_epoch)
 
@@ -389,20 +404,45 @@ class TransoarCriterion(nn.Module):
                 loss_dict = {k + f"_dn": v for k, v in loss_dict.items()}
                 losses.update(loss_dict)
         
-        for loss in ['cls', 'bbox']:
-            loss_dict = self.get_loss(loss, outputs, targets, pos_indices, num_boxes)
-            losses.update(loss_dict)
+        if flag_b2_ocl_rep_mix: # Case we have replay or mixing datasets data which batch size is 2
+            # First compute the loss for ABDOMENCT-1K dataset which we have all targets
+            for loss in ['cls', 'bbox']:
+                loss_dict = self.get_loss(loss, outputs_without_aux_2, targets_2, pos_indices, num_boxes)
+                losses.update(loss_dict)
 
+            # Second compute the loss for WORD dataset which we have only class labels
+            pos_indices = []
+            outputs_without_aux_1 = {}
+            outputs_without_aux_1["pred_logits"] = outputs["pred_logits"][0].unsqueeze(0)
+            targets_1 = [targets[0]]
+            
+            loss_1 = self.get_loss('cls', outputs_without_aux_1, targets_1, pos_indices, num_boxes)['cls']
+            losses['cls'] += loss_1
+
+        else:
+            for loss in ['cls', 'bbox']:
+                loss_dict = self.get_loss(loss, outputs, targets, pos_indices, num_boxes)
+                losses.update(loss_dict)
 
         #  seg_one2many check to block segmentation loss in one2many branch
-        if (self._seg_msa or self._seg_proxy ) and not 'seg_one2many' in outputs and \
-            seg_targets is not None:
+        if (self._seg_msa or self._seg_proxy ) and not 'seg_one2many' in outputs \
+            and not flag_b1_ocl and not flag_b2_ocl_rep_mix:
             loss_dict = self.loss_segmentation(outputs, seg_targets)
             losses.update(loss_dict) 
             with torch.no_grad():
                 loss_dict = self.hd95_loss(outputs, seg_targets)
             losses.update(loss_dict)
 
+        elif (self._seg_msa or self._seg_proxy ) and not 'seg_one2many' in outputs \
+            and not flag_b1_ocl and flag_b2_ocl_rep_mix: 
+            # For this case, seg_targets is the second target of the batch and
+            # outputs is the second output of the batch
+            loss_dict = self.loss_segmentation(outputs_without_aux_2, seg_targets)
+            losses.update(loss_dict)
+            with torch.no_grad():
+                loss_dict = self.hd95_loss(outputs_without_aux_2, seg_targets)
+            losses.update(loss_dict)
+            
         else:
             losses['segce'] = torch.tensor(0)
             losses['segdice'] = torch.tensor(0)
@@ -443,7 +483,7 @@ class TransoarCriterion(nn.Module):
                 loss_dict = self.get_loss(loss, enc_outputs, bin_targets, indices, num_boxes)
                 loss_dict = {k + f"_enc": v for k, v in loss_dict.items()}
                 losses.update(loss_dict)
-        
+
 
         return losses, pos_indices
 
