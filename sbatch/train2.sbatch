@@ -15,8 +15,8 @@
 #########>>>>> --mem_per_cpu=100000
 
 
-BASE_DIR=/dss/dsshome1/0A/di93liq
-CODE_DIR=ARMbn_new/DAFT
+BASE_DIR=/dss/dsshome1/01/ge32fix2
+CODE_DIR=OrganDETR
 ENV_DIR=ENVs_mori
 ENV_name=daft_mori
 DATA_dir=

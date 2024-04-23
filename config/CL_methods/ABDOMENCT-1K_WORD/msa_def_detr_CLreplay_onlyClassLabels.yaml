@@ -19,7 +19,7 @@ mixing_training: False # Mixing training samples from both datasets
 only_class_labels: True
 remove_labels: True # only class labels are used for training
 
-epochs: 2500 #1000 optimal
+epochs: 500 #1000 optimal
 lr: 2e-4
 lr_backbone: 2e-4
 lr_linear_proj_mult: 0.1

@@ -20,7 +20,7 @@ only_class_labels: False
 remove_labels: False # only class labels are used for training
 num_classes_orig_dataset: 5 # Number of classes in the original dataset
 
-epochs: 2500 #1000 optimal
+epochs: 500 #1000 optimal
 lr: 2e-4
 lr_backbone: 2e-4
 lr_linear_proj_mult: 0.1
