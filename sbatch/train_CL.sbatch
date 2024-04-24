@@ -23,4 +23,4 @@ srun --pty \
 /opt/conda/envs/${ENV_name}/bin/python scripts/train_CL.py --config CL_methods/ABDOMENCT-1K_WORD/msa_def_detr_CLreplay_onlyClassLabels
 
 
-#### sbatch train_CL.sbatch
+#### sbatch sbatch/train_CL.sbatch
