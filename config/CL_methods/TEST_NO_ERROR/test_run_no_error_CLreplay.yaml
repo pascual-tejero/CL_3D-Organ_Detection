@@ -10,7 +10,7 @@ seed: 10
 
 # Continual learning
 CL_replay: True # Continual learning with replay
-CL_replay_samples: 50 
+CL_replay_samples: 1 
 CL_reg: False # Continual learning with regularization
 val_interval: 1 # Validation interval
 test_interval: 1 # Test interval
@@ -179,7 +179,7 @@ CL_models:
   old_model_path: ./runs/test_run_no_error_ABDOMENCT-1K_dataset/model_last.pt
 
 # Dataset path:
-#   Windows: SET TRANSOAR_DATA=C:\Users\pascu\Documents\Thesis\datasets\
+#   Windows: SET TRANSOAR_DATA=C:\Users\pascu\Documents\Code Thesis\datasets
 #   Linux: export TRANSOAR_DATA=/mnt/nas/Projects/project_pascual/
 
 # Switch GPU

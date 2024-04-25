@@ -8,8 +8,6 @@
 #SBATCH -o daft_a100_%x.%j.%N.out
 #SBATCH -e daft_a100_%x.%j.%N.err
 
-
-
 ##########>>>>> -p mcml-dgx-a100-40x8
 #########>>>>> --gres=gpu:1 -q mcml     
 #########>>>>> --mem_per_cpu=100000

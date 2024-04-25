@@ -50,7 +50,7 @@ class TransoarDataset(Dataset):
                     self._data.append(data_path.name)
                     self._data.append(list_keys[count].parts[-1])
                     count += 1
-                    if count == len(list_keys) - 1:
+                    if count == len(list_keys):
                         count = 0
 
             else:
