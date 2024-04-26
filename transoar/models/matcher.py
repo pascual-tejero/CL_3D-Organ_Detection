@@ -112,7 +112,7 @@ class HungarianMatcher(nn.Module):
                     repeats = 0
                     c_for_matching = c[i].repeat(1, repeats) # repeat GT
                 else:
-                    if self.extra_classes > 0 or self.config["CL_replay"] or self.config["mixing_training"]:
+                    if self.extra_classes > 0 or self.config["CL_replay"] or self.config["mixing_datasets"]:
                         c_for_matching = c[i]
                     else:
                         repeats = math.ceil(self.dense_matching_lambda * num_queries / k)

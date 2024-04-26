@@ -21,7 +21,7 @@ class TransoarDataset(Dataset):
 
         data_dir = Path(os.getenv("TRANSOAR_DATA")).resolve()
 
-        if config["mixing_training"] and split == "train":
+        if config["mixing_datasets"] and split == "train":
             self._path_to_split = data_dir / self._config['dataset'] / split
             self._path_to_split_2 = data_dir / self._config['dataset_2'] / split
 
@@ -29,6 +29,9 @@ class TransoarDataset(Dataset):
             for data_path, data_path_2 in zip(self._path_to_split.iterdir(), self._path_to_split_2.iterdir()):
                 self._data.append(data_path.name)
                 self._data.append(data_path_2.name)
+
+            if config["few_shot_training"]:
+                self._data = self._data[:100] # Use only 50 samples from each dataset
         else:
             if self._dataset == 1:
                 self._path_to_split = data_dir / self._config['dataset'] / split
@@ -52,12 +55,15 @@ class TransoarDataset(Dataset):
                     count += 1
                     if count == len(list_keys):
                         count = 0
+                
+                if config["few_shot_training"]:
+                    self._data = self._data[:100] # Use only 50 samples from each dataset
 
             else:
                 self._data = [data_path.name for data_path in self._path_to_split.iterdir()]
 
-        if config["few_shot_training"] and split == "train":
-            self._data = self._data[:50]
+                if config["few_shot_training"] and split == "train" and not config ["CL_replay"]:
+                    self._data = self._data[:50] # Use only 50 samples for a single dataset
 
         self._augmentation = get_transforms(split, config)
 
@@ -71,7 +77,7 @@ class TransoarDataset(Dataset):
 
         case = self._data[idx]
 
-        if self._config["mixing_training"] and self._split == "train" or isinstance(self._selected_samples, dict):
+        if self._config["mixing_datasets"] and self._split == "train" or isinstance(self._selected_samples, dict):
             if idx % 2 == 0:
                 path_to_case = self._path_to_split / case
             else:

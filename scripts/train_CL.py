@@ -79,7 +79,7 @@ def train(config, args):
     
     # Load model from old model checkpoint
     model = TransoarNet(config).to(device=device)
-    if config["mixing_training"] is False: # Load old model if not mixing training
+    if config["mixing_datasets"] is False: # Load old model if not mixing training
         checkpoint_model = torch.load(config["CL_models"]["old_model_path"]) # Start main model with old model
         model.load_state_dict(checkpoint_model['model_state_dict'])
     
@@ -190,7 +190,7 @@ def train(config, args):
 
     write_json(config, path_to_run / 'config.json')
 
-    if config["mixing_training"] or config["CL_replay"]: # Load auxiliary model and old model
+    if config["mixing_datasets"] or config["CL_replay"]: # Load auxiliary model and old model
         aux_model = None
         old_model = None
     else:

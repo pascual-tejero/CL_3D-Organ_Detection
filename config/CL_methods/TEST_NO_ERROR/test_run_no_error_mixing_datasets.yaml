@@ -15,7 +15,7 @@ CL_reg: True # Continual learning with regularization
 val_interval: 1 # Validation interval
 test_interval: 1 # Test interval
 few_shot_training: False # Training samples limited to 50
-mixing_training: True # Mixing training samples from both datasets
+mixing_datasets: True # Mixing training samples from both datasets
 only_class_labels: False
 remove_labels: False # only class labels are used for training
 

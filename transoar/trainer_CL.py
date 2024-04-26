@@ -102,7 +102,7 @@ class Trainer_CL:
         self.best_performance_value = 0 # for test performance to save best model
         
         # In case of CL_replay or mixing training, we need to keep track of the samples
-        if self._config["only_class_labels"] and (self._config["CL_replay"] or self._config["mixing_training"]):
+        if self._config["only_class_labels"] and (self._config["CL_replay"] or self._config["mixing_datasets"]):
             self.flag_b2_ocl_re_mix = True
             self.flag_b1_ocl = False
             assert self._config["batch_size"] == 2, "Batch size must be 2 for or mixing training CL_replay with only class labels"

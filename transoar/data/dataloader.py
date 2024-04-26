@@ -40,7 +40,7 @@ def get_loader(config, split, batch_size=None):
         else: # Train and validation on the first dataset
             dataset = TransoarDataset(config, split)
 
-            if config["mixing_training"]:
+            if config["mixing_datasets"]:
                 shuffle = False
 
             dataloader = DataLoader(

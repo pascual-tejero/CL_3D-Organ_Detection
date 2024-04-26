@@ -38,7 +38,7 @@ class TransoarNet(nn.Module):
         if self.extra_classes > 0:
             self.num_classes = config["backbone"]["num_organs"]
             self.num_classes_orig_dataset = len(data_config['labels'])
-        elif config["mixing_training"] and config["only_class_labels"] and config["remove_labels"]:
+        elif config["mixing_datasets"] and config["only_class_labels"] and config["remove_labels"]:
             self.extra_classes = 0
             self.num_classes = config["backbone"]["num_organs"]
             self.num_classes_orig_dataset = 0
