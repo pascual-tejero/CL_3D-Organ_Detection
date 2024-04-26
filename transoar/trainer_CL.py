@@ -113,7 +113,6 @@ class Trainer_CL:
         else:
             self.flag_b2_ocl_re_mix = False
             self.flag_b1_ocl = False
-        
     
     def _train_one_epoch(self, num_epoch):
         self._model.train()
@@ -230,7 +229,8 @@ class Trainer_CL:
                 # Auxiliary model loss
                 if self._aux_model is not None:   
                     aux_out = self._aux_model(data)
-                    loss_dict_aux, _ = self._criterion(aux_out, det_targets, seg_targets, dn_meta, num_epoch)
+                    loss_dict_aux, _ = self._criterion(aux_out, det_targets, seg_targets, dn_meta, num_epoch,
+                                                         self.flag_b2_ocl_re_mix, self.flag_b1_ocl)
 
                     loss_dict["aux_model"] = 0 # initialize loss entry
                     del loss_dict_aux['hd95'] # remove Hausdorff distance from loss, so it does not influence loss_abs
@@ -240,8 +240,8 @@ class Trainer_CL:
                 # Old model loss
                 if self._old_model is not None: 
                     old_out = self._old_model(data)
-                    loss_dict_old, _ = self._criterion(old_out, det_targets, seg_targets, dn_meta, num_epoch)
-
+                    loss_dict_old, _ = self._criterion(old_out, det_targets, seg_targets, dn_meta, num_epoch,
+                                                         self.flag_b2_ocl_re_mix, self.flag_b1_ocl)
 
                     loss_dict["old_model"] = 0 # Initialize loss entry
                     del loss_dict_old['hd95'] # remove Hausdorff distance from loss, so it does not influence loss_abs
@@ -549,7 +549,10 @@ class Trainer_CL:
         for idx, (data, _, bboxes, seg_targets) in enumerate(progress_bar):
             # Put data to gpu
             data, seg_targets = data.to(device=self._device), seg_targets.to(device=self._device)
-        
+
+            if self._config["only_class_labels"]:      
+                seg_targets[seg_targets > 5] = 0
+
             det_targets = []
             for item in bboxes:
                 target = {
@@ -557,11 +560,13 @@ class Trainer_CL:
                     'labels': item[1].to(device=self._device)
                 }
                 det_targets.append(target)
+                if self._config["remove_labels"]:
+                    target['labels'][target['labels'] > 5] = 0
 
             # Make prediction
             with autocast():
                 out = self._model(data)
-                loss_dict, _ = self._criterion(out, det_targets, seg_targets)
+                loss_dict, _ = self._criterion(out, det_targets, seg_targets, num_epoch=num_epoch)
 
                 if self._criterion._seg_proxy: # log Hausdorff
                     hd95 = loss_dict['hd95'].item()

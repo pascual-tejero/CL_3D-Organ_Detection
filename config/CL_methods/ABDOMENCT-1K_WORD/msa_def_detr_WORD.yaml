@@ -172,7 +172,7 @@ augmentation:
 
 
 # Dataset path:
-#   Windows: SET TRANSOAR_DATA=C:\Users\pascu\Documents\Code Thesis\datasets
+#   Windows: SET TRANSOAR_DATA=C:\Users\pascu\Documents\Code_Thesis\datasets
 #   Linux: export TRANSOAR_DATA=/mnt/nas/Projects/project_pascual/
 
 # Switch GPU

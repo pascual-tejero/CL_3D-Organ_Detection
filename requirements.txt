@@ -21,7 +21,7 @@ einops==0.3.2
 # python ./scripts/train.py --config msa_def_detr_TOTALSEGMENTATOR
 
 # Windows: 
-# SET TRANSOAR_DATA=C:\Users\pascu\Documents\Code Thesis\datasets
+# SET TRANSOAR_DATA=C:\Users\pascu\Documents\Code_Thesis\datasets
 
 # Linux: 
 # export TRANSOAR_DATA=/mnt/nas/Projects/project_pascual/

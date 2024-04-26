@@ -94,7 +94,7 @@ backbone:
 
 
   # Segmentation proxy loss
-  num_organs: 10
+  num_organs: 5
   use_msa_seg_loss: True #<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
   fg_bg: False
   use_seg_proxy_loss: False  # never use it with msa
@@ -176,7 +176,7 @@ augmentation:
 
 
 # Dataset path:
-#   Windows: SET TRANSOAR_DATA=C:\Users\pascu\Documents\Code Thesis\datasets
+#   Windows: SET TRANSOAR_DATA=C:\Users\pascu\Documents\Code_Thesis\datasets
 #   Linux: export TRANSOAR_DATA=/mnt/nas/Projects/project_pascual/
 
 # Switch GPU

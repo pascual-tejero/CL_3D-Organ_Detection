@@ -18,7 +18,6 @@ few_shot_training: False # Training samples limited to 50
 mixing_training: False # Mixes two datasets
 only_class_labels: True
 remove_labels: True # only class labels are used for training
-num_classes_orig_dataset: False # Number of classes in the original dataset
 
 epochs: 500 #1000 optimal
 lr: 2e-4
@@ -180,7 +179,7 @@ CL_models:
   old_model_path: ./runs/test_run_no_error_ABDOMENCT-1K_dataset/model_last.pt
 
 # Dataset path:
-#   Windows: SET TRANSOAR_DATA=C:\Users\pascu\Documents\Code Thesis\datasets
+#   Windows: SET TRANSOAR_DATA=C:\Users\pascu\Documents\Code_Thesis\datasets
 #   Linux: export TRANSOAR_DATA=/mnt/nas/Projects/project_pascual/
 
 # Switch GPU
