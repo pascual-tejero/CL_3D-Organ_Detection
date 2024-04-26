@@ -43,7 +43,6 @@ class TransoarNet(nn.Module):
             self.num_classes = config["backbone"]["num_organs"]
             self.num_classes_orig_dataset = 0
 
-
         config['neck']['num_classes'] = self.num_classes
         self._input_level = config['neck']['input_level']
 
