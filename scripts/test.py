@@ -65,12 +65,15 @@ class Tester:
         else:
             if args.model_load == 'last':
                 path_to_ckpt = [path for path in avail_checkpoints if 'last' in str(path)]
+            elif args.model_load == 'best':
+                path_to_ckpt = [path for path in avail_checkpoints if 'best' in str(path)]
             elif args.model_load == 'best_val':
                 path_to_ckpt = [path for path in avail_checkpoints if 'best_val' in str(path)]
             elif args.model_load == 'best_test':
                 path_to_ckpt = [path for path in avail_checkpoints if 'best_test' in str(path)]
             elif isinstance(int(args.model_load), int):
                 path_to_ckpt = [path for path in avail_checkpoints if args.model_load in str(path)]
+
         
             if len(path_to_ckpt) == 0:
                 raise ValueError('No checkpoint found for specified epoch.')
