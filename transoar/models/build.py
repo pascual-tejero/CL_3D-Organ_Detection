@@ -84,12 +84,7 @@ def build_criterion(config):
     num_classes = len(data_config['labels'])
     extra_classes = config["backbone"]["num_organs"] - num_classes
     num_classes_orig_dataset = len(data_config['labels'])
-
-    if config["mixing_datasets"] and config["only_class_labels"] and config["remove_labels"]:
-        extra_classes = 0
-        num_classes = config["backbone"]["num_organs"]
-        num_classes_orig_dataset = 0
-    
+   
     matcher = HungarianMatcher(
         cost_class=config['set_cost_class'],
         cost_bbox=config['set_cost_bbox'],

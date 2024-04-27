@@ -7,7 +7,7 @@ from transoar.data.dataset import TransoarDataset
 from transoar.utils.bboxes import segmentation2bbox
 
 
-def get_loader(config, split, batch_size=None):
+def get_loader(config, split, batch_size=None, test_script=False):
 
     if not batch_size:
         batch_size = config['batch_size']
@@ -16,7 +16,14 @@ def get_loader(config, split, batch_size=None):
     collator = TransoarCollator(config, split)
     shuffle = False if split in ['test', 'val'] else config['shuffle']
 
-    if config["CL_reg"] is False and config["CL_replay"] is False: # Normal training
+    if test_script:
+        dataset = TransoarDataset(config, split, dataset=1, selected_samples=None, test_script=True)
+        dataloader = DataLoader(
+            dataset, batch_size=batch_size, shuffle=shuffle,
+            num_workers=config['num_workers'], collate_fn=collator
+        )
+
+    elif config["CL_reg"] is False and config["CL_replay"] is False: # Normal training
         dataset = TransoarDataset(config, split)
 
         dataloader = DataLoader(

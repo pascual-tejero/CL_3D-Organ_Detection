@@ -461,7 +461,7 @@ class Trainer_CL:
         # Test for each dataset (WORD and ABDOMEN_CT_1K)
         for idx, dataloader_test in enumerate(self._test_loader):
             
-            if idx == 0 and not self._config["only_class_labels"] and not self._config["remove_labels"]: # WORD dataset
+            if idx == 0: # WORD dataset
                 evaluator_test = DetectionEvaluator(
                     classes=list(WORD['labels'].values()),
                     classes_small=WORD['labels_small'],

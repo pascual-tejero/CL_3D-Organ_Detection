@@ -10,14 +10,15 @@ seed: 10
 
 # Continual learning
 CL_replay: False # Continual learning with replay
-CL_replay_samples: 50 # Number of samples to replay
+CL_replay_samples: 50 # Number of samples to replay (from previous dataset: ABDOMENCT-1K)
 CL_reg: True # Continual learning with regularization
 val_interval: 1 # Validation interval
 test_interval: 1 # Test interval
-few_shot_training: False # Training samples limited to 50
+few_shot_training: False # # Training samples limited
+few_shot_samples: 100 # Number of training samples (from current dataset: WORD)
 mixing_datasets: True # Mixing training samples from both datasets
-only_class_labels: True
-remove_labels: True # only class labels are used for training
+only_class_labels: True # Only class labels are used for training
+remove_labels: False # Remove labels from the dataset (WORD dataset, from 6 to 10 classes)
 
 epochs: 500 #1000 optimal
 lr: 2e-4
@@ -94,7 +95,7 @@ backbone:
 
 
   # Segmentation proxy loss
-  num_organs: 5
+  num_organs: 10
   use_msa_seg_loss: True #<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
   fg_bg: False
   use_seg_proxy_loss: False  # never use it with msa

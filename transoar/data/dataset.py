@@ -12,7 +12,7 @@ from transoar.data.transforms import get_transforms
 
 class TransoarDataset(Dataset):
     """Dataset class of the transoar project."""
-    def __init__(self, config, split, dataset = 1, selected_samples = None):
+    def __init__(self, config, split, dataset=1, selected_samples=None, test_script=False):
         assert split in ['train', 'val', 'test']
         self._config = config
         self._split = split
@@ -21,17 +21,21 @@ class TransoarDataset(Dataset):
 
         data_dir = Path(os.getenv("TRANSOAR_DATA")).resolve()
 
-        if config["mixing_datasets"] and split == "train":
+        if test_script:
+            self._path_to_split = data_dir / self._config['dataset'] / split
+            self._data = [data_path.name for data_path in self._path_to_split.iterdir()]
+
+        elif config["mixing_datasets"] and split == "train":
             self._path_to_split = data_dir / self._config['dataset'] / split
             self._path_to_split_2 = data_dir / self._config['dataset_2'] / split
 
             self._data = [] # Add samples alternatively from both datasets
-            for data_path, data_path_2 in zip(self._path_to_split.iterdir(), self._path_to_split_2.iterdir()):
+            for idx, (data_path, data_path_2) in enumerate(zip(self._path_to_split.iterdir(), self._path_to_split_2.iterdir())):
                 self._data.append(data_path.name)
                 self._data.append(data_path_2.name)
+                if config["few_shot_training"] and idx + 1 == config["few_shot_samples"]:
+                    break
 
-            if config["few_shot_training"]:
-                self._data = self._data[:100] # Use only 50 samples from each dataset
         else:
             if self._dataset == 1:
                 self._path_to_split = data_dir / self._config['dataset'] / split
@@ -40,30 +44,47 @@ class TransoarDataset(Dataset):
             
             self._data = []
 
-            if isinstance(self._selected_samples, dict):
+            if isinstance(self._selected_samples, dict): # CL_replay
                 self._path_to_split = data_dir / self._config['dataset'] / split
                 self._path_to_split_2 = data_dir / self._config['dataset_2'] / split
 
                 # Get keys from selected samples dict in a list
-                list_keys = list(self._selected_samples.keys())
+                list_selected_samples = list(self._selected_samples.keys())
+               
+                if config["few_shot_training"] and config["CL_replay_samples"] > config["few_shot_samples"]:
+                    # If the number of samples from ABDOMENCT-1K is greater than WORD samples, 
+                    # then we need to repeat the WORD samples
+                    list_dataset1 = [data_path_dat.name for data_path_dat in self._path_to_split.iterdir()]
+                    count = 0
+                    for idx, data_path in enumerate(list_selected_samples):
+                        self._data.append(list_dataset1[count])
+                        self._data.append(data_path.parts[-1])
+                        count += 1
+                        if idx + 1 == config["CL_replay_samples"]:
+                            break
+                        if count == config["few_shot_samples"]:
+                            count = 0
 
-                # Selected samples is dict whose keys are the names of the folder where the samples are located
-                count = 0
-                for  data_path in self._path_to_split.iterdir():
-                    self._data.append(data_path.name)
-                    self._data.append(list_keys[count].parts[-1])
-                    count += 1
-                    if count == len(list_keys):
-                        count = 0
-                
-                if config["few_shot_training"]:
-                    self._data = self._data[:100] # Use only 50 samples from each dataset
+                else:
+                    # If the number of samples from WORD is greater than ABDOMENCT-1K samples,
+                    # then we need to repeat the ABDOMENCT-1K samples
+                    count = 0
+                    for idx, data_path in enumerate(self._path_to_split.iterdir()):
+                        self._data.append(data_path.name)
+                        self._data.append(list_selected_samples[count].parts[-1])
+                        count += 1
+                        if config["few_shot_training"] and idx + 1 == config["few_shot_samples"]: # Use only a few samples
+                            break
+                        if count == len(list_selected_samples):
+                            count = 0                   
 
             else:
+                # Get all samples from the dataset folder
                 self._data = [data_path.name for data_path in self._path_to_split.iterdir()]
 
-                if config["few_shot_training"] and split == "train" and not config ["CL_replay"]:
-                    self._data = self._data[:50] # Use only 50 samples for a single dataset
+                # Use only a few samples
+                if config["few_shot_training"] and split == "train":
+                    self._data = self._data[:config["few_shot_samples"]] 
 
         self._augmentation = get_transforms(split, config)
 
