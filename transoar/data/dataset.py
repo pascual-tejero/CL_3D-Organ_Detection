@@ -76,8 +76,8 @@ class TransoarDataset(Dataset):
                         if config["few_shot_training"] and idx + 1 == config["few_shot_samples"]: # Use only a few samples
                             break
                         if count == len(list_selected_samples):
-                            count = 0                   
-
+                            count = 0       
+                            
             else:
                 # Get all samples from the dataset folder
                 self._data = [data_path.name for data_path in self._path_to_split.iterdir()]
