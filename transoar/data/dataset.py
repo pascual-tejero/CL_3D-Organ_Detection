@@ -83,7 +83,9 @@ class TransoarDataset(Dataset):
                 self._data = [data_path.name for data_path in self._path_to_split.iterdir()]
 
                 # Use only a few samples
-                if config["few_shot_training"] and split == "train":
+                if config["few_shot_training"] and split == "train" and not config["CL_replay"]:
+                    # Use only a few samples from the dataset, if CL_replay is False. Otherwise,
+                    # the selected samples used are less
                     self._data = self._data[:config["few_shot_samples"]] 
 
         self._augmentation = get_transforms(split, config)

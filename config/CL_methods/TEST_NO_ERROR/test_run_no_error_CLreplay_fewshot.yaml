@@ -15,7 +15,7 @@ CL_reg: False # Continual learning with regularization
 val_interval: 1 # Validation interval
 test_interval: 1 # Test interval
 few_shot_training: True # # Training samples limited
-few_shot_samples: 30 # Number of training samples (from current dataset: WORD)
+few_shot_samples: 5 # Number of training samples (from current dataset: WORD)
 mixing_datasets: False # Mixes two datasets
 only_class_labels: False # Only class labels are used for training
 remove_labels: False # Remove labels from the dataset (WORD dataset, from 6 to 10 classes)
