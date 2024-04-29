@@ -73,7 +73,7 @@ def train(config, args):
         val_loader = get_loader(config, 'val')
 
     if config['test']:
-        test_loader = get_loader(config, 'test', batch_size=1)
+        test_loader = get_loader(config, 'test') #### ??? batch_size=config['batch_size']??
     else:
         test_loader = None
     
