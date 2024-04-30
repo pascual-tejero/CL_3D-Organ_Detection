@@ -654,6 +654,8 @@ class Trainer_CL:
                 )
             
             for data, _, bboxes, _, _ in tqdm(dataloader_test):
+                # print labels of bboxes
+                # print(bboxes[0][1])
 
                 data = data.to(device=self._device) # Put data to gpu
 
@@ -753,10 +755,10 @@ class Trainer_CL:
     def _select_samples_for_replay(self):
         
         evaluator_replay = DetectionEvaluator(
-            classes=list(self._config['labels'].values()),
-            classes_small=self._config['labels_small'],
-            classes_mid=self._config['labels_mid'],
-            classes_large=self._config['labels_large'],
+            classes=list(ABDOMENCT_1K['labels'].values()),
+            classes_small=ABDOMENCT_1K['labels_small'],
+            classes_mid=ABDOMENCT_1K['labels_mid'],
+            classes_large=ABDOMENCT_1K['labels_large'],
             iou_range_nndet=(0.1, 0.5, 0.05),
             iou_range_coco=(0.5, 0.95, 0.05),
             sparse_results=False
@@ -805,8 +807,8 @@ class Trainer_CL:
 
         # Get the top CL_replay_samples samples
         replay_samples = dict(itertools.islice(replay_scores.items(), self._config['CL_replay_samples']))
-
-        self._train_loader = None
+    
+        del old_model_samples_rep, self._train_loader
         self._train_loader = get_loader_CLreplay_selected_samples(config=self._config,
                                                                 split='train',
                                                                 batch_size=self._config['batch_size'],
