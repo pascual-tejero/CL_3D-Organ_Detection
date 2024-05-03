@@ -85,7 +85,12 @@ def get_loader(config, split, batch_size=None, test_script=False):
                 num_workers=config['num_workers'], collate_fn=collator
             )
     else:
-        raise ValueError("Invalid config: CL_reg and CL_replay cannot be True at the same time.")
+        collator = TransoarCollator(config, split)
+        dataset = TransoarDataset(config, split)
+        dataloader = DataLoader(
+            dataset, batch_size=batch_size, shuffle=shuffle,
+            num_workers=config['num_workers'], collate_fn=collator
+        )
 
     return dataloader
 
