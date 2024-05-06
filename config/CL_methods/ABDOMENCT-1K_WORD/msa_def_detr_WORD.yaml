@@ -31,7 +31,7 @@ lr_drop: 500
 
 # Data
 dataset: matched_datasets/word_224_224_160_CT
-dataset: matched_datasets/abdomenCT-1k_224_224_160_CT
+dataset_2: matched_datasets/abdomenCT-1k_224_224_160_CT
 overfit: False # Use same set consisting of one image for train and val
 bbox_padding: 1
 val_interval: 1 # Validation interval
