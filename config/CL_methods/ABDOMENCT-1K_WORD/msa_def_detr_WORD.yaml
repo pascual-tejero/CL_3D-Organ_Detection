@@ -8,6 +8,8 @@ device: cuda:0
 debug_mode: False  # Doesn't save checkpoints
 seed: 10
 
+# Continual learning
+CL: False # Continual Learning
 CL_replay: False # Continual learning with replay
 CL_replay_samples: 50 # Number of samples to replay (from previous dataset: ABDOMENCT-1K)
 CL_reg: False # Continual learning with regularization
@@ -29,9 +31,11 @@ lr_drop: 500
 
 # Data
 dataset: matched_datasets/word_224_224_160_CT
+dataset: matched_datasets/abdomenCT-1k_224_224_160_CT
 overfit: False # Use same set consisting of one image for train and val
 bbox_padding: 1
 val_interval: 1 # Validation interval
+test: False 
 test_interval: 1 # Test interval
 
 # Dataloader

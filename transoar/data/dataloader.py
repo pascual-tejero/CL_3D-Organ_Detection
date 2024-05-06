@@ -85,12 +85,33 @@ def get_loader(config, split, batch_size=None, test_script=False):
                 num_workers=config['num_workers'], collate_fn=collator
             )
     else:
-        collator = TransoarCollator(config, split)
-        dataset = TransoarDataset(config, split)
-        dataloader = DataLoader(
-            dataset, batch_size=batch_size, shuffle=shuffle,
-            num_workers=config['num_workers'], collate_fn=collator
-        )
+        if config["test"] is True and split == "test":
+            collator = TransoarCollator(config, split)
+            
+            # Test on the first dataset
+            dataset_1 = TransoarDataset(config, split, dataset=1)
+            dataloader_1 = DataLoader(
+                dataset_1, batch_size=batch_size, shuffle=shuffle,
+                num_workers=config['num_workers'], collate_fn=collator
+            ) 
+
+            # Test on the second dataset
+            dataset_2 = TransoarDataset(config, split, dataset=2)
+            dataloader_2 = DataLoader(
+                dataset_2, batch_size=batch_size, shuffle=shuffle,
+                num_workers=config['num_workers'], collate_fn=collator
+            )
+
+            # Return both dataloaders
+            dataloader = (dataloader_1, dataloader_2)
+
+        else:
+            collator = TransoarCollator(config, split)
+            dataset = TransoarDataset(config, split)
+            dataloader = DataLoader(
+                dataset, batch_size=batch_size, shuffle=shuffle,
+                num_workers=config['num_workers'], collate_fn=collator
+            )
 
     return dataloader
 

@@ -9,6 +9,7 @@ debug_mode: False  # Doesn't save checkpoints
 seed: 10
 
 # Continual learning
+CL: False # Continual Learning
 CL_replay: False # Continual learning with replay
 CL_replay_samples: 50 # Number of samples to replay (from previous dataset: ABDOMENCT-1K)
 CL_reg: False # Continual learning with regularization
@@ -32,8 +33,12 @@ lr_drop: 500
 
 # Data
 dataset: downsampled_datasets/abdomenCT-1k_64_64_64_CT
+dataset_2: downsampled_datasets/word_64_64_64_CT
 overfit: False # Use same set consisting of one image for train and val
 bbox_padding: 1
+val_interval: 1 # Validation interval
+test: False
+test_interval: 1 # Test interval
 
 # Dataloader
 batch_size: 2 # 2 (normal, 1 reduced params)
@@ -182,4 +187,4 @@ augmentation:
 #   Linux: export CUDA_VISIBLE_DEVICES=0
 
 # Run command
-#   python ./scripts/train.py --config CL_methods/TEST_NO_ERROR/test_run_no_error_ABDOMENCT-1K
+#   python ./scripts/train_CL.py --config CL_methods/TEST_NO_ERROR/test_run_no_error_ABDOMENCT-1K

@@ -9,6 +9,7 @@ debug_mode: False  # Doesn't save checkpoints
 seed: 10
 
 # Continual learning
+CL: True # Continual Learning
 CL_replay: False # Continual learning with replay
 CL_replay_samples: 50 # Number of samples to replay (from previous dataset: ABDOMENCT-1K)
 CL_reg: True # Continual learning with regularization

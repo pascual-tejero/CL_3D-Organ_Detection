@@ -152,7 +152,7 @@ def train(config, args):
     path_to_run.mkdir(exist_ok=True)
 
     # Start CL approach from old model if not mixing datasets training
-    if config["mixing_datasets"] is False: 
+    if config["mixing_datasets"] is False and config["CL"] is True:
         checkpoint_model = torch.load(config["CL_models"]["old_model_path"]) # Start main model with old model
         model.load_state_dict(checkpoint_model['model_state_dict'])
 
@@ -190,7 +190,8 @@ def train(config, args):
 
     write_json(config, path_to_run / 'config.json')
 
-    if config["mixing_datasets"] or config["CL_replay"]: # Load auxiliary model and old model
+    # Load auxiliary model and old model if applicable
+    if config["mixing_datasets"] or config["CL_replay"] or config["CL"] is False:
         aux_model = None
         old_model = None
     else:

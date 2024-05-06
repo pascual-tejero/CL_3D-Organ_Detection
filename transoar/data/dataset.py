@@ -88,6 +88,7 @@ class TransoarDataset(Dataset):
                     # the selected samples used are less
                     self._data = self._data[:config["few_shot_samples"]] 
 
+
         self._augmentation = get_transforms(split, config)
 
 
