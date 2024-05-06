@@ -16,27 +16,10 @@ import io
 from transoar.data.dataloader import get_loader_CLreplay_selected_samples
 from transoar.models.transoarnet import TransoarNet
 
-from transoar.utils.io import write_json
+from transoar.utils.io import write_json, load_json
 import os
-import json
-import glob
+from pathlib import Path
 
-ABDOMENCT_1K = {
-    "num_classes": 5,
-    "labels": {"1": "liver", "2": "right kidney", "3": "spleen", "4": "pancreas", "5": "left kidney"},
-    "labels_small": {"4": "pancreas"},
-    "labels_mid": {"2": "right kidney", "3": "spleen", "5": "left kidney"},
-    "labels_large": {"1": "liver"}
-}
-
-WORD = {
-    "num_classes": 10,
-    "labels": {"1": "liver", "2": "right kidney", "3": "spleen", "4": "pancreas", "5": "left kidney", 
-               "6": "stomach", "7": "duodenum", "8": "colon", "9": "intestine", "10": "bladder"},
-    "labels_small": {"4": "pancreas", "7": "duodenum"},
-    "labels_mid": {"2": "right kidney", "3": "spleen", "5": "left kidney", "10": "bladder"},
-    "labels_large": {"1": "liver", "6": "stomach", "8": "colon", "9": "intestine"}
-}
 
 
 # helper function: generate box_plot of grads in tensorboard
@@ -112,6 +95,12 @@ class Trainer_CL:
         else:
             self.flag_b2_ocl_re_mix = False
             self.flag_b1_ocl = False
+
+        if self._config["test"] or self._config["CL_replay"]:
+            data_path = os.environ.get('TRANSOAR_DATA')
+            data_dir = Path(data_path).resolve()
+            self.dataset1_config = load_json(data_dir / config['dataset'] / "data_info.json")
+            self.dataset2_config = load_json(data_dir / config['dataset_2'] / "data_info.json")
     
     def _train_one_epoch(self, num_epoch):
         self._model.train()
@@ -629,25 +618,25 @@ class Trainer_CL:
 
         mean_mAP_coco = []
 
-        # Test for each dataset (WORD and ABDOMEN_CT_1K)
+        # Test for each dataset 
         for idx, dataloader_test in enumerate(self._test_loader):
 
-            if idx == 0: # WORD dataset
+            if idx == 0: # dataset1
                 evaluator_test = DetectionEvaluator(
-                    classes=list(WORD['labels'].values()),
-                    classes_small=WORD['labels_small'],
-                    classes_mid=WORD['labels_mid'],
-                    classes_large=WORD['labels_large'],
+                    classes=list(self.dataset1_config['labels'].values()),
+                    classes_small=self.dataset1_config['labels_small'],
+                    classes_mid=self.dataset1_config['labels_mid'],
+                    classes_large=self.dataset1_config['labels_large'],
                     iou_range_nndet=(0.1, 0.5, 0.05),
                     iou_range_coco=(0.5, 0.95, 0.05),
                     sparse_results=False
                 )
-            else: # ABDOMEN_CT_1K dataset
+            else: # dataset2
                 evaluator_test = DetectionEvaluator(
-                    classes=list(ABDOMENCT_1K['labels'].values()),
-                    classes_small=ABDOMENCT_1K['labels_small'],
-                    classes_mid=ABDOMENCT_1K['labels_mid'],
-                    classes_large=ABDOMENCT_1K['labels_large'],
+                    classes=list(self.dataset2_config['labels'].values()),
+                    classes_small=self.dataset2_config['labels_small'],
+                    classes_mid=self.dataset2_config['labels_mid'],
+                    classes_large=self.dataset2_config['labels_large'],
                     iou_range_nndet=(0.1, 0.5, 0.05),
                     iou_range_coco=(0.5, 0.95, 0.05),
                     sparse_results=False
@@ -755,10 +744,10 @@ class Trainer_CL:
     def _select_samples_for_replay(self):
         
         evaluator_replay = DetectionEvaluator(
-            classes=list(ABDOMENCT_1K['labels'].values()),
-            classes_small=ABDOMENCT_1K['labels_small'],
-            classes_mid=ABDOMENCT_1K['labels_mid'],
-            classes_large=ABDOMENCT_1K['labels_large'],
+            classes=list(self.dataset2_config['labels'].values()),
+            classes_small=self.dataset2_config['labels_small'],
+            classes_mid=self.dataset2_config['labels_mid'],
+            classes_large=self.dataset2_config['labels_large'],
             iou_range_nndet=(0.1, 0.5, 0.05),
             iou_range_coco=(0.5, 0.95, 0.05),
             sparse_results=False

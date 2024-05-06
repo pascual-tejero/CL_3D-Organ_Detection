@@ -2,7 +2,7 @@
 
 
 # General training
-experiment_name: test_run_no_error_mixing_datasets_fewshot
+experiment_name: test_run_no_error_CLreplay
 resume: False # True to resume from last checkpoint
 device: cuda:0
 debug_mode: False  # Doesn't save checkpoints
@@ -10,15 +10,15 @@ seed: 10
 
 # Continual learning
 CL: True # Continual Learning
-CL_replay: False # Continual learning with replay
-CL_replay_samples: 50 # Number of samples to replay (from previous dataset: ABDOMENCT-1K)
+CL_replay: True # Continual learning with replay
+CL_replay_samples: 20 # Number of samples to replay (from previous dataset: ABDOMENCT-1K)
 CL_reg: False # Continual learning with regularization
 val_interval: 1 # Validation interval
 test_interval: 1 # Test interval
 few_shot_training: True # # Training samples limited
-few_shot_samples: 100 # Number of training samples (from current dataset: WORD)
-mixing_datasets: True # Mixing training samples from both datasets
-only_class_labels: False # only class labels are used for training
+few_shot_samples: 5 # Number of training samples (from current dataset: WORD)
+mixing_datasets: False # Mixes two datasets
+only_class_labels: False # Only class labels are used for training
 remove_labels: False # Remove labels from the dataset (WORD dataset, from 6 to 10 classes)
 
 epochs: 500 #1000 optimal
@@ -62,7 +62,7 @@ loss_coefs:
   giou: 2
   segce: 2    # Segmentation proxy
   segdice: 2
-  aux: 10 # Aux loss coefficient
+  aux: 50 # Aux loss coefficient
   old: 10 # Old model loss coefficient
 
 # Model specific params
@@ -176,6 +176,9 @@ augmentation:
   shear_range: [0.1, 0.1, 0.1]
   flip_axis: [0, 1, 2]
 
+CL_models:
+  aux_model_path: ./runs/test_run_no_error_WORD_dataset/model_last.pt 
+  old_model_path: ./runs/test_run_no_error_ABDOMENCT-1K_dataset/model_last.pt
 
 # Dataset path:
 #   Windows: SET TRANSOAR_DATA=C:\Users\pascu\Documents\Code_Thesis\datasets
@@ -186,4 +189,4 @@ augmentation:
 #   Linux: export CUDA_VISIBLE_DEVICES=0
 
 # Run command
-#   python ./scripts/train_CL.py --config CL_methods/TEST_NO_ERROR/test_run_no_error_mixing_datasets_fewshot
+#   python ./scripts/train_CL.py --config CL_methods/TEST_NO_ERROR/ABDOMENCT-1K_WORD/test_run_no_error_CLreplay_fewshot

@@ -2,26 +2,24 @@
 
 
 # General training
-experiment_name: test_run_no_error_ABDOMENCT-1K_dataset
+experiment_name: msa_def_detr_CLreg_WORD_TOTALSEGMENTATOR_datasets
 resume: False # True to resume from last checkpoint
 device: cuda:0
 debug_mode: False  # Doesn't save checkpoints
 seed: 10
 
 # Continual learning
-CL: False # Continual Learning
+CL: True # Continual Learning
 CL_replay: False # Continual learning with replay
 CL_replay_samples: 50 # Number of samples to replay (from previous dataset: ABDOMENCT-1K)
-CL_reg: False # Continual learning with regularization
-val_interval: 1 # Validation interval
-test_interval: 1 # Test interval
+CL_reg: True # Continual learning with regularization
 few_shot_training: False # # Training samples limited
-few_shot_samples: 50 # Number of training samples (from current dataset: WORD)
+few_shot_samples: 50 # Number of samples to train with few-shot
 mixing_datasets: False # Mixing training samples from both datasets
 only_class_labels: False # only class labels are used for training
 remove_labels: False # Remove labels from the dataset (WORD dataset, from 6 to 10 classes)
 
-epochs: 500 #1000 optimal
+epochs: 1000 #1000 optimal
 lr: 2e-4
 lr_backbone: 2e-4
 lr_linear_proj_mult: 0.1
@@ -32,19 +30,19 @@ clip_max_norm: 1   # Not used
 lr_drop: 500
 
 # Data
-dataset: downsampled_datasets/abdomenCT-1k_64_64_64_CT
-dataset_2: downsampled_datasets/word_64_64_64_CT
+dataset: matched_datasets/total_segmentator_256_256_256_CT
+dataset_2: matched_datasets/word_256_256_256_CT
 overfit: False # Use same set consisting of one image for train and val
 bbox_padding: 1
+test: True
 val_interval: 1 # Validation interval
-test: False
 test_interval: 1 # Test interval
 
 # Dataloader
-batch_size: 2 # 2 (normal, 1 reduced params)
+batch_size: 1 # 2 (normal, 1 reduced params)
 shuffle: True
-num_workers: 1 # 10 (normal, 1 lower 80GB GPU)
- 
+num_workers: 10 # 10 (normal, 1 lower 80GB GPU)
+
 
 # Hungarian matching
 set_cost_class: 2
@@ -64,7 +62,8 @@ loss_coefs:
   giou: 2
   segce: 2    # Segmentation proxy
   segdice: 2
-
+  aux: 3 # Aux loss coefficient 
+  old: 15 # Old model loss coefficient 
 
 # Model specific params
 backbone:
@@ -76,18 +75,18 @@ backbone:
   start_channels: 32  # Channels after first encoder block
   bias: False
   norm_type: instance
-  data_size: [64, 64, 64] 
+  data_size: [224, 224, 160] 
 
   
   # Standard params
   fpn_channels: 384 # Final output channels (384 original, 288 reduced params)
-  out_fmaps: [P4, P3, P2]  # P0, P1, P2, P3, P4, P5
+  out_fmaps: [P4, P3, P2]  # [P4, P3, P2] or [P4, P3]
 
   kernel_size: 3
   patch_size: 2
   mlp_ratio: 2
-  num_heads: 32
-  depths: 2
+  num_heads: 32 # 32 original, 16 reduced params 3 #1
+  depths: 2 # 1 to reduce params #1
   drop_path_rate: 0.0
   attn_drop_rate: 0.0
   drop_rate: 0.0
@@ -97,7 +96,7 @@ backbone:
 
 
   # Segmentation proxy loss
-  num_organs: 10
+  num_organs: 19
   use_msa_seg_loss: True #<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
   fg_bg: False
   use_seg_proxy_loss: False  # never use it with msa
@@ -107,7 +106,7 @@ backbone:
 neck:
   name: def_detr
   use_encoder: True 
-  input_level: P2
+  input_level: P2 # P2 or P3
   num_feature_levels: 3
 
   pos_encoding: sine
@@ -147,7 +146,7 @@ neck:
 # Augmentation
 augmentation:
   use_augmentation: True
-  patch_size: [224, 224, 160] 
+  patch_size: [224, 224, 160]  
 
 
   p_gaussian_noise: 0
@@ -177,6 +176,9 @@ augmentation:
   shear_range: [0.1, 0.1, 0.1]
   flip_axis: [0, 1, 2]
 
+CL_models:
+  aux_model_path: ./runs/msa_def_detr_WORD_dataset/model_best_0.512_in_ep905.pt
+  old_model_path: ./runs/msa_def_detr_ABDOMENCT-1K_dataset/model_best_0.818_in_ep1329.pt
 
 # Dataset path:
 #   Windows: SET TRANSOAR_DATA=C:\Users\pascu\Documents\Code_Thesis\datasets
@@ -187,4 +189,4 @@ augmentation:
 #   Linux: export CUDA_VISIBLE_DEVICES=0
 
 # Run command
-#   python ./scripts/train_CL.py --config CL_methods/TEST_NO_ERROR/test_run_no_error_ABDOMENCT-1K
+#   python ./scripts/train_CL.py --config CL_methods/WORD_TOTALSEGMENTATOR/msa_def_detr_CLreg

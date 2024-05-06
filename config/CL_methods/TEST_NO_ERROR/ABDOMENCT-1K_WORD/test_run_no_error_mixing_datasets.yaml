@@ -186,4 +186,4 @@ augmentation:
 #   Linux: export CUDA_VISIBLE_DEVICES=0
 
 # Run command
-#   python ./scripts/train_CL.py --config CL_methods/TEST_NO_ERROR/test_run_no_error_mixing_datasets
+#   python ./scripts/train_CL.py --config CL_methods/TEST_NO_ERROR/ABDOMENCT-1K_WORD/test_run_no_error_mixing_datasets
