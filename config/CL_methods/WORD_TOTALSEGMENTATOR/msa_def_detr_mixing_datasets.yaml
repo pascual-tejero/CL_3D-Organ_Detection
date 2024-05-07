@@ -96,7 +96,7 @@ backbone:
 
 
   # Segmentation proxy loss
-  num_organs: 10 
+  num_organs: 19
   use_msa_seg_loss: True #<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
   fg_bg: False
   use_seg_proxy_loss: False  # never use it with msa
