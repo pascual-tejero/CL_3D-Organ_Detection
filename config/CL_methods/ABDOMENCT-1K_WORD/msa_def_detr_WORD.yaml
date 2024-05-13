@@ -2,7 +2,7 @@
 
 
 # General training
-experiment_name: msa_def_detr_WORD224_dataset 
+experiment_name: msa_def_detr_WORD_dataset 
 resume: False # True to resume from last checkpoint
 device: cuda:0
 debug_mode: False  # Doesn't save checkpoints

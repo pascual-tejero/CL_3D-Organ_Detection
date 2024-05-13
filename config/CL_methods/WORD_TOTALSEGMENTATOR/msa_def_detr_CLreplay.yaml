@@ -75,12 +75,12 @@ backbone:
   start_channels: 32  # Channels after first encoder block
   bias: False
   norm_type: instance
-  data_size: [224, 224, 160] 
+  data_size: [224, 224, 256] 
 
   
   # Standard params
   fpn_channels: 384 # Final output channels (384 original, 288 reduced params)
-  out_fmaps: [P4, P3, P2]  # [P4, P3, P2] or [P4, P3]
+  out_fmaps: [P4, P3, P2]  # [P4, P3, P2] or [P3, P2]
 
   kernel_size: 3
   patch_size: 2
@@ -146,7 +146,7 @@ neck:
 # Augmentation
 augmentation:
   use_augmentation: True
-  patch_size: [224, 224, 160]  
+  patch_size: [224, 224, 256]  
 
 
   p_gaussian_noise: 0

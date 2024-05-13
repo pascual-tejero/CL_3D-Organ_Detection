@@ -39,7 +39,7 @@ test: False
 test_interval: 1 # Test interval
 
 # Dataloader
-batch_size: 2 # 2 (normal, 1 reduced params)
+batch_size: 1 # 2 (normal, 1 reduced params)
 shuffle: True
 num_workers: 10 # 10 (normal, 1 lower 80GB GPU)
  
@@ -74,18 +74,18 @@ backbone:
   start_channels: 32  # Channels after first encoder block
   bias: False
   norm_type: instance
-  data_size: [224, 224, 160] 
+  data_size: [224, 224, 256] 
 
   
   # Standard params
-  fpn_channels: 384 # Final output channels (384 original, 288 reduced params)
+  fpn_channels: 288 # Final output channels (384 original, 288 reduced params)
   out_fmaps: [P4, P3, P2]  # P0, P1, P2, P3, P4, P5
 
   kernel_size: 3
   patch_size: 2
   mlp_ratio: 2
-  num_heads: 32
-  depths: 2
+  num_heads: 16
+  depths: 1
   drop_path_rate: 0.0
   attn_drop_rate: 0.0
   drop_rate: 0.0
@@ -109,7 +109,7 @@ neck:
   num_feature_levels: 3
 
   pos_encoding: sine
-  hidden_dim: 384 # (384 original, 288 reduced params)
+  hidden_dim: 288 # (384 original, 288 reduced params)
   dropout: 0.1
   nheads: 6
   dim_feedforward: 1024
@@ -145,7 +145,7 @@ neck:
 # Augmentation
 augmentation:
   use_augmentation: True
-  patch_size: [224, 224, 160] 
+  patch_size: [224, 224, 256] 
 
 
   p_gaussian_noise: 0

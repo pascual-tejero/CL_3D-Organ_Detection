@@ -680,12 +680,20 @@ class Trainer_CL:
             os.makedirs(self._path_to_run / 'test_during_training' / f"{num_epoch}_epoch", exist_ok=True)
 
             mean_mAP_coco.append(metric_scores['mAP_coco'])
+            
+            if 'ABDOMENCT-1K_WORD' in self._config['experiment_name']:
+                if idx == 0: 
+                    write_json(metric_scores, self._path_to_run / 'test_during_training' / f"{num_epoch}_epoch" / 'WORD_dataset.json')
+                else: # ABDOMEN_CT_1K dataset
+                    write_json(metric_scores, self._path_to_run / 'test_during_training' / f"{num_epoch}_epoch" / f'ABDOMENCT-1K_dataset.json')
+            elif 'WORD_TOTALSEGMENTATOR' in self._config['experiment_name']:
+                if idx == 0: 
+                    write_json(metric_scores, self._path_to_run / 'test_during_training' / f"{num_epoch}_epoch" / 'TOTALSEGMENTATOR_dataset.json')
+                else: # ABDOMEN_CT_1K dataset
+                    write_json(metric_scores, self._path_to_run / 'test_during_training' / f"{num_epoch}_epoch" / f'WORD_dataset.json')
+            else:
+                raise ValueError('Invalid experiment name')
 
-            if idx == 0: # WORD dataset
-                write_json(metric_scores, self._path_to_run / 'test_during_training' / f"{num_epoch}_epoch" / 'WORD_dataset.json')
-            else: # ABDOMEN_CT_1K dataset
-                write_json(metric_scores, self._path_to_run / 'test_during_training' / f"{num_epoch}_epoch" / f'ABDOMENCT-1K_dataset.json')
-        
         mean_mAP_coco = np.mean(mean_mAP_coco)
         
         if self.best_performance_value < mean_mAP_coco:

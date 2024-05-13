@@ -30,11 +30,32 @@ class TransoarDataset(Dataset):
             self._path_to_split_2 = data_dir / self._config['dataset_2'] / split
 
             self._data = [] # Add samples alternatively from both datasets
-            for idx, (data_path, data_path_2) in enumerate(zip(self._path_to_split.iterdir(), self._path_to_split_2.iterdir())):
-                self._data.append(data_path.name)
-                self._data.append(data_path_2.name)
-                if config["few_shot_training"] and idx + 1 == config["few_shot_samples"]:
-                    break
+
+            list_dataset1 = [data_path.name for data_path in self._path_to_split.iterdir()]
+            list_dataset2 = [data_path.name for data_path in self._path_to_split_2.iterdir()]
+
+            if len(list_dataset2) >= len(list_dataset1):
+                count = 0
+                for idx, data_path in enumerate(list_dataset2):
+                    self._data.append(list_dataset1[count])
+                    self._data.append(data_path)
+                    count += 1
+                    if count == len(list_dataset1):
+                        count = 0
+            else:
+                count = 0
+                for idx, data_path in enumerate(list_dataset1):
+                    self._data.append(data_path)
+                    self._data.append(list_dataset2[count])
+                    count += 1
+                    if count == len(list_dataset2):
+                        count = 0
+
+            # for idx, (data_path, data_path_2) in enumerate(zip(self._path_to_split.iterdir(), self._path_to_split_2.iterdir())):
+            #     self._data.append(data_path.name)
+            #     self._data.append(data_path_2.name)
+            #     if config["few_shot_training"] and idx + 1 == config["few_shot_samples"]:
+            #         break
 
         else:
             if self._dataset == 1:
