@@ -144,7 +144,7 @@ def train(config, args):
     optim = torch.optim.AdamW(
         param_dicts, lr=float(config['lr_backbone']), weight_decay=float(config['weight_decay'])
     )
-    scheduler = torch.optim.lr_scheduler.StepLR(optim, config['lr_drop'])
+    scheduler = torch.optim.lr_scheduler.StepLR(optim, config['lr_drop'], config['lr_gamma'])
 
 
     # Init logging
