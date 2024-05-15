@@ -28,10 +28,7 @@ clip_max_norm: 1   # Not used
 
 # Scheduler
 lr_drop: 250
-lr_gamma: 0.5
-
-
-
+lr_gamma: 0.5 # default = 0.1
 
 # Data
 dataset: matched_datasets/total_segmentator_256_256_256_CT
