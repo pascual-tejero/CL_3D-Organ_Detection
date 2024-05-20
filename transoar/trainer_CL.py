@@ -38,7 +38,8 @@ class Trainer_CL:
 
     def __init__(
         self, train_loader, val_loader, test_loader, model, criterion, optimizer, scheduler,
-        device, config, path_to_run, epoch, metric_start_val, dense_hybrid_criterion, aux_model, old_model
+        device, config, path_to_run, epoch, metric_start_val, metric_start_test, dense_hybrid_criterion, 
+        aux_model, old_model
     ):
         self._train_loader = train_loader
         self._val_loader = val_loader
@@ -80,8 +81,7 @@ class Trainer_CL:
         # Init main metric for checkpoint
         self._main_metric_key = 'mAP_coco'
         self._main_metric_max_val = metric_start_val
-
-        self.best_performance_value = 0 # for test performance to save best model
+        self.main_metric_max_test = metric_start_test
         
         # In case of CL_replay or mixing training, we need to keep track of the samples
         if self._config["only_class_labels"] and (self._config["CL_replay"] or self._config["mixing_datasets"]):
@@ -696,8 +696,8 @@ class Trainer_CL:
 
         mean_mAP_coco = np.mean(mean_mAP_coco)
         
-        if self.best_performance_value < mean_mAP_coco:
-            self.best_performance_value = mean_mAP_coco
+        if self.main_metric_max_test < mean_mAP_coco:
+            self.main_metric_max_test = mean_mAP_coco
             self._save_checkpoint(num_epoch, f'model_best_test_{mean_mAP_coco:.3f}_in_ep{num_epoch}.pt')        
 
     def run(self):
@@ -827,6 +827,7 @@ class Trainer_CL:
         torch.save({
             'epoch': num_epoch,
             'metric_max_val': self._main_metric_max_val,
+            'metric_max_test': self.main_metric_max_test,
             'model_state_dict': self._model.state_dict(),
             'optimizer_state_dict': self._optimizer.state_dict(),
             'scheduler_state_dict': self._scheduler.state_dict(),

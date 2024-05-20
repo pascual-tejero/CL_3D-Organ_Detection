@@ -170,9 +170,20 @@ def train(config, args):
         scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
         epoch = checkpoint['epoch']
         metric_start_val = checkpoint['metric_max_val']
+
+        if config['test']:
+            metric_start_test = checkpoint['metric_max_test']
+        else:
+            metric_start_test = None
     else:
         epoch = 0
         metric_start_val = 0
+
+        if config['test']:
+            metric_start_test = 0
+        else:
+            metric_start_test = None
+        
 
 
     # log num_params
@@ -214,7 +225,7 @@ def train(config, args):
     # Build trainer and start training
     trainer = Trainer_CL(
         train_loader, val_loader, test_loader, model, criterion, optim, scheduler, device, config, 
-        path_to_run, epoch, metric_start_val, dense_hybrid_criterion, aux_model, old_model
+        path_to_run, epoch, metric_start_val, metric_start_test, dense_hybrid_criterion, aux_model, old_model
     )
     trainer.run()
         
