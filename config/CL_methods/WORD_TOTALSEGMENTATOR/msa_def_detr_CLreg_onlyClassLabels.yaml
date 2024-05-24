@@ -31,8 +31,8 @@ lr_drop: 500
 lr_gamma: 0.1 # default = 0.1
 
 # Data
-dataset: matched_datasets/total_segmentator_256_256_256_CT
-dataset_2: matched_datasets/word_256_256_256_CT
+dataset: matched_datasets/total_segmentator_224_224_256_CT
+dataset_2: matched_datasets/word_224_224_256_CT
 overfit: False # Use same set consisting of one image for train and val
 bbox_padding: 1
 test: True
@@ -177,8 +177,8 @@ augmentation:
   flip_axis: [0, 1, 2]
 
 CL_models:
-  aux_model_path: ./runs/msa_def_detr_WORD_dataset/model_best_0.512_in_ep905.pt
-  old_model_path: ./runs/msa_def_detr_ABDOMENCT-1K_dataset/model_best_0.818_in_ep1329.pt
+  aux_model_path: ./runs/msa_def_detr_TOTALSEGMENTATOR_dataset/model_best_val_0.455_in_ep1226.pt  
+  old_model_path: ./runs/msa_def_detr_WORD256_dataset/model_best_val_0.451_in_ep1571.pt
 
 # Dataset path:
 #   Windows: SET TRANSOAR_DATA=C:\Users\pascu\Documents\Code_Thesis\datasets
