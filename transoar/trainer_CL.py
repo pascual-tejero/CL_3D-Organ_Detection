@@ -691,6 +691,11 @@ class Trainer_CL:
                     write_json(metric_scores, self._path_to_run / 'test_during_training' / f"{num_epoch}_epoch" / 'TOTALSEGMENTATOR_dataset.json')
                 else: # ABDOMEN_CT_1K dataset
                     write_json(metric_scores, self._path_to_run / 'test_during_training' / f"{num_epoch}_epoch" / f'WORD_dataset.json')
+            elif 'test_run_no_error' in self._config['experiment_name']:
+                if idx == 0:
+                    write_json(metric_scores, self._path_to_run / 'test_during_training' / f"{num_epoch}_epoch" / 'test_run_no_error_dataset1.json')
+                else:
+                    write_json(metric_scores, self._path_to_run / 'test_during_training' / f"{num_epoch}_epoch" / 'test_run_no_error_dataset2.json')
             else:
                 raise ValueError('Invalid experiment name')
 

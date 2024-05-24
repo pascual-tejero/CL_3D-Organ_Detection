@@ -10,6 +10,8 @@ SimpleITK==2.1.1
 nibabel==3.2.1
 tensorboard
 matplotlib
+opencv-python
+open3d
 
 # swin
 timm==0.4.12

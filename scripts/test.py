@@ -19,12 +19,10 @@ sys.path.append(base_dir)
 
 
 from transoar.utils.io import load_json, write_json
-try:
-    from transoar.utils.visualization import save_pred_visualization, save_pred_visualization_nifti
-    import open3d as o3d
-    import matplotlib.pyplot as plt
-except:
-    pass
+from transoar.utils.visualization import save_pred_visualization, save_pred_visualization_nifti
+import open3d as o3d
+import matplotlib.pyplot as plt
+
 from transoar.data.dataloader import get_loader
 from transoar.models.transoarnet import TransoarNet
 from transoar.evaluator import DetectionEvaluator, SegmentationEvaluator
@@ -85,11 +83,15 @@ class Tester:
         self._set_to_eval = 'val' if args.val else 'test'
         self._test_loader = get_loader(self.config, self._set_to_eval, batch_size=1, test_script=True)
 
+        data_path = os.environ.get('TRANSOAR_DATA')
+        data_dir = Path(data_path).resolve()
+        self.dataset1_config = load_json(data_dir / self.config['dataset'] / "data_info.json")
+
         self._evaluator = DetectionEvaluator(
-            classes=list(self.config['labels'].values()),
-            classes_small=self.config['labels_small'],
-            classes_mid=self.config['labels_mid'],
-            classes_large=self.config['labels_large'],
+            classes=list(self.dataset1_config['labels'].values()),
+            classes_small=self.dataset1_config['labels_small'],
+            classes_mid=self.dataset1_config['labels_mid'],
+            classes_large=self.dataset1_config['labels_large'],
             iou_range_nndet=(0.1, 0.5, 0.05),
             iou_range_coco=(0.5, 0.95, 0.05),
             sparse_results=False
@@ -227,12 +229,12 @@ class Tester:
                         per_sample_results[sample_name][self.config['labels'][str(class_)]] = result
 
                 if self._save_preds:
-                    if self._vis_mode == 'o3d':
+                    if self._vis_mode == 'o3d': # Export as ply files
                         save_pred_visualization(
                             pred_boxes[0], pred_classes[0], gt_boxes[0], gt_classes[0], seg_mask[0], 
                             self._path_to_vis, self._class_dict, idx
                         )
-                    elif self._vis_mode == 'nii':
+                    elif self._vis_mode == 'nii': # Export as nii.gz files
                         input_image = None
                         if self._exp_img:
                             input_image = data
@@ -240,6 +242,7 @@ class Tester:
                             pred_boxes[0], pred_classes[0], gt_boxes[0], gt_classes[0], seg_mask[0], 
                             self._path_to_vis, self._class_dict, idx, input_image, self.config
                         )
+                        
                     else:
                         raise ValueError('Please select o3d or nii to export either ply or nii.gz files')
 
