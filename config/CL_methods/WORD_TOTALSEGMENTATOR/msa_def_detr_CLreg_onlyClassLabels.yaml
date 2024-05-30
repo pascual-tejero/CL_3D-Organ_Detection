@@ -79,14 +79,14 @@ backbone:
 
   
   # Standard params
-  fpn_channels: 288 # Final output channels (384 original, 288 reduced params)
+  fpn_channels: 384 # Final output channels (384 original, 288 reduced params)
   out_fmaps: [P4, P3, P2]  # [P4, P3, P2] or [P4, P3]
 
   kernel_size: 3
   patch_size: 2
   mlp_ratio: 2
-  num_heads: 16 # 32 original, 16 reduced params 3 #1
-  depths: 1 # 1 to reduce params #1
+  num_heads: 32 # 32 original, 16 reduced params 3 #1
+  depths: 2 # 1 to reduce params #1
   drop_path_rate: 0.0
   attn_drop_rate: 0.0
   drop_rate: 0.0
@@ -110,7 +110,7 @@ neck:
   num_feature_levels: 3
 
   pos_encoding: sine
-  hidden_dim: 288 # (384 original, 288 reduced params)
+  hidden_dim: 384 # (384 original, 288 reduced params)
   dropout: 0.1
   nheads: 6
   dim_feedforward: 1024
