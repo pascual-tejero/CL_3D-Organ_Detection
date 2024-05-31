@@ -3,7 +3,6 @@ salloc -p lrz-dgx-a100-80x8 --ntasks=1 --gres=gpu:1 --time=72:00:00
 salloc -p mcml-dgx-a100-40x8 --time 96:00:00 --gres gpu:1 -q mcml
 
 
-DATA_DIR=/dss/dsshome1/01/ge32fix2/DATASETS/
 
 ## activate the env
 ENV_name=msadet
