@@ -19,7 +19,7 @@ mixing_datasets: False # Mixing training samples from both datasets
 only_class_labels: False # Only class labels are used for training
 remove_labels: False # Remove labels from the dataset (WORD dataset, from 6 to 10 classes)
 
-epochs: 2500 #1000 optimal
+epochs: 1000 #1000 optimal
 lr: 2e-4
 lr_backbone: 2e-4
 lr_linear_proj_mult: 0.1
