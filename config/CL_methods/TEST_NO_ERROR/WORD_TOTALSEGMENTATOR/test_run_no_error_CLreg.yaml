@@ -178,7 +178,7 @@ augmentation:
   flip_axis: [0, 1, 2]
 
 CL_models:
-  aux_model_path: ./runs/test_run_no_error_WORD_dataset/model_last.pt 
+  aux_model_path: ./runs/test_run_no_error_WORD256_dataset/model_last.pt 
   old_model_path: ./runs/test_run_no_error_ABDOMENCT-1K_dataset/model_last.pt
 
 # Dataset path:
