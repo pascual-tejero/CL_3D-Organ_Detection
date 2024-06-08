@@ -202,7 +202,8 @@ def train(config, args):
     write_json(config, path_to_run / 'config.json')
 
     # Load auxiliary model and old model if applicable
-    if config["mixing_datasets"] or config["CL_replay"] or config["CL"] is False:
+    if config["mixing_datasets"] or config["CL_replay"] or config["CL"] is False or (config["CL"] is True and
+        config["CL_models"]["aux_model_path"] is False or config["CL_models"]["old_model_path"] is False):
         aux_model = None
         old_model = None
     else:

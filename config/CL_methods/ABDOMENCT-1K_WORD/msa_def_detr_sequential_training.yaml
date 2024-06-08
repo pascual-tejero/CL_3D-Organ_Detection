@@ -178,7 +178,7 @@ augmentation:
   flip_axis: [0, 1, 2]
 
 CL_models:
-  aux_model_path: ./runs/msa_def_detr_WORD160_dataset/model_best_val_0.512_in_ep925.pt
+  aux_model_path: False
   old_model_path: ./runs/msa_def_detr_ABDOMENCT-1K_dataset/model_best_val_0.814_in_ep1052.pt
 
 # Dataset path:

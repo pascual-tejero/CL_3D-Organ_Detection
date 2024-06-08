@@ -105,3 +105,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
     print("press 'r' to center point cloud")
     visualize_random_case(args.path, args.case)
+
+# python scripts/display_case_ply.py --path runs/.../.../vis_test --case 0
