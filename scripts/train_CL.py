@@ -172,7 +172,10 @@ def train(config, args):
         metric_start_val = checkpoint['metric_max_val']
 
         if config['test']:
-            metric_start_test = checkpoint['metric_max_test']
+            try:
+                metric_start_test = checkpoint['metric_max_test']
+            except:
+                metric_start_test = None
         else:
             metric_start_test = None
     else:
