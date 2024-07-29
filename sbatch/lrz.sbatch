@@ -78,6 +78,8 @@ python scripts/display_case_ply.py --path msa_def_detr_ABDOMENCT-1K_dataset
 python scripts/display_case_ply.py --path msa_def_detr_WORD256_dataset
 python scripts/display_case_ply.py --path msa_def_detr_TOTALSEGMENTATOR_dataset
 
+/opt/conda/envs/${ENV_name}/bin/python scripts/test.py --path msa_def_detr_WORD256_dataset
+/opt/conda/envs/${ENV_name}/bin/python scripts/test.py --path msa_def_detr_TOTALSEGMENTATOR_dataset
 
 # Login to LRZ
 ssh login.ai.lrz.de -l ge32fix2
