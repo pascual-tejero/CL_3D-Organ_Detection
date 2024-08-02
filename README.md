@@ -29,7 +29,7 @@ The Organ-DETR architecture consists of essential components: an initial stage w
 
 ### Replay-Based Approach
 
-![Replay-Based Approach](img/Replay.png)
+![Replay-Based Approach](img/Replay.png#center)
 
 
 **Replay-Based Approach**: Mitigates forgetting by including the most challenging samples from previous tasks in the current task data loader.
