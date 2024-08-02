@@ -108,14 +108,14 @@ While the replay-based approach demonstrated the most effectiveness in preventin
 
 # References
 
-[1] Benjamin Raphael Ernhofer. Organ Detection in Computed Tomography. 2023. url: https: //ai-med.de/wp-content/uploads/2023/12/MasterThesis_OrganDet_Ernhofer.pdf. 
+[1] Benjamin Raphael Ernhofer. Organ Detection in Computed Tomography. 2023. url: https://ai-med.de/wp-content/uploads/2023/12/MasterThesis_OrganDet_Ernhofer.pdf
 
 [2] Morteza Ghahremani, Benjamin Raphael Ernhofer, JiajunWang, and ChristianWachinger. Organ-DETR: 3D Organ Detection Transfomer with Multiscale Attention and Dense Query Matching. 2024. url: https://openreview.net/forum?id=7YEXo5qUmN
 
-[3] Sanghwan Kim, Lorenzo Noci, Antonio Orvieto, and Thomas Hofmann, “Achieving a Better Stability-Plasticity Trade-off via Auxiliary Networks in Continual Learning,” in 2023 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR), Jun. 2023, pp. 1-10, doi: 10.1109/CVPR52729.2023.01148
+[3] Sanghwan Kim, Lorenzo Noci, Antonio Orvieto, and Thomas Hofmann, “Achieving a Better Stability-Plasticity Trade-off via Auxiliary Networks in Continual Learning,” in 2023 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR), Jun. 2023, pp. 1-10, doi: https://doi.org/10.1109/CVPR52729.2023.01148
 
 [4] Pratibha Kumari, Joohi Chauhan, Afshin Bozorgpour, Boqiang Huang, Reza Azad, and Dorit Merhof. “Continual Learning in Medical Image Analysis: A Comprehensive Review of Recent
-Advancements and Future Prospects”. In: (Dec. 2023). url: https: //arxiv.org/abs/2312.17004v2
+Advancements and Future Prospects”. In: (Dec. 2023). url: https://arxiv.org/abs/2312.17004v2
 
 [5] Jun Ma, Yao Zhang, Song Gu, Cheng Zhu, Cheng Ge, Yichi Zhang, Xingle An, Congcong Wang, Qiyuan Wang, Xin Liu, Shucheng Cao, Qi Zhang, Shangqing Liu, Yunpeng Wang, Yuhui Li, Jian He, and Xiaoping Yang. “AbdomenCT-1K: Is Abdominal Organ Segmentation a Solved Problem?” In: IEEE transactions on pattern analysis and machine intelligence 44 (10 2022). issn: 1939-3539. doi: 10.1109/TPAMI.2021.3100536. url: https://pubmed.ncbi.nlm.nih.gov/34314356/.
 
