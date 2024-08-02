@@ -74,12 +74,29 @@ To start training, use the following command:
 
 # Results
 
-According to the results of Experiment 1, the best ANCL model (training session 5) achieved an Average Incremental Accuracy (AIA) of 0.412 and a Forgetting Measure (FM) of 0.544, while the best replay-based CL model (with 50 replay samples) achieved an AIA of 0.703 and a FM of 0.041. 
+According to the results of Experiment 1 (AbdomenCT-1K and WORD datasets), the best ANCL model (training session 5) achieved an Average Incremental Accuracy (AIA) of 0.412 and a Forgetting Measure (FM) of 0.544, while the best replay-based CL model (with 50 replay samples) achieved an AIA of 0.703 and a FM of 0.041. 
 
-In Experiment 2, the best ANCL model (training session 4) achieved an AIA of 0.263 and a FM of 0.362, while the best replay-based CL model (with 50 replay samples) achieved an AIA of 0.464 and a FM of 0.001. Therefore, it has been demonstrated that the replay-based approach is the most effective CL method for these organ detection tasks, though considerations regarding privacy concerns and the computational and temporal resources required must be considered.
+In Experiment 2 (WORD and TotalSegmentator datasets), the best ANCL model (training session 4) achieved an AIA of 0.263 and a FM of 0.362, while the best replay-based CL model (with 50 replay samples) achieved an AIA of 0.464 and a FM of 0.001. Therefore, it has been demonstrated that the replay-based approach is the most effective CL method for these organ detection tasks, though considerations regarding privacy concerns and the computational and temporal resources required must be considered.
 
 # Conclusion
 While the replay-based approach demonstrated the most effectiveness in preventing catastrophic forgetting, it is important to consider the privacy concerns, computational resources, and time required for this method.
+
+# References
+
+[1] Benjamin Raphael Ernhofer. Organ Detection in Computed Tomography. 2023. url: https: //ai-med.de/wp-content/uploads/2023/12/MasterThesis_OrganDet_Ernhofer.pdf. 
+
+[2] Morteza Ghahremani, Benjamin Raphael Ernhofer, JiajunWang, and ChristianWachinger. Organ-DETR: 3D Organ Detection Transfomer with Multiscale Attention and Dense Query Matching. 2024. url: https://openreview.net/forum?id=7YEXo5qUmN
+
+[3] Sanghwan Kim, Lorenzo Noci, Antonio Orvieto, and Thomas Hofmann, “Achieving a Better Stability-Plasticity Trade-off via Auxiliary Networks in Continual Learning,” in 2023 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR), Jun. 2023, pp. 1-10, doi: 10.1109/CVPR52729.2023.01148
+
+[4] Pratibha Kumari, Joohi Chauhan, Afshin Bozorgpour, Boqiang Huang, Reza Azad, and Dorit Merhof. “Continual Learning in Medical Image Analysis: A Comprehensive Review of Recent
+Advancements and Future Prospects”. In: (Dec. 2023). url: https: //arxiv.org/abs/2312.17004v2
+
+[5] Jun Ma, Yao Zhang, Song Gu, Cheng Zhu, Cheng Ge, Yichi Zhang, Xingle An, Congcong Wang, Qiyuan Wang, Xin Liu, Shucheng Cao, Qi Zhang, Shangqing Liu, Yunpeng Wang, Yuhui Li, Jian He, and Xiaoping Yang. “AbdomenCT-1K: Is Abdominal Organ Segmentation a Solved Problem?” In: IEEE transactions on pattern analysis and machine intelligence 44 (10 2022). issn: 1939-3539. doi: 10.1109/TPAMI.2021.3100536. url: https://pubmed.ncbi.nlm.nih.gov/34314356/.
+
+[6] Xiangde Luo, Wenjun Liao, Jianghong Xiao, Jieneng Chen, Tao Song, Xiaofan Zhang, Kang Li, Dimitris N. Metaxas, GuotaiWang, and Shaoting Zhang. “WORD: A large scale dataset, benchmark and clinical applicable study for abdominal organ segmentation from CT image”. In: Medical Image Analysis 82 (Nov. 2021). doi: 10.1016/j.media.2022. 102642. url: http://arxiv.org/abs/2111.02403%20http://dx.doi.org/10.1016/j. media.2022.102642.
+
+[7] Jakob Wasserthal, Hanns-Christian Breit, Manfred T Meyer, Maurice Pradella, Daniel Hinck, Alexander W Sauter, Tobias Heye, Daniel Boll, Joshy Cyriac Msc, Shan Yang, Michael Bach, and Martin Segeroth. “TotalSegmentator: Robust Segmentation of 104 Anatomical Structures in CT images”. In: (2023). doi: 10.5281/zenodo.6802613. url: https://www.github.com/wasserth/TotalSegmentator.
 
 
 
