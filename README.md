@@ -78,6 +78,17 @@ According to the results of Experiment 1 (AbdomenCT-1K and WORD datasets), the b
 
 In Experiment 2 (WORD and TotalSegmentator datasets), the best ANCL model (training session 4) achieved an AIA of 0.263 and a FM of 0.362, while the best replay-based CL model (with 50 replay samples) achieved an AIA of 0.464 and a FM of 0.001. Therefore, it has been demonstrated that the replay-based approach is the most effective CL method for these organ detection tasks, though considerations regarding privacy concerns and the computational and temporal resources required must be considered.
 
+<p align="center">
+  <img src="img/Results_exp1_replay_AbdomenCT-1K.png" alt="Results for Replay-Based Approach on AbdomenCT-1K Dataset" width="80%">
+</p>
+Experiment 1: 3D predictions (red) and ground truth (green) of case 17 from the test set of the AbdomenCT-1K dataset using the best model (50 replay samples) from the replay-based CL approach
+
+Results for Replay-Based Approach on WORD Dataset
+<p align="center">
+  <img src="img/Results_exp1_replay_WORD.png" alt="Results for Replay-Based Approach on WORD Dataset" width="80%">
+</p>
+Experiment 1: 3D predictions (red) and ground truth (green) of case 27 from the test set of the WORD dataset using the best model (50 replay samples) from the replay-based CL approach.
+
 # Conclusion
 While the replay-based approach demonstrated the most effectiveness in preventing catastrophic forgetting, it is important to consider the privacy concerns, computational resources, and time required for this method.
 
