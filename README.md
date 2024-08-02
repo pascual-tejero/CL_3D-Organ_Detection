@@ -14,6 +14,25 @@ The second technique is a replay-based approach that includes the most difficult
 
 In Experiment 2, the best ANCL model (training session 4) achieved an AIA of 0.263 and a FM of 0.362, while the best replay-based CL model (with 50 replay samples) achieved an AIA of 0.464 and a FM of 0.001. Therefore, it has been demonstrated that the replay-based approach is the most effective CL method for these organ detection tasks, though considerations regarding privacy concerns and the computational and temporal resources required must be considered.
 
+## Architecture
+
+![Network Architecture](img/arch.png)
+
+## Continual Learning Techniques
+
+### Auxiliary Network Continual Learning (ANCL)
+
+![ANCL Approach](img/ANCL.png)
+
+**Auxiliary Network Continual Learning (ANCL)**: Incorporates predictions from both the old model and an auxiliary network into the main network's loss function to preserve past knowledge.
+
+### Replay-Based Approach
+
+![Replay-Based Approach](img/Replay.png)
+
+**Replay-Based Approach**: Mitigates forgetting by including the most challenging samples from previous tasks in the current task data loader.
+
+
 ## Installation
 
 To set up the environment and install the necessary dependencies, follow these steps:
