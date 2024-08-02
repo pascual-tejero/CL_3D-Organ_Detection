@@ -11,7 +11,9 @@ The aim of this work is to extend a transformer-based 3D organ recognition neura
 
 ## Architecture
 
-![Network Architecture](img/arch.png)
+<p align="center">
+  <img src="img/arch.png" alt="Network Architecture" width="80%">
+</p>
 
 The Organ-DETR architecture consists of essential components: an initial stage with a feature extractor backbone that generates feature maps, followed by a MultiScale Attention (MSA) module that enriches semantic features through self- and cross-attention mechanisms. These enriched features, together with a segmentation head, support the generation of multiple segmentation maps for improved object detection. The decoder includes a classification head, a regression head and later a Dense Query Matching (DQM) mechanism, which is crucial for effective model training and performance as it duplicates the ground truth labels
 
@@ -19,13 +21,17 @@ The Organ-DETR architecture consists of essential components: an initial stage w
 
 ### Auxiliary Network Continual Learning (ANCL)
 
-![ANCL Approach](img/ANCL.png)
+<p align="center">
+  <img src="img/ANCL.png" alt="ANCL Approach" width="80%">
+</p>
 
 **Auxiliary Network Continual Learning (ANCL)**: Incorporates predictions from the old model (optimized on the previous task) and the auxiliary network (optimized on the current task) into the loss function of the main network. 
 
 ### Replay-Based Approach
 
-![Replay-Based Approach](img/Replay.png)
+<p align="center">
+  <img src="img/Replay.png" alt="Replay-Based Approach" width="80%">
+</p>
 
 **Replay-Based Approach**: Mitigates forgetting by including the most challenging samples from previous tasks in the current task data loader.
 
