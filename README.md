@@ -62,10 +62,10 @@ Before running the training script, set the dataset path environment variable:
     export TRANSOAR_DATA=your_dataset_path
     ```
 
-1. To start training, use the following command:
-   ```bash
-    python ./scripts/train.py --config {config file of technique}
-    ```
+To start training, use the following command:
+```bash
+   python ./scripts/train.py --config {config file of technique}
+```
 
 # Results
 
