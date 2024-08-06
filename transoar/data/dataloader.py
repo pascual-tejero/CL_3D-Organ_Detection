@@ -6,114 +6,46 @@ from torch.utils.data import DataLoader
 from transoar.data.dataset import TransoarDataset
 from transoar.utils.bboxes import segmentation2bbox
 
-
 def get_loader(config, split, batch_size=None, test_script=False):
+    batch_size = batch_size or config['batch_size'] # Default batch size
+    shuffle = False if split in ['test', 'val'] else config['shuffle'] # Shuffle only for training 
+    collator = TransoarCollator(config, split, CL_replay=test_script or (split == 'train' and config.get("CL_replay", False)))
 
-    if not batch_size:
-        batch_size = config['batch_size']
-
-    # Init collator
-    shuffle = False if split in ['test', 'val'] else config['shuffle']
-
+    # Test script
     if test_script:
-        collator = TransoarCollator(config, split)
         dataset = TransoarDataset(config, split, dataset=1, selected_samples=None, test_script=True)
-        dataloader = DataLoader(
-            dataset, batch_size=batch_size, shuffle=shuffle,
-            num_workers=config['num_workers'], collate_fn=collator
-        )
+        return DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, num_workers=config['num_workers'], collate_fn=collator)
 
-    elif config["CL_reg"] is True or config["CL_replay"] is True or config["mixing_datasets"] is True:
+    # Test split if CL_reg, CL_replay or mixing_datasets is True
+    if split == 'test' and (config.get("CL_reg") or config.get("CL_replay") or config.get("mixing_datasets") or config.get("test")):
+        dataset_1 = TransoarDataset(config, split, dataset=1)
+        dataset_2 = TransoarDataset(config, split, dataset=2)
+        dataloader_1 = DataLoader(dataset_1, batch_size=batch_size, shuffle=shuffle, num_workers=config['num_workers'], collate_fn=collator)
+        dataloader_2 = DataLoader(dataset_2, batch_size=batch_size, shuffle=shuffle, num_workers=config['num_workers'], collate_fn=collator)
+        return (dataloader_1, dataloader_2)
 
-        # Test on both datasets to see the evolution of performance with CL or mixing datasets method
-        if split == 'test': 
-            collator = TransoarCollator(config, split)
+    # CL_reg training or validation
+    if config.get("CL_reg") and not config.get("CL_replay") and not config.get("mixing_datasets"):
+        dataset = TransoarDataset(config, split, dataset=1) # Take the dataset of task 2 for CL_reg
+        return DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, num_workers=config['num_workers'], collate_fn=collator)
 
-            # Test on the first dataset
-            dataset_1 = TransoarDataset(config, split, dataset=1)
-            dataloader_1 = DataLoader(
-                dataset_1, batch_size=batch_size, shuffle=shuffle,
-                num_workers=config['num_workers'], collate_fn=collator
-            ) 
+    # CL_replay training or validation
+    if config.get("CL_replay") and not config.get("CL_reg") and not config.get("mixing_datasets"):
+        dataset = TransoarDataset(config, split, dataset=2 if split == 'train' else 1) # Take the dataset of task 1 for CL_replay
+        batch_size = 1 if split == 'train' else batch_size
+        return DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, num_workers=config['num_workers'], collate_fn=collator)
 
-            # Test on the second dataset
-            dataset_2 = TransoarDataset(config, split, dataset=2)
-            dataloader_2 = DataLoader(
-                dataset_2, batch_size=batch_size, shuffle=shuffle,
-                num_workers=config['num_workers'], collate_fn=collator
-            )
+    # Mixing datasets training
+    if config.get("mixing_datasets") and not config.get("CL_reg") and not config.get("CL_replay"):
+        dataset = TransoarDataset(config, split) # Normal training
+        return DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=config['num_workers'], collate_fn=collator)
 
-            # Return both dataloaders
-            dataloader = (dataloader_1, dataloader_2)
+    dataset = TransoarDataset(config, split) # Normal training
 
-        elif config["CL_reg"] is True and config["CL_replay"] is False and config["mixing_datasets"] is False:
-            # If CL_reg is True, train and validate on the first dataset
-            collator = TransoarCollator(config, split)
-            dataset = TransoarDataset(config, split, dataset=1)
-            dataloader = DataLoader(
-                dataset, batch_size=batch_size, shuffle=shuffle,
-                num_workers=config['num_workers'], collate_fn=collator
-            )
+    # Return dataloader with collator
+    return DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, num_workers=config['num_workers'], collate_fn=collator)
 
-        elif config["CL_reg"] is False and config["CL_replay"] is True and config["mixing_datasets"] is False:
-            if split == "train":
-                # If CL_replay is True, create a dataloader for the second dataset to replay samples.
-                # Later, the replayed samples will be added to the first dataset in a new dataloader.
-                # The function get_loader_CLreplay_selected_samples will be used to create the new dataloader.
-                collator = TransoarCollator(config, split, CL_replay=True)
-                dataset = TransoarDataset(config, split, dataset=2)
-                dataloader = DataLoader(
-                    dataset, batch_size=1, shuffle=shuffle,
-                    num_workers=config['num_workers'], collate_fn=collator
-                )
-            else:
-                # Validate on the first dataset
-                collator = TransoarCollator(config, split)
-                dataset = TransoarDataset(config, split, dataset=1)
-                dataloader = DataLoader(
-                    dataset, batch_size=batch_size, shuffle=shuffle,
-                    num_workers=config['num_workers'], collate_fn=collator
-                )
 
-        elif config["CL_reg"] is False and config["CL_replay"] is False and config["mixing_datasets"] is True:
-            # Mixing datasets training 
-            shuffle = False
-            collator = TransoarCollator(config, split)
-            dataset = TransoarDataset(config, split)
-            dataloader = DataLoader(
-                dataset, batch_size=batch_size, shuffle=shuffle,
-                num_workers=config['num_workers'], collate_fn=collator
-            )
-    else:
-        if config["test"] is True and split == "test":
-            collator = TransoarCollator(config, split)
-            
-            # Test on the first dataset
-            dataset_1 = TransoarDataset(config, split, dataset=1)
-            dataloader_1 = DataLoader(
-                dataset_1, batch_size=batch_size, shuffle=shuffle,
-                num_workers=config['num_workers'], collate_fn=collator
-            ) 
-
-            # Test on the second dataset
-            dataset_2 = TransoarDataset(config, split, dataset=2)
-            dataloader_2 = DataLoader(
-                dataset_2, batch_size=batch_size, shuffle=shuffle,
-                num_workers=config['num_workers'], collate_fn=collator
-            )
-
-            # Return both dataloaders
-            dataloader = (dataloader_1, dataloader_2)
-
-        else:
-            collator = TransoarCollator(config, split)
-            dataset = TransoarDataset(config, split)
-            dataloader = DataLoader(
-                dataset, batch_size=batch_size, shuffle=shuffle,
-                num_workers=config['num_workers'], collate_fn=collator
-            )
-
-    return dataloader
 
 def get_loader_CLreplay_selected_samples(config, split, batch_size=None, selected_samples=None):
 

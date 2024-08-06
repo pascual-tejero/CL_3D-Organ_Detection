@@ -8,8 +8,6 @@ from torch.utils.data import Dataset
 
 from transoar.data.transforms import get_transforms
 
-#data_base_dir = "/mnt/data/transoar_prep/dataset/"  #"datasets/"
-
 class TransoarDataset(Dataset):
     """Dataset class of the transoar project."""
     def __init__(self, config, split, dataset=1, selected_samples=None, test_script=False):
@@ -21,49 +19,39 @@ class TransoarDataset(Dataset):
 
         data_dir = Path(os.getenv("TRANSOAR_DATA")).resolve()
 
-        if test_script:
+        if test_script: # Parameters for testing the model
             self._path_to_split = data_dir / self._config['dataset'] / split
             self._data = [data_path.name for data_path in self._path_to_split.iterdir()]
 
-        elif config["mixing_datasets"] and split == "train":
+        elif config["mixing_datasets"] and split == "train": # Mix datasets and train on both
             self._path_to_split = data_dir / self._config['dataset'] / split
             self._path_to_split_2 = data_dir / self._config['dataset_2'] / split
 
             self._data = [] # Add samples alternatively from both datasets
 
+            # Get all samples from the dataset folder
             list_dataset1 = [data_path.name for data_path in self._path_to_split.iterdir()]
             list_dataset2 = [data_path.name for data_path in self._path_to_split_2.iterdir()]
 
-            if len(list_dataset2) >= len(list_dataset1):
-                count = 0
-                for idx, data_path in enumerate(list_dataset2):
-                    self._data.append(list_dataset1[count])
-                    self._data.append(data_path)
-                    count += 1
-                    if count == len(list_dataset1):
-                        count = 0
-            else:
-                count = 0
-                for idx, data_path in enumerate(list_dataset1):
-                    self._data.append(data_path)
-                    self._data.append(list_dataset2[count])
-                    count += 1
-                    if count == len(list_dataset2):
-                        count = 0
+            if len(list_dataset1) <= len(list_dataset2):  # If dataset 1 has more samples than dataset 2
+                self._path_to_split, self._path_to_split_2 = self._path_to_split_2, self._path_to_split
 
-            # for idx, (data_path, data_path_2) in enumerate(zip(self._path_to_split.iterdir(), self._path_to_split_2.iterdir())):
-            #     self._data.append(data_path.name)
-            #     self._data.append(data_path_2.name)
-            #     if config["few_shot_training"] and idx + 1 == config["few_shot_samples"]:
-            #         break
+            # Determine which list is shorter and needs to be repeated
+            short_dataset, long_dataset = (list_dataset1, list_dataset2) if len(list_dataset1) <= len(list_dataset2) else (list_dataset2, list_dataset1)
 
-        else:
-            if self._dataset == 1:
-                self._path_to_split = data_dir / self._config['dataset'] / split
-            else:
-                self._path_to_split = data_dir / self._config['dataset_2'] / split 
-            
-            self._data = []
+            # Repeat elements of the shorter list to match the length of the longer list
+            repeated_short_list = short_dataset * (len(long_dataset) // len(short_dataset)) + short_dataset[:len(long_dataset) % len(short_dataset)]
+
+            # Interleave the samples from both lists
+            for idx in range(len(long_dataset)):
+                self._data.append(long_dataset[idx])
+                self._data.append(repeated_short_list[idx])
+
+
+        else: # Rest of the cases
+            dataset_key = 'dataset' if self._dataset == 1 else 'dataset_2'
+            self._path_to_split = data_dir / self._config[dataset_key] / split
+            self._data = [] # Add samples from the dataset
 
             if isinstance(self._selected_samples, dict): # CL_replay
                 self._path_to_split = data_dir / self._config['dataset'] / split
@@ -71,10 +59,9 @@ class TransoarDataset(Dataset):
 
                 # Get keys from selected samples dict in a list
                 list_selected_samples = list(self._selected_samples.keys())
-               
+
+                # Few-shot training and the number of CL_replay samples is greater than the few-shot samples
                 if config["few_shot_training"] and config["CL_replay_samples"] > config["few_shot_samples"]:
-                    # If the number of samples from ABDOMENCT-1K is greater than WORD samples, 
-                    # then we need to repeat the WORD samples
                     list_dataset1 = [data_path_dat.name for data_path_dat in self._path_to_split.iterdir()]
                     count = 0
                     for idx, data_path in enumerate(list_selected_samples):
@@ -86,9 +73,8 @@ class TransoarDataset(Dataset):
                         if count == config["few_shot_samples"]:
                             count = 0
 
+                # Rest of the cases (normal CL replay or few-shot training with more samples from the dataset)
                 else:
-                    # If the number of samples from WORD is greater than ABDOMENCT-1K samples,
-                    # then we need to repeat the ABDOMENCT-1K samples
                     count = 0
                     for idx, data_path in enumerate(self._path_to_split.iterdir()):
                         self._data.append(data_path.name)
@@ -97,17 +83,15 @@ class TransoarDataset(Dataset):
                         if config["few_shot_training"] and idx + 1 == config["few_shot_samples"]: # Use only a few samples
                             break
                         if count == len(list_selected_samples):
-                            count = 0       
-                            
+                            count = 0   
+
             else:
                 # Get all samples from the dataset folder
                 self._data = [data_path.name for data_path in self._path_to_split.iterdir()]
 
                 # Use only a few samples
                 if config["few_shot_training"] and split == "train" and not config["CL_replay"]:
-                    # Use only a few samples from the dataset, if CL_replay is False. Otherwise,
-                    # the selected samples used are less
-                    self._data = self._data[:config["few_shot_samples"]] 
+                    self._data = self._data[:config["few_shot_samples"]]
 
 
         self._augmentation = get_transforms(split, config)
@@ -120,22 +104,27 @@ class TransoarDataset(Dataset):
         if self._config['overfit']:
             idx = 0
 
-        case = self._data[idx]
+        case = self._data[idx] # Get the case name
 
+        # Mix datasets and train on both
         if self._config["mixing_datasets"] and self._split == "train" or isinstance(self._selected_samples, dict):
-            if idx % 2 == 0:
-                path_to_case = self._path_to_split / case
+            if idx % 2 == 0: 
+                path_to_case = self._path_to_split / case # Dataset task 1
             else:
-                path_to_case = self._path_to_split_2 / case
+                path_to_case = self._path_to_split_2 / case # Dataset task 2
 
         else:
-            path_to_case = self._path_to_split / case
+            path_to_case = self._path_to_split / case # Normal training
 
-        data_path, label_path = sorted(list(path_to_case.iterdir()), key=lambda x: len(str(x)))
+        data_path, label_path = sorted(list(path_to_case.iterdir()), key=lambda x: len(str(x))) # Sort the files by length of the string
 
         # Load npy files
         data, label = np.load(data_path), np.load(label_path)
 
+        # if self._split == 'train':
+        #     print("path_to_case", path_to_case) 
+
+        # Apply data augmentation
         if self._config['augmentation']['use_augmentation']:
             data_dict = {
                 'image': data,
@@ -152,9 +141,9 @@ class TransoarDataset(Dataset):
         # print("data, label", data.shape, label.shape)
         
         
-        if self._split == 'test':
+        if self._split == 'test': # Return path to case for visualization
             return data, label, path_to_case # path is used for visualization of predictions on source data
         elif self._config["CL_replay"] and self._split == "train" and self._dataset == 2 and self._selected_samples is None:
             return data, label, path_to_case
         else:
-            return data, label
+            return data, label # Return data and label

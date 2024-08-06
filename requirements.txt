@@ -11,6 +11,7 @@ tensorboard
 matplotlib
 opencv-python
 open3d
+soundfile
 
 # swin
 timm==0.4.12

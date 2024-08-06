@@ -28,9 +28,9 @@ The Organ-DETR architecture consists of essential components: an initial stage w
 **Auxiliary Network Continual Learning (ANCL)**: Incorporates predictions from the old model (optimized on the previous task) and the auxiliary network (optimized on the current task) into the loss function of the main network. 
 
 ### Replay-Based Approach
-
-![Replay-Based Approach](img/Replay.png#center)
-
+<p align="center">
+  <img src="img/Replay.png" alt="Replay-based Approach" width="50%">
+</p>
 
 **Replay-Based Approach**: Mitigates forgetting by including the most challenging samples from previous tasks in the current task data loader.
 
