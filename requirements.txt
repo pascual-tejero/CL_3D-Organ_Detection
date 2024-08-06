@@ -1,13 +1,25 @@
-torch==1.7.1+cu101
-torchvision==0.8.2+cu101
+# conda install pytorch==1.11.0 torchvision==0.12.0 torchaudio==0.11.0 -c pytorch
+
+
 tqdm==4.62.3
-monai==0.7.0
+monai==1.0.0 # monai==0.7.0
 batchgenerators==0.23
 pyyaml==6.0
-SimpleITK==2.1.1
+SimpleITK
 nibabel==3.2.1
+tensorboard
+matplotlib
+opencv-python
+open3d
+soundfile
 
 # swin
 timm==0.4.12
 einops==0.3.2
 
+
+# Windows: 
+# SET TRANSOAR_DATA=C:\Users\pascu\Documents\Code_Thesis\datasets
+
+# Linux: 
+# export TRANSOAR_DATA=/mnt/nas/Projects/project_pascual/

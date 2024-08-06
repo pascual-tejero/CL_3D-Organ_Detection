@@ -54,7 +54,7 @@ class Trainer:
 
         self._writer = SummaryWriter(log_dir=path_to_run)
         self._scaler = GradScaler()
-
+        
         self._evaluator = DetectionEvaluator(
             classes=list(config['labels'].values()),
             classes_small=config['labels_small'],
@@ -113,9 +113,19 @@ class Trainer:
                     'labels': item[1].to(device=self._device)
                 }
                 det_targets.append(target)
+            # print('det_targets: ', det_targets) 
+            # quit()
 
             # Make prediction
             with autocast(): 
+                # print(det_targets)
+                # # Change from cx,cy,cz,w,h,d to x1,y1,z1,x2,y2,z2
+                # for target in det_targets:
+                #     target['boxes'] = torch.cat((target['boxes'][:, :3] - target['boxes'][:, 3:]/2, 
+                #                                 target['boxes'][:, :3] + target['boxes'][:, 3:]/2), dim=1)
+                # print("=====================================")
+                # print('det_targets: ', det_targets)
+                # quit()
                 out, contrast_losses, dn_meta = self._model(data, det_targets, num_epoch=num_epoch)
                 loss_dict, pos_indices = self._criterion(out, det_targets, seg_targets, dn_meta, num_epoch=num_epoch)
 

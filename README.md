@@ -1,85 +1,129 @@
-# New config parameters
-DAB & two-stage (configure "neck" sub-configuration)
-- use_dab: True 
-- num_patterns: 3 # number of patterns for anchors, DAB-DETR uses 3
-- two_stage: True
-- box_refine: True
+# Organ-DETR
 
-Custom matching (place these below 'set_cost_giou')
-- dense_matching: True
-- dense_matching_lambda: 0.5 
+Organ-DETR is a DEtection TRansformer (DETR) model enhanced with two novel modules: MultiScale Attention (MSA) and Dense Query Matching (DQM) for improving the performance of 3D organ detection. This project also explores Continual Learning (CL) techniques to adapt the model to new datasets while retaining knowledge from previous training sessions.
 
-Hybrid matching (from [H-Deformable-DETR](https://github.com/HDETR/H-Deformable-DETR), place these below 'set_cost_giou')
-- hybrid_matching: True
-- hybrid_K: 6   # repeated GT
-- hybrid_T: 300 # additional many2one queries
-- hybrid_loss_weight_one2many: 1
+## Introduction
 
-Hybrid matching with DM in additional branch
-- hybrid_matching: True
-- hybrid_dense_matching: True # also set hybrid_matching to True, disregards hybrid_K
-- hybrid_dense_matching_lambda: 0.5
-- hybrid_T: 300 # additional many2one queries
-- hybrid_loss_weight_one2many: 1
+Medical image analysis is a dynamic field, constantly evolving with new datasets and domains. Adapting neural networks to these new data distributions represents a significant challenge for deep learning, as models tend to optimize only for current data and struggle to retain knowledge from previous training sessions. To address this problem, Continual Learning (CL) has emerged as a promising approach for updating models to new domains while preserving past knowledge and avoiding catastrophic forgetting.
 
-Class-specific queries (place these below 'set_cost_giou')
-- class_matching: True
-- class_matching_query_split: [10,20,20,30,20] these are the number of queries for class 1,2,3,... They need to sum up to num_queries.
+The aim of this work is to extend a transformer-based 3D organ recognition neural network, called Organ-DEtection TRansformer (DETR), to CL tasks. Two experiments of class-incremental learning for the organ detection task will be conducted, each involving two medical datasets. In addition, two CL techniques have been developed to evaluate which method yields a more adaptive model. 
 
-Focal loss for class loss (place before 'loss_coefs')
-- focal_loss: True
 
-Contrastive learning & denoising for queries (place as sub-config inside neck)
-- contrastive:
-    - enabled: True
-    - mom: 0.999
-    - dim: 256
-    - eqco: 1000
-    - tau: 0.7
-    - loss_coeff: 0.2
-- dn:
-    - enabled: True
-    - dn_number: 3  # number of dn groups 
-    - dn_box_noise_ratio: 0.2 # 0.4 
-    - dn_label_noise_ratio: 0.25 # 0.5
+## Architecture
 
-# Visualization
-Arguments for test script:
-- --run NAME_OF_RUN
-- --num_gpu CUDA_ID → e.g., 0
-- --val → use validation dataset
-- --last → use last model instead of best
-- --per_sample_results → exports json with results for every individual case
-- --save_preds → save visualizations
-    - --vis_mode o3d (default) OR nii 
-        - o3d: exports ply files, can be visualized by `display_case_ply.py`
-        - nii: exports nii.gz file for segmentation map and markup jsons for boxes, can be visualized by 3D Slicer
-    - --exp_img → additionally exports input image as nii.gz, only works with `--vis_mode nii`
-    - --save_attn_map → additionally exports sampling locations and reference points of last cross-attention layer in decoder
+<p align="center">
+  <img src="img/arch.png" alt="Network Architecture" width="80%">
+</p>
 
-Examples:
+The Organ-DETR architecture consists of essential components: an initial stage with a feature extractor backbone that generates feature maps, followed by a MultiScale Attention (MSA) module that enriches semantic features through self- and cross-attention mechanisms. These enriched features, together with a segmentation head, support the generation of multiple segmentation maps for improved object detection. The decoder includes a classification head, a regression head and later a Dense Query Matching (DQM) mechanism, which is crucial for effective model training and performance as it duplicates the ground truth labels
 
-- export ply: `python scripts/test.py --run myrun --num_gpu 0 --save_preds`
-- export nifti: `python scripts/test.py --run myrun --num_gpu 0 --save_preds --vis_mode nii` 
-- export ply + sampling loc: `python scripts/test.py --run myrun --num_gpu 0 --save_attn_map`
-- export nifti + sampling loc: `python scripts/test.py --run myrun --num_gpu 0 --save_attn_map --vis_mode nii` 
-- export nifti + input image: `python scripts/test.py --run myrun --num_gpu 0 --save_preds --vis_mode nii --exp_img` 
+## Continual Learning Techniques
 
-# Loading nifti exports in 3D Slicer
-Tested with 3D Slicer 5.2.2
-1. Download & open [3D Slicer](https://download.slicer.org/)
-2. Click on "Add Data" / Ctrl+O
-3. Choose case directory and put "Segmentation" for "seg_mask.nii.gz" → OK
-4. Run this code in the python console (Ctrl+3) to deactivate markup fillings and configure white background: 
+### Auxiliary Network Continual Learning (ANCL)
 
+<p align="center">
+  <img src="img/ANCL.png" alt="ANCL Approach" width="80%">
+</p>
+
+**Auxiliary Network Continual Learning (ANCL)**: Incorporates predictions from the old model (optimized on the previous task) and the auxiliary network (optimized on the current task) into the loss function of the main network. 
+
+### Replay-Based Approach
+<p align="center">
+  <img src="img/Replay.png" alt="Replay-based Approach" width="50%">
+</p>
+
+**Replay-Based Approach**: Mitigates forgetting by including the most challenging samples from previous tasks in the current task data loader.
+
+
+## Installation
+
+To set up the environment and install the necessary dependencies, follow these steps:
+
+1. Create a conda environment:
+   ```bash
+   conda create -n organ_detr python=3.9.15 anaconda
+   conda activate organ_detr
+   ```
+2. Create a conda environment:
+   ```bash
+    conda install pytorch==1.11.0 torchvision==0.12.0 torchaudio==0.11.0 -c pytorch
+   ```
+3. Install additional Python packages:
+   ```bash
+    pip install -r requirements.txt
+    pip install opencv-python
+    pip3 install open3d   
     ```
-    viewNode = slicer.app.layoutManager().threeDWidget(0).mrmlViewNode() 
-    viewNode.SetBackgroundColor(1,1,1) 
-    viewNode.SetBackgroundColor2(1,1,1) 
-    for node in slicer.mrmlScene.GetNodesByClass('vtkMRMLMarkupsROINode'): 
-        displayNode = node.GetDisplayNode() 
-        if displayNode: 
-            displayNode.SetFillVisibility(False)
+
+## Running the model
+Before running the training script, set the dataset path environment variable:
+
+- On Windows:
+   ```bash
+    SET TRANSOAR_DATA=your_dataset_path
     ```
-5. Go to the "Segmentations" module and click on "Show 3D" for seg_mask.nii.gz
-6. Orientation marker and 3D cube can be disabled in the 3D view window itself (pin on top-left). Since the training data does not contain metadata, the orientation markers and voxel spacing might be wrong.
+- On Linux:
+   ```bash
+    export TRANSOAR_DATA=your_dataset_path
+    ```
+
+To start training, use the following command:
+```bash
+   python ./scripts/train.py --config {config file of technique}
+```
+
+# Results
+
+According to the results of Experiment 1 (AbdomenCT-1K and WORD datasets), the best ANCL model (training session 5) achieved an Average Incremental Accuracy (AIA) of 0.412 and a Forgetting Measure (FM) of 0.544, while the best replay-based CL model (with 50 replay samples) achieved an AIA of 0.703 and a FM of 0.041. 
+
+In Experiment 2 (WORD and TotalSegmentator datasets), the best ANCL model (training session 4) achieved an AIA of 0.263 and a FM of 0.362, while the best replay-based CL model (with 50 replay samples) achieved an AIA of 0.464 and a FM of 0.001. Therefore, it has been demonstrated that the replay-based approach is the most effective CL method for these organ detection tasks, though considerations regarding privacy concerns and the computational and temporal resources required must be considered.
+
+### Results for Replay-Based Approach on AbdomenCT-1K Dataset (Experiment 1)
+
+<p align="center">
+  <img src="img/Results_exp1_replay_AbdomenCT-1K.png" alt="Results for Replay-Based Approach on AbdomenCT-1K Dataset" width="80%">
+</p>
+Experiment 1: 3D predictions (red) and ground truth (green) of case 17 from the test set of the AbdomenCT-1K dataset using the best model (50 replay samples) from the replay-based CL approach
+
+### Results for Replay-Based Approach on WORD Dataset (Experiment 1)
+<p align="center">
+  <img src="img/Results_exp1_replay_WORD.png" alt="Results for Replay-Based Approach on WORD Dataset" width="80%">
+</p>
+Experiment 1: 3D predictions (red) and ground truth (green) of case 27 from the test set of the WORD dataset using the best model (50 replay samples) from the replay-based CL approach.
+
+### Results for Replay-Based Approach on WORD Dataset (Experiment 2)
+<p align="center">
+  <img src="img/Results_exp2_replay_WORD.png" alt="Experiment 2: Results for Replay-Based Approach on WORD Dataset" width="80%">
+</p>
+Experiment 2: 3D predictions (red) and ground truth (green) of case 7 from the test set of the WORD dataset using the best model (50 replay samples) from the replay-based CL approach.
+
+### Results for Replay-Based Approach on TotalSegmentator Dataset (Experiment 2)
+<p align="center">
+  <img src="img/Results_exp2_replay_TotalSegmentator.png" alt="Experiment 2: Results for Replay-Based Approach on TotalSegmentator Dataset" width="80%">
+</p>
+Experiment 2: 3D predictions (red) and ground truth (green) of case 25 from the test set of the TotalSegmentator dataset using the best model (50 replay samples) from the replay-based CL approach.
+
+# Conclusion
+While the replay-based approach demonstrated the most effectiveness in preventing catastrophic forgetting, it is important to consider the privacy concerns, computational resources, and time required for this method.
+
+# References
+
+[1] Benjamin Raphael Ernhofer. Organ Detection in Computed Tomography. 2023. url: https://ai-med.de/wp-content/uploads/2023/12/MasterThesis_OrganDet_Ernhofer.pdf
+
+[2] Morteza Ghahremani, Benjamin Raphael Ernhofer, JiajunWang, and ChristianWachinger. Organ-DETR: 3D Organ Detection Transfomer with Multiscale Attention and Dense Query Matching. 2024. url: https://openreview.net/forum?id=7YEXo5qUmN
+
+[3] Sanghwan Kim, Lorenzo Noci, Antonio Orvieto, and Thomas Hofmann, “Achieving a Better Stability-Plasticity Trade-off via Auxiliary Networks in Continual Learning,” in 2023 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR), Jun. 2023, pp. 1-10, doi: https://doi.org/10.1109/CVPR52729.2023.01148
+
+[4] Pratibha Kumari, Joohi Chauhan, Afshin Bozorgpour, Boqiang Huang, Reza Azad, and Dorit Merhof. “Continual Learning in Medical Image Analysis: A Comprehensive Review of Recent
+Advancements and Future Prospects”. In: (Dec. 2023). url: https://arxiv.org/abs/2312.17004v2
+
+[5] Jun Ma, Yao Zhang, Song Gu, Cheng Zhu, Cheng Ge, Yichi Zhang, Xingle An, Congcong Wang, Qiyuan Wang, Xin Liu, Shucheng Cao, Qi Zhang, Shangqing Liu, Yunpeng Wang, Yuhui Li, Jian He, and Xiaoping Yang. “AbdomenCT-1K: Is Abdominal Organ Segmentation a Solved Problem?” In: IEEE transactions on pattern analysis and machine intelligence 44 (10 2022). issn: 1939-3539. doi: 10.1109/TPAMI.2021.3100536. url: https://pubmed.ncbi.nlm.nih.gov/34314356/.
+
+[6] Xiangde Luo, Wenjun Liao, Jianghong Xiao, Jieneng Chen, Tao Song, Xiaofan Zhang, Kang Li, Dimitris N. Metaxas, GuotaiWang, and Shaoting Zhang. “WORD: A large scale dataset, benchmark and clinical applicable study for abdominal organ segmentation from CT image”. In: Medical Image Analysis 82 (Nov. 2021). doi: 10.1016/j.media.2022. 102642. url: http://arxiv.org/abs/2111.02403%20http://dx.doi.org/10.1016/j. media.2022.102642.
+
+[7] Jakob Wasserthal, Hanns-Christian Breit, Manfred T Meyer, Maurice Pradella, Daniel Hinck, Alexander W Sauter, Tobias Heye, Daniel Boll, Joshy Cyriac Msc, Shan Yang, Michael Bach, and Martin Segeroth. “TotalSegmentator: Robust Segmentation of 104 Anatomical Structures in CT images”. In: (2023). doi: 10.5281/zenodo.6802613. url: https://www.github.com/wasserth/TotalSegmentator.
+
+
+
+
+

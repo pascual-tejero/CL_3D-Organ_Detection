@@ -105,3 +105,29 @@ if __name__ == "__main__":
     args = parser.parse_args()
     print("press 'r' to center point cloud")
     visualize_random_case(args.path, args.case)
+
+# Experiment 1 - ANCL - AbdomenCT-1K dataset
+# python scripts/display_case_ply.py --path "runs\Experiment1_ABCOMENCT1K_WORD\5. ANCL\msa_def_detr_CLreg_ABDOMENCT-1K_WORD_datasets_exp5\results\ABDOMENCT-1K_model_best_test_0.412_in_ep640\vis_test"
+
+# Experiment 1 - ANCL - WORD dataset
+# python scripts/display_case_ply.py --path "runs\Experiment1_ABCOMENCT1K_WORD\5. ANCL\msa_def_detr_CLreg_ABDOMENCT-1K_WORD_datasets_exp5\results\WORD_model_best_test_0.412_in_ep640\vis_test"
+
+# Experiment 1 - Replay - AbdomenCT-1K dataset
+# python scripts/display_case_ply.py --path "runs\Experiment1_ABCOMENCT1K_WORD\6. CL replay\msa_def_detr_CLreplay_ABDOMENCT-1K_WORD_datasets_50samples\results\ABDOMENCT-1K_model_best_test_0.705_in_ep932\vis_test"
+
+# Experiment 1 - Replay- WORD dataset
+# python scripts/display_case_ply.py --path "runs\Experiment1_ABCOMENCT1K_WORD\6. CL replay\msa_def_detr_CLreplay_ABDOMENCT-1K_WORD_datasets_50samples\results\WORD_model_best_val_0.610_in_ep863\vis_test"
+
+
+
+# Experiment 2 - ANCL - WORD dataset
+# python scripts/display_case_ply.py --path "runs\Experiment2_WORD_TOTALSEGMENTATOR\5. ANCL\msa_def_detr_CLreg_WORD_TOTALSEGMENTATOR_datasets_exp4\results\WORD_model_best_val_0.355_in_ep801\vis_test"
+
+# Experiment 2 - ANCL - TotalSegmentator dataset
+# python scripts/display_case_ply.py --path "runs\Experiment2_WORD_TOTALSEGMENTATOR\5. ANCL\msa_def_detr_CLreg_WORD_TOTALSEGMENTATOR_datasets_exp4\results\TOTALSEGMENTATOR_model_best_val_0.355_in_ep801\vis_test"
+
+# Experiment 2 - Replay - WORD
+# python scripts/display_case_ply.py --path "runs\Experiment2_WORD_TOTALSEGMENTATOR\6. CL replay\msa_def_detr_CLreplay_WORD_TOTALSEGMENTATOR_datasets_50samples\results\WORD_model_best_test_0.467_in_ep918\vis_test"
+
+# Experiment 2 - Replay - TotalSegmentator dataset
+# python scripts/display_case_ply.py --path "runs\Experiment2_WORD_TOTALSEGMENTATOR\6. CL replay\msa_def_detr_CLreplay_WORD_TOTALSEGMENTATOR_datasets_50samples\results\TOTALSEGMENTATOR_model_best_test_0.467_in_ep918\vis_test"
