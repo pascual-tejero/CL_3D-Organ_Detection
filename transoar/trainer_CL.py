@@ -697,7 +697,10 @@ class Trainer_CL:
                 else:
                     write_json(metric_scores, self._path_to_run / 'test_during_training' / f"{num_epoch}_epoch" / 'test_run_no_error_dataset2.json')
             else:
-                raise ValueError('Invalid experiment name')
+                if idx == 0:
+                    write_json(metric_scores, self._path_to_run / 'test_during_training' / f"{num_epoch}_epoch" / 'dataset1.json')
+                else:
+                    write_json(metric_scores, self._path_to_run / 'test_during_training' / f"{num_epoch}_epoch" / 'dataset2.json')
 
         mean_mAP_coco = np.mean(mean_mAP_coco)
         

@@ -1,6 +1,4 @@
 import numpy as np 
-import matplotlib
-from matplotlib import pyplot as plt
 import os
 import shutil
 
@@ -63,32 +61,22 @@ def check_downsampled_data(folder, ideal_size=(64,64,64)):
         print(f"Label that are not downsampled to ideal shape: {no_downsampeld_label}")
 
     if not no_downsampled_data and not no_downsampeld_label: # If all data and label are padded to ideal shape
-        print(f"All data and label from \"{folder}\" are downsampled to ideal shape {ideal_size}.")
+        print(f"All data and label from \"{folder}\" are downsampled to desired shape {ideal_size}.")
 
 if __name__ == "__main__":
 
-    # source_folder = "./matched_datasets/word_224_224_160_CT/"
-    # output_folder = "./downsampled_datasets/word_64_64_64_CT/"
-    # downsample_data(source_folder, output_folder, size_xyz=64)
-    # check_downsampled_data(output_folder)
+    source_folder = "../matched_datasets/total_segmentator_224_224_256_CT/"
+    output_folder = "../downsampled_datasets/total_segmentator_64_64_64_CT/"
+    downsample_data(source_folder, output_folder, size_xyz=64)
+    check_downsampled_data(output_folder, ideal_size=(64,64,64))
 
-    # source_folder = "./original_datasets/totalsegmentator_TAPv2_160_160_256_CT/"
-    # output_folder = "./downsampled_datasets/totalsegmentator_TAPv2_160_160_256_CT/"
-    # downsample_data(source_folder, output_folder, size_xyz=64)
-    # check_downsampled_data(output_folder)
+    source_folder = "../matched_datasets/word_224_224_160_CT/"
+    output_folder = "../downsampled_datasets/word_64_64_64_CT/"
+    downsample_data(source_folder, output_folder, size_xyz=64)
+    check_downsampled_data(output_folder, ideal_size=(64,64,64))
 
-    # source_folder = "./matched_datasets/abdomenCT-1k_224_224_160_CT/"
-    # # source_folder = "./padded_datasets/abdomenCT-1k_224_224_160_CT/"
-    # output_folder = "./downsampled_datasets/abdomenCT-1k_64_64_64_CT/"
-    # downsample_data(source_folder, output_folder, size_xyz=64)
-    # check_downsampled_data(output_folder, ideal_size=(64,64,64))
-
-    # check_downsampled_data("./downsampled_datasets/abdomenCT-1k_64_64_64_CT/")
-    # check_downsampled_data("./downsampled_datasets/totalsegmentator_TAPv2_160_160_256_CT/")
-    # check_downsampled_data("./downsampled_datasets/word_64_64_64_CT/")
-
-    source_folder = "./matched_datasets/total_segmentator_256_256_256_CT/"
-    output_folder = "./downsampled_datasets/total_segmentator_64_64_64_CT/"
+    source_folder = "../matched_datasets/abdomenCT-1k_224_224_160_CT/"
+    output_folder = "../downsampled_datasets/abdomenCT-1k_64_64_64_CT/"
     downsample_data(source_folder, output_folder, size_xyz=64)
     check_downsampled_data(output_folder, ideal_size=(64,64,64))
 
