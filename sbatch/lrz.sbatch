@@ -1,5 +1,6 @@
 ##>>>> active session
 salloc -p lrz-dgx-a100-80x8 --ntasks=1 --gres=gpu:1 --time=72:00:00
+salloc -p lrz-dgx-a100-80x8 --ntasks=1 --gres=gpu:1 --time=48:00:00
 salloc -p mcml-dgx-a100-40x8 --time 96:00:00 --gres gpu:1 -q mcml
 
 
