@@ -20,10 +20,10 @@ only_class_labels: False # only class labels are used for training
 remove_labels: False # Remove labels from the current task dataset 
 
 epochs: 1000 #1000 optimal
-lr: 2e-4
-lr_backbone: 2e-4
+lr: 2e-5
+lr_backbone: 2e-5
 lr_linear_proj_mult: 0.1
-weight_decay: 1e-4
+weight_decay: 1e-5
 clip_max_norm: 1   # Not used
 
 # Scheduler
