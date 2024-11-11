@@ -183,3 +183,5 @@ runs/*
 
 # Ignore all files with .pyc extension
 *.pyc
+
+.vscode/
