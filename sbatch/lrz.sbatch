@@ -10,7 +10,7 @@ ENV_name=msadet
 BASE_DIR=/dss/dsshome1/01/ge32fix2
 ENV_DIR=ENVS
 DATA_DIR=/dss/dssmcmlfs01/pr62la/pr62la-dss-0002/Mori/PASCUAL/DATASETS/
-DATA_DIR=/dss/dssmcmlfs01/pr62la/pr62la-dss-0002/Mori/AbdomenAtlas/AbdomenAtlas_processed
+DATA_DIR=/dss/dssmcmlfs01/pr62la/pr62la-dss-0002/Mori/AbdomenAtlas
 
 srun --pty --container-mounts=${DATA_DIR}:/mnt/data,${BASE_DIR}:/mnt/code \
 --container-image=${BASE_DIR}/${ENV_DIR}/${ENV_name}.sqsh bash
@@ -62,6 +62,9 @@ export TRANSOAR_DATA=/mnt/data/
 /opt/conda/envs/${ENV_name}/bin/python scripts/train_CL.py --config CL_methods/WORD_TOTALSEGMENTATOR/msa_def_detr_mixing_datasets_fewshot
 /opt/conda/envs/${ENV_name}/bin/python scripts/train_CL.py --config CL_methods/WORD_TOTALSEGMENTATOR/msa_def_detr_mixing_datasets_onlyClassLabels
 /opt/conda/envs/${ENV_name}/bin/python scripts/train_CL.py --config CL_methods/WORD_TOTALSEGMENTATOR/msa_def_detr_sequential_training
+
+
+/opt/conda/envs/${ENV_name}/bin/python scripts/train_CL.py --config CL_methods/ABDOMEN_ATLAS/msa_def_detr_AbdomenAtlas 
 
 # test #--save_preds to save predictions in .ply format
 python scripts/test.py --run msa_def_detr_WORD160_dataset --model_load best --save_preds

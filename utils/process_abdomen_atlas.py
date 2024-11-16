@@ -33,10 +33,11 @@ def apply_resizing(data, new_shape, mode_interpolation="trilinear"):
         data = F.interpolate(data, size=new_shape, mode=mode_interpolation)
 
     # Remove the batch and channel dimensions, and permute back to [H, W, D]
-    data = data.squeeze().permute(1, 2, 0).numpy()  # Convert back to [H, W, D]
+    data = data.squeeze().permute(1, 2, 0).numpy()
+    data = np.expand_dims(data, axis=0)
     return data
 
-def process_abdomen_atlas(data_dir):
+def process_abdomen_atlas(data_dir, remove_segmentations=False):
 
     error_log_path = Path(data_dir) / "error_log.txt"
 
@@ -129,19 +130,19 @@ def process_abdomen_atlas(data_dir):
                 crop_start_x = random.randint(0, xyz_shape[0] - crop_shape)
                 crop_start_y = random.randint(0, xyz_shape[1] - crop_shape)
 
-                ct_data = ct_data[crop_start_x:crop_start_x + crop_shape, crop_start_y:crop_start_y + crop_shape, :]
-                label_data = label_data[crop_start_x:crop_start_x + crop_shape, crop_start_y:crop_start_y + crop_shape, :]
+                ct_data = ct_data[..., crop_start_x:crop_start_x + crop_shape, crop_start_y:crop_start_y + crop_shape, :]
+                label_data = label_data[..., crop_start_x:crop_start_x + crop_shape, crop_start_y:crop_start_y + crop_shape, :]
                 
                 # Save resized and cropped nifti files
-                ct_path = Path(dirpath) / "ct_resized_cropped.nii.gz"
-                nib.save(nib.Nifti1Image(ct_data, ct_affine, ct_header), ct_path)
-                label_path = Path(dirpath) / "label_resized_cropped.nii.gz"
-                nib.save(nib.Nifti1Image(label_data, label_affine, label_header), label_path)
+                # ct_path = Path(dirpath) / "ct_resized_cropped.nii.gz"
+                # nib.save(nib.Nifti1Image(ct_data, ct_affine, ct_header), ct_path)
+                # label_path = Path(dirpath) / "label_resized_cropped.nii.gz"
+                # nib.save(nib.Nifti1Image(label_data, label_affine, label_header), label_path)
 
                 # Save resized and cropped data and label as .npy (data_resized_cropped.npy and label_resized_cropped.npy)
                 # np.save(str(Path(dirpath) / "ct_resized_cropped.npy"), ct_data)
                 # np.save(str(Path(dirpath) / "label_resized_cropped.npy"), label_data)
-                np.save(str(Path(dirpath) / "ct.npy"), ct_data)
+                np.save(str(Path(dirpath) / "data.npy"), ct_data)
                 np.save(str(Path(dirpath) / "label.npy"), label_data)
                 print(f"Files ct.npy and label.npy saved in {dirpath}")
 
@@ -170,15 +171,15 @@ def process_abdomen_atlas(data_dir):
                 label_data = apply_resizing(label_data, xyz_shape, mode_interpolation="nearest").astype(np.uint8)
                 
                 # Save resized and cropped nifti files
-                ct_path = Path(dirpath) / "ct_resized_cropped.nii.gz"
-                nib.save(nib.Nifti1Image(ct_data, ct_affine, ct_header), ct_path)
-                label_path = Path(dirpath) / "label_resized_cropped.nii.gz"
-                nib.save(nib.Nifti1Image(label_data, label_affine, label_header), label_path)
+                # ct_path = Path(dirpath) / "ct_resized_cropped.nii.gz"
+                # nib.save(nib.Nifti1Image(ct_data, ct_affine, ct_header), ct_path)
+                # label_path = Path(dirpath) / "label_resized_cropped.nii.gz"
+                # nib.save(nib.Nifti1Image(label_data, label_affine, label_header), label_path)
 
                 # Save resized and cropped data and label as .npy (data_resized_cropped.npy and label_resized_cropped.npy)
                 # np.save(str(Path(dirpath) / "ct_resized_cropped.npy"), ct_data)
                 # np.save(str(Path(dirpath) / "label_resized_cropped.npy"), label_data)
-                np.save(str(Path(dirpath) / "ct.npy"), ct_data)
+                np.save(str(Path(dirpath) / "data.npy"), ct_data)
                 np.save(str(Path(dirpath) / "label.npy"), label_data)
                 print(f"Files ct.npy and label.npy saved in {dirpath}")
 
@@ -188,9 +189,24 @@ def process_abdomen_atlas(data_dir):
                 f.write(f"Error processing {dirpath}: {e}\n")
         filenames_data_label = []
 
+    if remove_segmentations:
+        # After finishing the processing, remove all files except the data.npy and label.npy files
+        for dirpath, dirnames, filenames in os.walk(data_dir):
+            for filename in filenames:
+                if filename != "data.npy" and filename != "label.npy" and filename != "data_info.json" \
+                    and filename != "error_log.txt" and filename != "process_abdomen_atlas.py" \
+                    and filename != "dataset.txt" and filename != "check_abdomen_atlas.py":
+                    os.remove(os.path.join(dirpath, filename))
+
+        # Remove folder segmentation after emptying it
+        for dirpath, dirnames, filenames in os.walk(data_dir):
+            if "segmentations" in dirpath:
+                os.rmdir(dirpath)
+
 
 if __name__ == "__main__":
     np.random.seed(0)
     script_dir = os.path.dirname(os.path.abspath(__file__))
     print(f"Processing abdomen atlas data in {script_dir}")
-    process_abdomen_atlas(script_dir)
+    process_abdomen_atlas(script_dir, remove_segmentations=True)
+    # process_abdomen_atlas(script_dir, remove_segmentations=False)
