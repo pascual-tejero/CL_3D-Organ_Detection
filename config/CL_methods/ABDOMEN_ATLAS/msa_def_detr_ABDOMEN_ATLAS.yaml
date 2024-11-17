@@ -79,7 +79,7 @@ backbone:
 
   
   # Standard params
-  fpn_channels: 288 # Final output channels (384 original, 288 reduced params)
+  fpn_channels: 384 # Final output channels (384 original, 288 reduced params)
   out_fmaps: [P4, P3, P2]  # P0, P1, P2, P3, P4, P5
 
   kernel_size: 3
@@ -96,7 +96,7 @@ backbone:
 
 
   # Segmentation proxy loss
-  num_organs: 9 
+  num_organs: 20
   use_msa_seg_loss: True #<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
   fg_bg: False
   use_seg_proxy_loss: False  # never use it with msa
@@ -110,7 +110,7 @@ neck:
   num_feature_levels: 3
 
   pos_encoding: sine
-  hidden_dim: 288 # (384 original, 288 reduced params)
+  hidden_dim: 384 # (384 original, 288 reduced params)
   dropout: 0.1
   nheads: 6
   dim_feedforward: 1024
