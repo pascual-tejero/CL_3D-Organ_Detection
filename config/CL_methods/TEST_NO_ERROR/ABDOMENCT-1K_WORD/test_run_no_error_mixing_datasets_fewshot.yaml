@@ -147,6 +147,7 @@ neck:
 # Augmentation
 augmentation:
   use_augmentation: True
+  apply_crooping: True
   patch_size: [224, 224, 160] 
 
 
@@ -179,8 +180,8 @@ augmentation:
 
 
 # Dataset path:
-#   Windows: SET TRANSOAR_DATA=C:\Users\pascu\Documents\Code_Thesis\datasets
-#   Linux: export TRANSOAR_DATA=/mnt/nas/Projects/project_pascual/
+#   Windows: SET TRANSOAR_DATA=./dataset
+#   Linux: export TRANSOAR_DATA=./dataset
 
 # Switch GPU
 #   Windows: set CUDA_VISIBLE_DEVICES=0

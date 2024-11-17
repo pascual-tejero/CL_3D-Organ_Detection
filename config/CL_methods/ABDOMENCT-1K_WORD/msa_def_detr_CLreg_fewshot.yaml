@@ -147,6 +147,7 @@ neck:
 # Augmentation
 augmentation:
   use_augmentation: True
+  apply_crooping: True
   patch_size: [224, 224, 160] 
 
 
@@ -182,8 +183,8 @@ CL_models:
   old_model_path: ./runs/msa_def_detr_ABDOMENCT-1K_dataset/model_best_val_0.814_in_ep1052.pt
 
 # Dataset path:
-#   Windows: SET TRANSOAR_DATA=C:\Users\pascu\Documents\Code_Thesis\datasets
-#   Linux: export TRANSOAR_DATA=/mnt/nas/Projects/project_pascual/
+#   Windows: SET TRANSOAR_DATA=./dataset
+#   Linux: export TRANSOAR_DATA=./dataset
 
 # Switch GPU
 #   Windows: set CUDA_VISIBLE_DEVICES=0

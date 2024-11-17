@@ -64,6 +64,14 @@ def train(config, args):
     os.environ["CUDA_VISIBLE_DEVICES"] = config['device'][-1]
     device = 'cuda'
 
+    # if device == 'cuda':
+    #     # use bfloat16 for the entire notebook
+    #     torch.autocast('cuda', dtype=torch.bfloat16).__enter__()
+    #     # turn on tfloat32 for Ampere GPUs (https://pytorch.org/docs/stable/notes/cuda.html#tensorfloat-32-tf32-on-ampere-devices)
+    #     if torch.cuda.get_device_properties(0).major >= 8:
+    #         torch.backends.cuda.matmul.allow_tf32 = True
+    #         torch.backends.cudnn.allow_tf32 = True
+
     # Build necessary components
     train_loader = get_loader(config, 'train')
 

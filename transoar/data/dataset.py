@@ -94,7 +94,7 @@ class TransoarDataset(Dataset):
                     self._data = self._data[:config["few_shot_samples"]]
 
 
-        self._augmentation = get_transforms(split, config)
+        self._augmentation = get_transforms(split, config, config["augmentation"]["apply_crooping"])
 
 
     def __len__(self):
@@ -120,9 +120,6 @@ class TransoarDataset(Dataset):
 
         # Load npy files
         data, label = np.load(data_path), np.load(label_path)
-
-        # if self._split == 'train':
-        #     print("path_to_case", path_to_case) 
 
         # Apply data augmentation
         if self._config['augmentation']['use_augmentation']:

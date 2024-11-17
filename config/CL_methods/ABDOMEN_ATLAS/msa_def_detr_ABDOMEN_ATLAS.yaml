@@ -2,7 +2,7 @@
 
 
 # General training
-experiment_name: msa_def_detr_AbdomenAtlas 
+experiment_name: msa_def_detr_ABDOMEN_ATLAS_dataset
 resume: False # True to resume from last checkpoint
 device: cuda:0
 debug_mode: False  # Doesn't save checkpoints
@@ -31,7 +31,7 @@ lr_drop: 500
 lr_gamma: 0.1 # default = 0.1
 
 # Data
-dataset: AbdomenAtlas_processed2
+dataset: AbdomenAtlas_OrganDETR
 dataset_2: None
 overfit: False # Use same set consisting of one image for train and val
 bbox_padding: 1
@@ -75,11 +75,11 @@ backbone:
   start_channels: 32  # Channels after first encoder block
   bias: False
   norm_type: instance
-  data_size: [96, 96, 256] 
+  data_size: [256, 256, 256] 
 
   
   # Standard params
-  fpn_channels: 384 # Final output channels (384 original, 288 reduced params)
+  fpn_channels: 288 # Final output channels (384 original, 288 reduced params)
   out_fmaps: [P4, P3, P2]  # P0, P1, P2, P3, P4, P5
 
   kernel_size: 3
@@ -96,7 +96,7 @@ backbone:
 
 
   # Segmentation proxy loss
-  num_organs: 10 
+  num_organs: 9 
   use_msa_seg_loss: True #<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
   fg_bg: False
   use_seg_proxy_loss: False  # never use it with msa
@@ -110,7 +110,7 @@ neck:
   num_feature_levels: 3
 
   pos_encoding: sine
-  hidden_dim: 384 # (384 original, 288 reduced params)
+  hidden_dim: 288 # (384 original, 288 reduced params)
   dropout: 0.1
   nheads: 6
   dim_feedforward: 1024
@@ -146,6 +146,7 @@ neck:
 # Augmentation
 augmentation:
   use_augmentation: True
+  apply_crooping: False
   patch_size: [256, 256, 256] 
 
 
@@ -178,8 +179,8 @@ augmentation:
 
 
 # Dataset path:
-#   Windows: SET TRANSOAR_DATA=C:\Users\pascu\Desktop\master_thesis\project_pascual\
-#   Linux: export TRANSOAR_DATA=/mnt/nas/Projects/project_pascual/
+#   Windows: SET TRANSOAR_DATA=./dataset
+#   Linux: export TRANSOAR_DATA=./dataset
 
 # Switch GPU
 #   Windows: set CUDA_VISIBLE_DEVICES=0

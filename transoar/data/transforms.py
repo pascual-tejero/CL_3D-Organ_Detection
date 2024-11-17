@@ -45,7 +45,8 @@ def transform_preprocessing(
 
     return Compose(transform_list)
 
-def get_transforms(split, config):
+def get_transforms(split, config, apply_crooping=False):
+
     rotate_range = [i / 180 * np.pi for i in config['augmentation']['rotation']]
     translate_range = [(i * config['augmentation']['translate_precentage']) / 100 for i in config['shape_statistics']['median']]
     
@@ -53,6 +54,7 @@ def get_transforms(split, config):
         patch_size = config['shape_statistics']['median']
     else:
         patch_size = config['augmentation']['patch_size']
+
 
     if split == 'train':
         transform = [
@@ -101,11 +103,6 @@ def get_transforms(split, config):
                 keys=['image', 'label'], prob=config['augmentation']['p_flip'],
                 spatial_axis=config['augmentation']['flip_axis'][2]
             ),
-            RandSpatialCropd(
-                keys=['image', 'label'],
-                roi_size=patch_size,
-                random_size=False, random_center=True
-            ),
 
             # Intensity transformations
             RandGaussianNoised(
@@ -130,12 +127,16 @@ def get_transforms(split, config):
                 keys=['image'], prob=config['augmentation']['p_adjust_contrast'],
                 gamma=config['augmentation']['adjust_contrast_gamma']
             ),
-
-            # Convert to torch.Tensor
-            ToTensord(
-                keys=['image', 'label']
-            )
         ]
+
+        if apply_crooping:
+            transform.append(
+                RandSpatialCropd(
+                    keys=['image', 'label'], roi_size=patch_size,
+                    random_size=False, random_center=True
+                )
+            )
+            
     elif split == 'val':
         transform = [
             ScaleIntensityRanged(
@@ -147,14 +148,20 @@ def get_transforms(split, config):
             #     keys=['image', 'label'], spatial_size=config['shape_statistics']['median'],
             #     mode=['area', 'nearest']
             # ),
-            RandSpatialCropd(
-                keys=['image', 'label'], roi_size=patch_size,
-                random_size=False, random_center=True
-            ),
+        ]
+        if apply_crooping:
+            transform.append(
+                RandSpatialCropd(
+                    keys=['image', 'label'], roi_size=patch_size,
+                    random_size=False, random_center=True
+                )
+            )
+        transform.append(
             ToTensord(
                 keys=['image', 'label']
             )
-        ]
+        )
+
     elif split == 'test':
         transform = [
             ScaleIntensityRanged(
@@ -166,14 +173,21 @@ def get_transforms(split, config):
             #     keys=['image', 'label'], spatial_size=config['shape_statistics']['median'],
             #     mode=['area', 'nearest']
             # ),
-            RandSpatialCropd(
-                keys=['image', 'label'], roi_size=patch_size,
-                random_size=False, random_center=True
-            ),
+        ]
+
+
+        if apply_crooping:
+            transform.append(
+                RandSpatialCropd(
+                    keys=['image', 'label'], roi_size=patch_size,
+                    random_size=False, random_center=True
+                )
+            )
+        transform.append(
             ToTensord(
                 keys=['image', 'label']
             )
-        ]
+        )
     else:
         raise ValueError("Please use 'test', 'val', or 'train' as split arg.")
     return Compose(transform)

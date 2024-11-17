@@ -19,7 +19,7 @@ einops==0.3.2
 
 
 # Windows: 
-# SET TRANSOAR_DATA=C:\Users\pascu\Documents\Code_Thesis\datasets
+# SET TRANSOAR_DATA=./dataset
 
 # Linux: 
-# export TRANSOAR_DATA=/mnt/nas/Projects/project_pascual/
+# export TRANSOAR_DATA=./dataset
