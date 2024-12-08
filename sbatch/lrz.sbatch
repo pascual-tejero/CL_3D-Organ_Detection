@@ -66,6 +66,7 @@ export TRANSOAR_DATA=/mnt/data/
 
 
 /opt/conda/envs/${ENV_name}/bin/python scripts/train.py --config CL_methods/ABDOMEN_ATLAS/msa_def_detr_ABDOMEN_ATLAS 
+/opt/conda/envs/${ENV_name}/bin/python scripts/train.py --config CL_methods/ABDOMEN_ATLAS/msa_def_detr_ABDOMEN_ATLAS_9seg-heads
 /opt/conda/envs/${ENV_name}/bin/python scripts/train_CL.py --config CL_methods/ABDOMEN_ATLAS/msa_def_detr_ABDOMEN_ATLAS_CLreg 
 
 # test #--save_preds to save predictions in .ply format

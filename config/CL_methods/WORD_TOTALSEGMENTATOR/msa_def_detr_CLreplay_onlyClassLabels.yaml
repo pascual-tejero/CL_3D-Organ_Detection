@@ -27,8 +27,8 @@ weight_decay: 1e-5
 clip_max_norm: 1   # Not used
 
 # Scheduler
-lr_drop: 100
-lr_gamma: 0.631 # default = 0.1
+lr_drop: 250
+lr_gamma: 0.333 # default = 0.1
 
 # Data
 dataset: matched_datasets/total_segmentator_224_224_256_CT
