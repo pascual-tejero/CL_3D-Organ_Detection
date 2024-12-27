@@ -24,14 +24,14 @@ lr: 2e-4
 lr_backbone: 2e-4
 lr_linear_proj_mult: 0.1
 weight_decay: 1e-4
-clip_max_norm: 1   # Not used
+clip_max_norm: 10   # Not used
 
 # Scheduler
 lr_drop: 500
 lr_gamma: 0.1 # default = 0.1
 
 # Data
-dataset: AbdomenAtlas_OrganDETR
+dataset: matched_datasets/AbdomenAtlas
 dataset_2: None
 overfit: False # Use same set consisting of one image for train and val
 bbox_padding: 1
@@ -40,9 +40,9 @@ test: False
 test_interval: 1 # Test interval
 
 # Dataloader
-batch_size: 1 # 2 (normal, 1 reduced params)
+batch_size: 2 # 2 (normal, 1 reduced params)
 shuffle: True
-num_workers: 1 # 10 (normal, 1 lower 80GB GPU)
+num_workers: 10 # 10 (normal, 1 lower 80GB GPU)
  
 
 # Hungarian matching
@@ -67,7 +67,8 @@ loss_coefs:
 
 # Model specific params
 backbone:
-  name: msavit
+  name: fpn
+  layers: [3, 4, 6, 3] # it is used in resnet backbone
 
   # Standard params
   msa: True
@@ -79,13 +80,13 @@ backbone:
 
   
   # Standard params
-  fpn_channels: 288 # Final output channels (384 original, 288 reduced params)
+  fpn_channels: 384 # Final output channels (384 original, 288 reduced params)
   out_fmaps: [P4, P3, P2]  # P0, P1, P2, P3, P4, P5
 
   kernel_size: 3
   patch_size: 2
   mlp_ratio: 2
-  num_heads: 32
+  num_heads: 64
   depths: 2
   drop_path_rate: 0.0
   attn_drop_rate: 0.0
@@ -96,21 +97,37 @@ backbone:
 
 
   # Segmentation proxy loss
-  num_organs: 20
+  num_organs: 15 # should be consistent with the dataset
   use_msa_seg_loss: True #<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
   fg_bg: False
   use_seg_proxy_loss: False  # never use it with msa
 
 
-
 neck:
   name: def_detr
-  use_encoder: True 
+  use_encoder: False # set false when msa is enabled
+  msa: 
+    # standard params of msa
+    enabled: True
+    bias: False
+    patch_size: 2
+    mlp_ratio: 2
+    num_heads: 32
+    depths: 2
+    drop_path_rate: 0.3
+    attn_drop_rate: 0
+    drop_rate: 0.0
+    qkv_bias: True
+    cuda: 0
+    # Segmentation proxy loss
+    use_msa_seg_loss: True
+    num_organs: 15 # should be consistent with the dataset
+
   input_level: P2
   num_feature_levels: 3
 
   pos_encoding: sine
-  hidden_dim: 288 # (384 original, 288 reduced params)
+  hidden_dim: 384 # (384 original, 288 reduced params)
   dropout: 0.1
   nheads: 6
   dim_feedforward: 1024

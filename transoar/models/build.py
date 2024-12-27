@@ -7,6 +7,7 @@ from transoar.models.necks.def_detr_transformer import DeformableTransformer
 from transoar.models.position_encoding import PositionEmbeddingSine3D, PositionEmbeddingLearned3D
 
 from transoar.models.backbones.resnet3d import ResNet3D
+from transoar.models.backbones.fpn import FPN
 from transoar.models.backbones.MSAViT import MSAViT
 from transoar.models.backbones.swin_unetr import Swin_UNETR
 
@@ -17,6 +18,8 @@ import os
 def build_backbone(config):
     if config['name'].lower() in ['attn_fpn']:
         return AttnFPN(config)
+    elif config['name'].lower() in ['fpn']:
+        return FPN(config)
     elif config['name'].lower() in ['msavit']:
         return MSAViT(config)
     elif config['name'].lower() in ['resnet']:

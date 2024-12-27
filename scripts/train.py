@@ -17,7 +17,8 @@ import monai, re
 from transoar.trainer import Trainer
 from transoar.data.dataloader import get_loader
 from transoar.utils.io import get_config, write_json, get_meta_data
-from transoar.models.transoarnet import TransoarNet
+# from transoar.models.transoarnet import TransoarNet
+from transoar.models.organdetr_net import OrganDetrNet
 from transoar.models.build import build_criterion
 
 
@@ -72,7 +73,7 @@ def train(config, args):
     else:
         val_loader = get_loader(config, 'val')
 
-    model = TransoarNet(config).to(device=device)
+    model = OrganDetrNet(config).to(device=device)
     if args.medicalnet:  # Download pretrained model from https://github.com/Tencent/MedicalNet
         assert config['backbone']['name'] == 'resnet', 'Loading MedicalNet is only possible if ResNet backbone is configured!'
         ckpt = torch.load('resnet_50.pth')

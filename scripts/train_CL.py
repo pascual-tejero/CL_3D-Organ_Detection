@@ -17,7 +17,8 @@ import monai, re
 from transoar.trainer_CL import Trainer_CL
 from transoar.data.dataloader import get_loader
 from transoar.utils.io import get_config, write_json, get_meta_data
-from transoar.models.transoarnet import TransoarNet
+# from transoar.models.transoarnet import TransoarNet
+from transoar.models.organdetr_net import OrganDetrNet
 from transoar.models.build import build_criterion
 
 
@@ -86,7 +87,7 @@ def train(config, args):
         test_loader = None
     
     # Load model from old model checkpoint
-    model = TransoarNet(config).to(device=device)    
+    model = OrganDetrNet(config).to(device=device)    
 
     if args.medicalnet:  # Download pretrained model from https://github.com/Tencent/MedicalNet
         assert config['backbone']['name'] == 'resnet', 'Loading MedicalNet is only possible if ResNet backbone is configured!'
@@ -219,7 +220,7 @@ def train(config, args):
         old_model = None
     else:
         # Load auxiliary model from config["CL_models"]["aux_model_path"]
-        aux_model = TransoarNet(config).to(device=device)
+        aux_model = OrganDetrNet(config).to(device=device)
         checkpoint_aux_model = torch.load(config["CL_models"]["aux_model_path"])
         aux_model.load_state_dict(checkpoint_aux_model['model_state_dict'])
         aux_model.eval()
@@ -227,7 +228,7 @@ def train(config, args):
             param.requires_grad = False
 
         # Load old model from config["CL_models"]["old_model_path"]
-        old_model = TransoarNet(config).to(device=device)
+        old_model = OrganDetrNet(config).to(device=device)
         checkpoint_old_model = torch.load(config["CL_models"]["old_model_path"])
         old_model.load_state_dict(checkpoint_old_model['model_state_dict'])
         old_model.eval()

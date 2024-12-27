@@ -24,7 +24,8 @@ import open3d as o3d
 import matplotlib.pyplot as plt
 
 from transoar.data.dataloader import get_loader
-from transoar.models.transoarnet import TransoarNet
+# from transoar.models.transoarnet import TransoarNet
+from transoar.models.organdetr_net import OrganDetrNet
 from transoar.evaluator import DetectionEvaluator, SegmentationEvaluator
 from transoar.inference import inference
 from transoar.utils.bboxes import box_cxcyczwhd_to_xyzxyz, iou_3d
@@ -101,7 +102,7 @@ class Tester:
                                                      ce_dice=self._segm_eval, 
                                                      hd95=self._segm_eval)
 
-        self._model = TransoarNet(self.config).to(device=self._device)
+        self._model = OrganDetrNet(self.config).to(device=self._device)
 
         # Load checkpoint
         checkpoint = torch.load(path_to_ckpt, map_location=self._device)
