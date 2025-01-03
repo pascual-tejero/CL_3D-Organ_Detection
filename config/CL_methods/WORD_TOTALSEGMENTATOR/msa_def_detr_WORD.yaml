@@ -146,7 +146,7 @@ neck:
 # Augmentation
 augmentation:
   use_augmentation: True
-  apply_crooping: True
+  apply_croping: True
   patch_size: [224, 224, 256] 
 
 

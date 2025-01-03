@@ -94,7 +94,7 @@ class TransoarDataset(Dataset):
                     self._data = self._data[:config["few_shot_samples"]]
 
 
-        self._augmentation = get_transforms(split, config, config["augmentation"]["apply_crooping"])
+        self._augmentation = get_transforms(split, config, config["augmentation"]["apply_croping"])
 
 
     def __len__(self):

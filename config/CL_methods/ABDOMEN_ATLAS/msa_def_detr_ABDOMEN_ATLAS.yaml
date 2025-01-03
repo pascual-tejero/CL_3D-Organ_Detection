@@ -1,4 +1,4 @@
-# Config file for msa-def-DETR
+GNU nano 6.2                                                                                                                                                                                                                                                                                                                                                                                                                                                           msa_def_detr_ABDOMEN_ATLAS.yaml                                                                                                                                                                                                                                                                                                                                                                                                                                                                    # Config file for msa-def-DETR
 
 
 # General training
@@ -17,7 +17,7 @@ few_shot_training: False # # Training samples limited
 few_shot_samples: 50 # Number of samples to train with few-shot
 mixing_datasets: False # Mixing training samples from both datasets
 only_class_labels: False # only class labels are used for training
-remove_labels: False # Remove labels from the current task dataset 
+remove_labels: False # Remove labels from the current task dataset
 
 epochs: 1000 #1000 optimal
 lr: 2e-4
@@ -31,19 +31,19 @@ lr_drop: 500
 lr_gamma: 0.1 # default = 0.1
 
 # Data
-dataset: matched_datasets/AbdomenAtlas
+dataset: "matched_datasets/AbdomenAtlas"
 dataset_2: None
 overfit: False # Use same set consisting of one image for train and val
 bbox_padding: 1
 val_interval: 1 # Validation interval
-test: False 
+test: False
 test_interval: 1 # Test interval
 
 # Dataloader
 batch_size: 2 # 2 (normal, 1 reduced params)
 shuffle: True
 num_workers: 10 # 10 (normal, 1 lower 80GB GPU)
- 
+
 
 # Hungarian matching
 set_cost_class: 2
@@ -67,18 +67,18 @@ loss_coefs:
 
 # Model specific params
 backbone:
-  name: fpn
+  name: fpn #msavit
   layers: [3, 4, 6, 3] # it is used in resnet backbone
 
   # Standard params
   msa: True
-  in_channels: 1  #  Input channels 
+  in_channels: 1  #  Input channels
   start_channels: 32  # Channels after first encoder block
   bias: False
   norm_type: instance
-  data_size: [256, 256, 256] 
+  data_size: [256, 256, 256]
 
-  
+
   # Standard params
   fpn_channels: 384 # Final output channels (384 original, 288 reduced params)
   out_fmaps: [P4, P3, P2]  # P0, P1, P2, P3, P4, P5
@@ -106,13 +106,13 @@ backbone:
 neck:
   name: def_detr
   use_encoder: False # set false when msa is enabled
-  msa: 
+  msa:
     # standard params of msa
     enabled: True
     bias: False
     patch_size: 2
     mlp_ratio: 2
-    num_heads: 32
+    num_heads: 64
     depths: 2
     drop_path_rate: 0.3
     attn_drop_rate: 0
@@ -154,17 +154,17 @@ neck:
     type: cdn # Remember to add this to the model
     enabled: False # True
     multiscale: True
-    dn_number: 50  # number of dn groups 
+    dn_number: 50  # number of dn groups
     dn_box_noise_ratio: 0.
     multiscale_box_noise_ratio_max: 0.4  #it is necessary if multi_scale is true
-    dn_label_noise_ratio: 0. 
+    dn_label_noise_ratio: 0.
     multiscale_label_noise_ratio_max: 0.2 #it is necessary if multi_scale is true
 
 # Augmentation
 augmentation:
   use_augmentation: True
-  apply_crooping: False
-  patch_size: [256, 256, 256] 
+  apply_croping: False
+  patch_size: [256, 256, 256]
 
 
   p_gaussian_noise: 0
@@ -194,14 +194,3 @@ augmentation:
   shear_range: [0.1, 0.1, 0.1]
   flip_axis: [0, 1, 2]
 
-
-# Dataset path:
-#   Windows: SET TRANSOAR_DATA=./dataset
-#   Linux: export TRANSOAR_DATA=./dataset
-
-# Switch GPU
-#   Windows: set CUDA_VISIBLE_DEVICES=0
-#   Linux: export CUDA_VISIBLE_DEVICES=0
-
-# Run command
-#   python ./scripts/train.py --config CL_methods/ABDOMEN_ATLAS/msa_def_detr_AbdomenAtlas

@@ -45,7 +45,7 @@ def transform_preprocessing(
 
     return Compose(transform_list)
 
-def get_transforms(split, config, apply_crooping=False):
+def get_transforms(split, config, apply_croping=False):
 
     rotate_range = [i / 180 * np.pi for i in config['augmentation']['rotation']]
     translate_range = [(i * config['augmentation']['translate_precentage']) / 100 for i in config['shape_statistics']['median']]
@@ -129,7 +129,7 @@ def get_transforms(split, config, apply_crooping=False):
             ),
         ]
 
-        if apply_crooping:
+        if apply_croping:
             transform.append(
                 RandSpatialCropd(
                     keys=['image', 'label'], roi_size=patch_size,
@@ -149,7 +149,7 @@ def get_transforms(split, config, apply_crooping=False):
             #     mode=['area', 'nearest']
             # ),
         ]
-        if apply_crooping:
+        if apply_croping:
             transform.append(
                 RandSpatialCropd(
                     keys=['image', 'label'], roi_size=patch_size,
@@ -176,7 +176,7 @@ def get_transforms(split, config, apply_crooping=False):
         ]
 
 
-        if apply_crooping:
+        if apply_croping:
             transform.append(
                 RandSpatialCropd(
                     keys=['image', 'label'], roi_size=patch_size,
