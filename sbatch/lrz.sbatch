@@ -21,6 +21,10 @@ cd /mnt/code/OrganDETR
 ENV_name=msadet
 export TRANSOAR_DATA=/mnt/data/
 
+cd /mnt/code/OrganDETR_other/CL_Organ_Detection
+ENV_name=msadet
+export TRANSOAR_DATA=/mnt/data/
+
 
 # test no error
 /opt/conda/envs/${ENV_name}/bin/python scripts/train.py --config CL_methods/TEST_NO_ERROR/test_run_no_error_WORD
