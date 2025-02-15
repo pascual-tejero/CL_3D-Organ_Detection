@@ -21,7 +21,7 @@ from transoar.models.matcher import HungarianMatcher
 from transoar.utils.io import load_json
 
 class OrganDetrNet(nn.Module):
-    def __init__(self, config):
+    def __init__(self, config, num_organs=None):
         super().__init__()
 
         self.hybrid = config.get('hybrid_matching', False)
@@ -92,13 +92,19 @@ class OrganDetrNet(nn.Module):
 
         if self._seg_proxy:
             in_channels = config['backbone']['start_channels']
-            out_channels = 2 if config['backbone']['fg_bg'] else config['neck']['num_organs'] + 1 # inc bg
+            if num_organs is not None:
+                out_channels = 2 if config['backbone']['fg_bg'] else config['neck']['num_organs'] + 1 # inc bg
+            else:
+                out_channels = num_organs + 1 # inc bg
             self._seg_head = nn.Conv3d(in_channels, out_channels, kernel_size=1, stride=1)
         
 
         if self._msa_seg:
             in_channels = config['backbone']['fpn_channels']
-            out_channels =  2 if config['backbone']['fg_bg'] else config['backbone']['num_organs'] + 1 
+            if num_organs is not None:
+                out_channels =  2 if config['backbone']['fg_bg'] else config['backbone']['num_organs'] + 1 # inc bg
+            else:
+                out_channels = num_organs + 1 # inc bg
             self._seg_neck = nn.Conv3d(in_channels, out_channels, kernel_size=1, stride=1)
     
         

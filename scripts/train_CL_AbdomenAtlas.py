@@ -232,7 +232,7 @@ def train(config, args):
             param.requires_grad = False
 
         # Load old model from config["CL_models"]["old_model_path"]
-        old_model = OrganDetrNet(config).to(device=device)
+        old_model = OrganDetrNet(config, num_organs=8).to(device=device)
         checkpoint_old_model = torch.load(config["CL_models"]["old_model_path"])
         try:
             old_model.load_state_dict(checkpoint_old_model['model_state_dict'])
