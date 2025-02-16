@@ -7,6 +7,7 @@ resume: False # True to resume from last checkpoint
 device: cuda:0
 debug_mode: False  # Doesn't save checkpoints
 seed: 10
+model: TransoarNet #OrganDetrNet
 
 # Continual learning
 CL: False # Continual Learning

@@ -1,5 +1,4 @@
-GNU nano 6.2                                                                                                                                                                                                                                                                                                                                                                                                                                                           msa_def_detr_ABDOMEN_ATLAS.yaml                                                                                                                                                                                                                                                                                                                                                                                                                                                                    # Config file for msa-def-DETR
-
+# Config file for msa-def-DETR
 
 # General training
 experiment_name: msa_def_detr_ABDOMEN_ATLAS_dataset
@@ -7,6 +6,7 @@ resume: False # True to resume from last checkpoint
 device: cuda:0
 debug_mode: False  # Doesn't save checkpoints
 seed: 10
+model: OrganDetrNet  #TransoarNet
 
 # Continual learning
 CL: False # Continual Learning

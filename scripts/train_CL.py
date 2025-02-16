@@ -17,7 +17,7 @@ import monai, re
 from transoar.trainer_CL import Trainer_CL
 from transoar.data.dataloader import get_loader
 from transoar.utils.io import get_config, write_json, get_meta_data
-# from transoar.models.transoarnet import TransoarNet
+from transoar.models.transoarnet import TransoarNet
 from transoar.models.organdetr_net import OrganDetrNet
 from transoar.models.build import build_criterion
 
@@ -87,7 +87,12 @@ def train(config, args):
         test_loader = None
     
     # Load model from old model checkpoint
-    model = OrganDetrNet(config).to(device=device)    
+    if config["model"] == "TransoarNet":
+        model = TransoarNet(config).to(device=device)
+    elif config["model"] == "OrganDetrNet":
+        model = OrganDetrNet(config).to(device=device)    
+    else:
+        raise ValueError("Model not found in config")
 
     if args.medicalnet:  # Download pretrained model from https://github.com/Tencent/MedicalNet
         assert config['backbone']['name'] == 'resnet', 'Loading MedicalNet is only possible if ResNet backbone is configured!'
