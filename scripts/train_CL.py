@@ -189,18 +189,13 @@ def train(config, args):
             try:
                 metric_start_test = checkpoint['metric_max_test']
             except:
-                metric_start_test = None
+                metric_start_test = 0
         else:
-            metric_start_test = None
+            metric_start_test = 0
     else:
         epoch = 0
         metric_start_val = 0
-
-        if config['test']:
-            metric_start_test = 0
-        else:
-            metric_start_test = None
-        
+        metric_start_test = 0      
 
 
     # log num_params

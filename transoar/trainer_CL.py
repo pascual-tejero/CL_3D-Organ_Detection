@@ -15,6 +15,7 @@ from torchvision.transforms import ToTensor
 import io
 from transoar.data.dataloader import get_loader_CLreplay_selected_samples
 from transoar.models.transoarnet import TransoarNet
+from transoar.models.organdetr_net import OrganDetrNet
 
 from transoar.utils.io import write_json, load_json
 import os
@@ -776,9 +777,33 @@ class Trainer_CL:
         replay_scores = {}
 
         # Load old model from config["CL_models"]["old_model_path"]
-        old_model_samples_rep = TransoarNet(self._config).to(device=self._device)
+        if self._config["model"] == "TransoarNet":
+            old_model_samples_rep = TransoarNet(self._config).to(device=self._device)
+        elif self._config["model"] == "OrganDetrNet":
+            old_model_samples_rep = OrganDetrNet(self._config).to(device=self._device)  
+
         checkpoint_old_model = torch.load(self._config["CL_models"]["old_model_path"])
-        old_model_samples_rep.load_state_dict(checkpoint_old_model['model_state_dict'])
+
+        try:
+            old_model_samples_rep.load_state_dict(checkpoint_old_model['model_state_dict'])
+        except RuntimeError:
+            print("Warning: Some layers could not be loaded strictly. Adapting weights...")
+            
+            model_dict = old_model_samples_rep.state_dict()
+            pretrained_dict = checkpoint_old_model['model_state_dict']
+            updated_dict = {}
+            
+            for key, old_weights in pretrained_dict.items():
+                if key in model_dict and old_weights.shape != model_dict[key].shape:
+                    print(f"Adapting weights for layer: {key}")
+                    new_weights = model_dict[key]
+                    updated_dict[key] = adapt_weights_old_to_new(old_weights, new_weights)
+                else:
+                    updated_dict[key] = old_weights
+            
+            model_dict.update(updated_dict)
+            old_model_samples_rep.load_state_dict(model_dict, strict=False)
+            
         old_model_samples_rep.eval()
         for param in old_model_samples_rep.parameters():
             param.requires_grad = False
@@ -851,3 +876,26 @@ def get_gpu_memory(device):
     memory_allocated = torch.cuda.memory_allocated(device)
     memory_cached = torch.cuda.memory_cached(device)
     return memory_allocated, memory_cached
+
+def adapt_weights_old_to_new(old_weights, new_weights):
+    """
+    Expands old weights to match the new shape.
+    - Copies the first 16 channels from the checkpoint.
+    - Randomly initializes the last 4 channels.
+    """
+    old_shape = old_weights.shape
+
+    if len(old_shape) == 1:  # Bias
+        new_weights[:old_shape[0]] = old_weights
+    elif len(old_shape) == 2:  # Linear layer (Classification head)
+        new_weights[:old_shape[0], :] = old_weights
+    elif len(old_shape) == 3: # 1D convolution weights
+        new_weights[:old_shape[0], :, :] = old_weights
+    elif len(old_shape) == 4: # 2D convolution weights
+        new_weights[:old_shape[0], :, :, :] = old_weights
+    elif len(old_shape) == 5:  # 3D convolution weights
+        new_weights[:old_shape[0], :, :, :, :] = old_weights
+    else:
+        raise ValueError("Unsupported tensor shape")
+
+    return new_weights

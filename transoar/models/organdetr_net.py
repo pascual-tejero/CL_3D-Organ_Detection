@@ -92,7 +92,7 @@ class OrganDetrNet(nn.Module):
 
         if self._seg_proxy:
             in_channels = config['backbone']['start_channels']
-            if num_organs is not None:
+            if num_organs is None:
                 out_channels = 2 if config['backbone']['fg_bg'] else config['neck']['num_organs'] + 1 # inc bg
             else:
                 out_channels = num_organs + 1 # inc bg
@@ -101,7 +101,7 @@ class OrganDetrNet(nn.Module):
 
         if self._msa_seg:
             in_channels = config['backbone']['fpn_channels']
-            if num_organs is not None:
+            if num_organs is None:
                 out_channels =  2 if config['backbone']['fg_bg'] else config['backbone']['num_organs'] + 1 # inc bg
             else:
                 out_channels = num_organs + 1 # inc bg

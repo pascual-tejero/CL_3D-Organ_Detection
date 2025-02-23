@@ -21,6 +21,50 @@ from transoar.utils.io import get_config, write_json, get_meta_data
 from transoar.models.organdetr_net import OrganDetrNet
 from transoar.models.build import build_criterion
 
+# def adapt_weights_old_to_new_v2(new_weights, old_weights):
+#     """
+#     Reduces old weights to match the new shape.
+#     - Copies the first 16 channels from the checkpoint.
+#     """
+#     new_shape = new_weights.shape
+
+#     if len(new_shape) == 1:  # Bias
+#         new_weights = old_weights[:new_shape[0]]
+#     elif len(new_shape) == 2:  # Linear layer (Classification head)
+#         new_weights = old_weights[:new_shape[0], :]
+#     elif len(new_shape) == 3: # 1D convolution weights
+#         new_weights = old_weights[:new_shape[0], :, :]
+#     elif len(new_shape) == 4: # 2D convolution weights
+#         new_weights = old_weights[:new_shape[0], :, :, :]
+#     elif len(new_shape) == 5:  # 3D convolution weights
+#         new_weights = old_weights[:new_shape[0], :, :, :, :]
+#     else:
+#         raise ValueError("Unsupported tensor shape")
+
+#     return new_weights
+
+def adapt_weights_old_to_new(old_weights, new_weights):
+    """
+    Expands old weights to match the new shape.
+    - Copies the first 16 channels from the checkpoint.
+    - Randomly initializes the last 4 channels.
+    """
+    old_shape = old_weights.shape
+
+    if len(old_shape) == 1:  # Bias
+        new_weights[:old_shape[0]] = old_weights
+    elif len(old_shape) == 2:  # Linear layer (Classification head)
+        new_weights[:old_shape[0], :] = old_weights
+    elif len(old_shape) == 3: # 1D convolution weights
+        new_weights[:old_shape[0], :, :] = old_weights
+    elif len(old_shape) == 4: # 2D convolution weights
+        new_weights[:old_shape[0], :, :, :] = old_weights
+    elif len(old_shape) == 5:  # 3D convolution weights
+        new_weights[:old_shape[0], :, :, :, :] = old_weights
+    else:
+        raise ValueError("Unsupported tensor shape")
+
+    return new_weights
 
 def get_last_ckpt(filepath):
     """
@@ -163,7 +207,27 @@ def train(config, args):
     # Start CL approach from old model if not mixing datasets training
     if config["mixing_datasets"] is False and config["CL"] is True:
         checkpoint_model = torch.load(config["CL_models"]["old_model_path"]) # Start main model with old model
-        model.load_state_dict(checkpoint_model['model_state_dict'])
+        try:
+            model.load_state_dict(checkpoint_model['model_state_dict'])
+        except Exception as e:
+            print("Warning: Some layers could not be loaded strictly. Adapting weights...")
+            
+            model_dict = model.state_dict()
+            pretrained_dict = checkpoint_model['model_state_dict']
+            updated_dict = {}
+            
+            for key, old_weights in pretrained_dict.items():
+                if key in model_dict and old_weights.shape != model_dict[key].shape:
+                    print(f"Adapting weights for layer: {key}")
+                    new_weights = model_dict[key]
+                    updated_dict[key] = adapt_weights_old_to_new(old_weights, new_weights)
+                else:
+                    updated_dict[key] = old_weights
+            
+            model_dict.update(updated_dict)
+            model.load_state_dict(model_dict, strict=False)
+            print("Model loaded with adapted weights.")
+        print("Main model loaded.")
 
     # Load checkpoint if applicable
     if config.get('resume', False) or args.resume:
@@ -174,7 +238,27 @@ def train(config, args):
         checkpoint['scheduler_state_dict']['step_size'] = config['lr_drop']
 
         # Unpack and load content
-        model.load_state_dict(checkpoint['model_state_dict'])
+        try:
+            model.load_state_dict(checkpoint['model_state_dict'])
+        except Exception as e:
+            print("Warning: Some layers could not be loaded strictly. Adapting weights...")
+            
+            model_dict = model.state_dict()
+            pretrained_dict = checkpoint_model['model_state_dict']
+            updated_dict = {}
+            
+            for key, old_weights in pretrained_dict.items():
+                if key in model_dict and old_weights.shape != model_dict[key].shape:
+                    print(f"Adapting weights for layer: {key}")
+                    new_weights = model_dict[key]
+                    updated_dict[key] = adapt_weights_old_to_new(old_weights, new_weights)
+                else:
+                    updated_dict[key] = old_weights
+            
+            model_dict.update(updated_dict)
+            model.load_state_dict(model_dict, strict=False)
+            print("Model loaded with adapted weights.")
+
         optim.load_state_dict(checkpoint['optimizer_state_dict'])
         scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
         epoch = checkpoint['epoch']
@@ -184,9 +268,9 @@ def train(config, args):
             try:
                 metric_start_test = checkpoint['metric_max_test']
             except:
-                metric_start_test = None
+                metric_start_test = 0
         else:
-            metric_start_test = None
+            metric_start_test = 0
     else:
         epoch = 0
         metric_start_val = 0
@@ -194,7 +278,7 @@ def train(config, args):
         if config['test']:
             metric_start_test = 0
         else:
-            metric_start_test = None
+            metric_start_test = 0
         
 
 
@@ -225,20 +309,39 @@ def train(config, args):
         try:
             aux_model.load_state_dict(checkpoint_aux_model['model_state_dict'])
         except Exception as e:
-            print("Loading pretrained model with strict=False ...")
+
             aux_model.load_state_dict(checkpoint_aux_model['model_state_dict'], strict=False)
+            print("Aux Model loaded with adapted weights.")
+
+        print("Auxiliary model loaded.")
         aux_model.eval()
         for param in aux_model.parameters():
             param.requires_grad = False
 
         # Load old model from config["CL_models"]["old_model_path"]
-        old_model = OrganDetrNet(config, num_organs=8).to(device=device)
+        old_model = OrganDetrNet(config).to(device=device)
         checkpoint_old_model = torch.load(config["CL_models"]["old_model_path"])
         try:
             old_model.load_state_dict(checkpoint_old_model['model_state_dict'])
         except Exception as e:
-            print("Loading pretrained model with strict=False ...")
-            old_model.load_state_dict(checkpoint_old_model['model_state_dict'], strict=False)
+            print("Warning: Some layers could not be loaded strictly. Adapting weights...")
+            
+            model_dict = old_model.state_dict()
+            pretrained_dict = checkpoint_model['model_state_dict']
+            updated_dict = {}
+            
+            for key, old_weights in pretrained_dict.items():
+                if key in model_dict and old_weights.shape != model_dict[key].shape:
+                    print(f"Adapting weights for layer: {key}")
+                    new_weights = model_dict[key]
+                    updated_dict[key] = adapt_weights_old_to_new(old_weights, new_weights)
+                else:
+                    updated_dict[key] = old_weights
+            
+            model_dict.update(updated_dict)
+            model.load_state_dict(model_dict, strict=False)
+
+        print("Old model loaded.")
         old_model.eval()
         for param in old_model.parameters():
             param.requires_grad = False

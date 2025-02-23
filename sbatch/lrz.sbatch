@@ -16,15 +16,9 @@ DATA_DIR=/dss/dssmcmlfs01/pr62la/pr62la-dss-0002/Mori/PASCUAL/DATASETS/
 srun --pty --container-mounts=${DATA_DIR}:/mnt/data,${BASE_DIR}:/mnt/code \
 --container-image=${BASE_DIR}/${ENV_DIR}/${ENV_name}.sqsh bash
 
-
 cd /mnt/code/OrganDETR
 ENV_name=msadet
 export TRANSOAR_DATA=/mnt/data/
-
-cd /mnt/code/OrganDETR_other/CL_Organ_Detection
-ENV_name=msadet
-export TRANSOAR_DATA=/mnt/data/
-
 
 # test no error
 /opt/conda/envs/${ENV_name}/bin/python scripts/train.py --config CL_methods/TEST_NO_ERROR/test_run_no_error_WORD
@@ -69,14 +63,12 @@ export TRANSOAR_DATA=/mnt/data/
 /opt/conda/envs/${ENV_name}/bin/python scripts/train_CL.py --config CL_methods/WORD_TOTALSEGMENTATOR/msa_def_detr_sequential_training
 
 
-/opt/conda/envs/${ENV_name}/bin/python scripts/train.py --config CL_methods/ABDOMEN_ATLAS/msa_def_detr_ABDOMEN_ATLAS 
 /opt/conda/envs/${ENV_name}/bin/python scripts/train.py --config CL_methods/ABDOMEN_ATLAS/msa_def_detr_ABDOMEN_ATLAS_1
-/opt/conda/envs/${ENV_name}/bin/python scripts/train.py --config CL_methods/ABDOMEN_ATLAS/msa_def_detr_ABDOMEN_ATLAS_2 
-/opt/conda/envs/${ENV_name}/bin/python scripts/train.py --config CL_methods/ABDOMEN_ATLAS/msa_def_detr_ABDOMEN_ATLAS_3 
-/opt/conda/envs/${ENV_name}/bin/python scripts/train.py --config CL_methods/ABDOMEN_ATLAS/msa_def_detr_ABDOMEN_ATLAS_no-augm
-/opt/conda/envs/${ENV_name}/bin/python scripts/train.py --config CL_methods/ABDOMEN_ATLAS/msa_def_detr_ABDOMEN_ATLAS_9seg-heads
-/opt/conda/envs/${ENV_name}/bin/python scripts/train.py --config CL_methods/ABDOMEN_ATLAS/msa_def_detr_ABDOMEN_ATLAS_9seg-heads_lr-changed
-/opt/conda/envs/${ENV_name}/bin/python scripts/train_CL.py --config CL_methods/ABDOMEN_ATLAS/msa_def_detr_ABDOMEN_ATLAS_CLreg 
+/opt/conda/envs/${ENV_name}/bin/python scripts/train.py --config CL_methods/ABDOMEN_ATLAS/msa_def_detr_TOTALSEGMENTATOR_2 
+/opt/conda/envs/${ENV_name}/bin/python scripts/train.py --config CL_methods/ABDOMEN_ATLAS/msa_def_detr_mixing_datasets 
+/opt/conda/envs/${ENV_name}/bin/python scripts/train_CL_AbdomenAtlas.py --config CL_methods/ABDOMEN_ATLAS/msa_def_detr_sequential_training
+/opt/conda/envs/${ENV_name}/bin/python scripts/train_CL_AbdomenAtlas.py --config CL_methods/ABDOMEN_ATLAS/msa_def_detr_CLreg
+/opt/conda/envs/${ENV_name}/bin/python scripts/train_CL_AbdomenAtlas.py --config CL_methods/ABDOMEN_ATLAS/msa_def_detr_CLreplay
 
 # test #--save_preds to save predictions in .ply format
 python scripts/test.py --run msa_def_detr_WORD160_dataset --model_load best --save_preds
