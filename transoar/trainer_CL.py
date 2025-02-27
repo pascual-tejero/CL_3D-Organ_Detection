@@ -696,7 +696,7 @@ class Trainer_CL:
                 if idx == 0: 
                     write_json(metric_scores, self._path_to_run / 'test_during_training' / f"{num_epoch}_epoch" / 'ABDOMEN_ATLAS_dataset.json')
                 else:
-                    write_json(metric_scores, self._path_to_run / 'test_during_training' / f"{num_epoch}_epoch" / 'ABDOMEN_ATLAS_dataset.json')
+                    write_json(metric_scores, self._path_to_run / 'test_during_training' / f"{num_epoch}_epoch" / 'TOTALSEGMENTATOR.json')
             elif 'test_run_no_error' in self._config['experiment_name']:
                 if idx == 0:
                     write_json(metric_scores, self._path_to_run / 'test_during_training' / f"{num_epoch}_epoch" / 'test_run_no_error_dataset1.json')

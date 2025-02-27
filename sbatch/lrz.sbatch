@@ -64,10 +64,11 @@ export TRANSOAR_DATA=/mnt/data/
 
 
 /opt/conda/envs/${ENV_name}/bin/python scripts/train.py --config CL_methods/ABDOMEN_ATLAS/msa_def_detr_ABDOMEN_ATLAS_1
-/opt/conda/envs/${ENV_name}/bin/python scripts/train.py --config CL_methods/ABDOMEN_ATLAS/msa_def_detr_TOTALSEGMENTATOR_2 
+/opt/conda/envs/${ENV_name}/bin/python scripts/train.py --config CL_methods/ABDOMEN_ATLAS/msa_def_detr_TOTALSEGMENTATOR_1 
 /opt/conda/envs/${ENV_name}/bin/python scripts/train.py --config CL_methods/ABDOMEN_ATLAS/msa_def_detr_mixing_datasets 
 /opt/conda/envs/${ENV_name}/bin/python scripts/train_CL_AbdomenAtlas.py --config CL_methods/ABDOMEN_ATLAS/msa_def_sequential_training
 /opt/conda/envs/${ENV_name}/bin/python scripts/train_CL_AbdomenAtlas.py --config CL_methods/ABDOMEN_ATLAS/msa_def_detr_CLreg
+/opt/conda/envs/${ENV_name}/bin/python scripts/train_CL_AbdomenAtlas.py --config CL_methods/ABDOMEN_ATLAS/msa_def_detr_CLreg-2
 /opt/conda/envs/${ENV_name}/bin/python scripts/train_CL_AbdomenAtlas.py --config CL_methods/ABDOMEN_ATLAS/msa_def_detr_CLreplay
 
 # test #--save_preds to save predictions in .ply format

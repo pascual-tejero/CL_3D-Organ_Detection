@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # Data
-categories = ["AbdomenCT-1K", "WORD", "ANCL", "CL replay"]
+categories = ["Single dataset\n(AbdomenCT-1K)", "Single dataset\n(WORD)", "ANCL", "CL Replay"]
 datasets = ["AbdomenCT-1K", "WORD"]
 values = np.array([
     [0.813, 0.001],  # AbdomenCT-1K performance
@@ -15,16 +15,16 @@ values = np.array([
 x = np.arange(len(categories))  # Base positions
 width = 0.25  # Reduce width slightly to avoid overlap
 
-fig, ax = plt.subplots(figsize=(7, 5), dpi=200)  # High DPI for print quality
-bars1 = ax.bar(x - width * 0.65, values[:, 0], width, label="AbdomenCT-1K", color='dodgerblue', edgecolor='black', linewidth=0.8)
-bars2 = ax.bar(x + width * 0.65, values[:, 1], width, label="WORD", color='orange', edgecolor='black', linewidth=0.8)
+fig, ax = plt.subplots(figsize=(7, 5), dpi=175)  # High DPI for print quality
+bars1 = ax.bar(x - width * 0.60, values[:, 0], width, label="AbdomenCT-1K", color='dodgerblue', edgecolor='black', linewidth=0.8)
+bars2 = ax.bar(x + width * 0.60, values[:, 1], width, label="WORD", color='orange', edgecolor='black', linewidth=0.8)
 
 # Add value labels above bars
 for bars in [bars1, bars2]:
     for bar in bars:
         height = bar.get_height()
         ax.text(bar.get_x() + bar.get_width()/2, height + 0.02, f'{height:.3f}', 
-                ha='center', va='bottom', fontsize=10, fontweight='bold')
+                ha='center', va='bottom', fontsize=14, fontweight='bold')
 
 # Labels & Titles
 ax.set_xlabel("Training Method", fontsize=16, fontweight='bold', labelpad=12)
